@@ -182,6 +182,23 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
 
 # ---------------------------------------------------------------------------
+# Logging — surface tracebacks to stderr so Render logs show real errors
+# ---------------------------------------------------------------------------
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
+}
+
+
+# ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
