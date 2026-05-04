@@ -25,8 +25,13 @@ from home.models import (
 )
 
 
-class CleanFileInput(forms.FileInput):
-    """Plain file input — no 'Currently / Change / Clear' chrome."""
+class CleanFileInput(forms.ClearableFileInput):
+    """File input that still processes the `{name}-clear` POST flag (so the
+    custom dashboard preview's cross icon can mark a stored image for
+    deletion) but renders only a plain file input — no default
+    'Currently / Change / Clear' chrome."""
+
+    template_name = "django/forms/widgets/file.html"
 
 
 class BootstrapFormMixin:

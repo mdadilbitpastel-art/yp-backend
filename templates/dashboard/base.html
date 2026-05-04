@@ -37,6 +37,37 @@
             color: #fff;
             background-color: rgba(255, 255, 255, .04);
         }
+
+        /* Image preview thumbnail with removable cross icon. */
+        .image-preview-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .image-preview-thumb {
+            max-height: 80px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: block;
+        }
+        .image-preview-clear {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            border-radius: 50%;
+            background-color: #dc3545;
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 11px;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+        }
+        .image-preview-clear:hover {
+            background-color: #b02a37;
+        }
     </style>
 
     {% block extra_head %}{% endblock %}
@@ -189,6 +220,53 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script>
+    // Image preview / clear handling for dashboard image fields.
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-image-field]').forEach(function (wrap) {
+            var fileInput = wrap.querySelector('input[type=file]');
+            if (!fileInput) return;
+
+            var clearCheckbox = wrap.querySelector('[data-clear-checkbox]');
+            var existingBox = wrap.querySelector('[data-existing-preview]');
+            var newBox = wrap.querySelector('[data-new-preview]');
+            var newImg = newBox ? newBox.querySelector('img') : null;
+
+            // Cross on stored image: mark for deletion + hide preview.
+            var existingClear = wrap.querySelector('[data-clear-existing]');
+            if (existingClear && existingBox && clearCheckbox) {
+                existingClear.addEventListener('click', function () {
+                    clearCheckbox.checked = true;
+                    existingBox.style.display = 'none';
+                    fileInput.value = '';
+                    if (newBox) newBox.style.display = 'none';
+                });
+            }
+
+            // Show preview when a new file is selected.
+            fileInput.addEventListener('change', function () {
+                if (!fileInput.files || !fileInput.files[0] || !newImg) return;
+                var file = fileInput.files[0];
+                if (!file.type.startsWith('image/')) return;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    newImg.src = e.target.result;
+                    newBox.style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Cross on freshly selected image: reset the file input.
+            var newClear = wrap.querySelector('[data-clear-new]');
+            if (newClear && newBox) {
+                newClear.addEventListener('click', function () {
+                    fileInput.value = '';
+                    newBox.style.display = 'none';
+                });
+            }
+        });
+    });
+</script>
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

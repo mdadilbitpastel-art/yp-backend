@@ -28,7 +28,8 @@
       "Bash(.venv/bin/python manage.py check)",
       "Bash(.venv/Scripts/python.exe manage.py migrate)",
       "Bash(python manage.py makemigrations --dry-run --check home)",
-      "Bash(chmod +x *)"
+      "Bash(chmod +x *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('dashboard/forms.py'\\).read\\(\\)\\); ast.parse\\(open\\('home/signals.py'\\).read\\(\\)\\); ast.parse\\(open\\('home/apps.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")"
     ]
   }
 }

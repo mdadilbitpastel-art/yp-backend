@@ -1,4 +1,44 @@
 {# Renders a single bound form field with AdminLTE styling. #}
+{% if field.field.widget.input_type == 'file' %}
+    <div class="form-group" data-image-field>
+        <label for="{{ field.id_for_label }}">
+            {{ field.label }}
+            {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+        </label>
+
+        {% if field.value and field.value.url %}
+            <div class="image-preview-wrapper mb-2" data-existing-preview>
+                <img src="{{ field.value.url }}" class="image-preview-thumb">
+                <button type="button" class="image-preview-clear" data-clear-existing
+                        title="Remove image">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="checkbox"
+                   name="{{ field.html_name }}-clear"
+                   id="{{ field.html_name }}-clear-id"
+                   data-clear-checkbox
+                   style="display:none;">
+        {% endif %}
+
+        <div class="image-preview-wrapper mb-2" data-new-preview style="display:none;">
+            <img src="" class="image-preview-thumb" alt="">
+            <button type="button" class="image-preview-clear" data-clear-new
+                    title="Remove selection">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        {{ field }}
+        {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+
+        {% for error in field.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
+    </div>
+{% else %}
 <div class="form-group">
     <label for="{{ field.id_for_label }}">
         {{ field.label }}
@@ -13,11 +53,6 @@
             </label>
         </div>
     {% else %}
-        {% if field.value and field.field.widget.input_type == 'file' %}
-            <div class="mb-2">
-                <img src="{{ field.value.url }}" style="max-height:80px;border-radius:4px;border:1px solid #ddd;">
-            </div>
-        {% endif %}
         {{ field }}
         {% if field.help_text %}
             <small class="form-text text-muted">{{ field.help_text }}</small>
@@ -28,3 +63,4 @@
         <div class="invalid-feedback d-block">{{ error }}</div>
     {% endfor %}
 </div>
+{% endif %}
