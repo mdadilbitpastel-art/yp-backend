@@ -1,0 +1,74 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for module in module_summaries %}
+    <div class="col-lg-6 col-12">
+        <div class="card card-outline card-primary h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="{{ module.icon }} mr-2"></i>{{ module.title }}
+                </h3>
+                <div class="card-tools">
+                    <span class="badge badge-primary">
+                        {{ module.configured }} / {{ module.total }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{{ module.description }}</p>
+                <div class="progress mb-3" style="height: 6px;">
+                    {% if module.total %}
+                    <div class="progress-bar bg-primary"
+                         role="progressbar"
+                         style="width: {% widthratio module.configured module.total 100 %}%"></div>
+                    {% endif %}
+                </div>
+                <a href="{% url module.index_url %}" class="btn btn-primary btn-sm">
+                    Manage <i class="fas fa-arrow-circle-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="col-lg-6 col-12">
+        <div class="card card-outline card-info h-100">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-plug mr-2"></i>Frontend API</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    JSON endpoints consumed by the Next.js frontend. Use these
+                    to verify the data your editors save here is reaching the
+                    site correctly.
+                </p>
+                <a href="/api/home/" target="_blank" class="btn btn-info btn-sm">
+                    Preview <code class="text-white">/api/home/</code>
+                    <i class="fas fa-external-link-alt ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i>About this dashboard</h3>
+    </div>
+    <div class="card-body">
+        <p class="mb-0">
+            Custom CMS for Young Professionals. Content is grouped into
+            <strong>modules</strong> (Home Management today; more coming) — each
+            module's sections live on its own management page so this overview
+            stays clean as more sections are added.
+        </p>
+    </div>
+</div>
+{% endblock %}

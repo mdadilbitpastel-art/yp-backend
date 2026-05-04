@@ -1,0 +1,99 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Apply Section{% endblock %}
+{% block page_title %}Apply Section{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item">Home Management</li>
+    <li class="breadcrumb-item active">Apply Section</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Section heading ------------ #}
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Heading</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.apply_section_title %}
+            {% include "dashboard/home/_field.html" with field=form.apply_section_subtitle %}
+        </div>
+    </div>
+
+    {# ------------ 3 fixed company cards ------------ #}
+    {% for position, fields in form.company_groups %}
+    <div class="card card-info card-outline collapsed-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-building mr-1"></i> Company {{ position }}
+                {% if fields.title.value %}
+                    <small class="text-muted ml-2">— {{ fields.title.value }}</small>
+                {% endif %}
+            </h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    {% include "dashboard/home/_field.html" with field=fields.label %}
+                </div>
+                <div class="col-md-8">
+                    {% include "dashboard/home/_field.html" with field=fields.title %}
+                </div>
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=fields.description %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=fields.button_text %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=fields.button_url %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=fields.large_image %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=fields.small_image %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {# ------------ Bottom button ------------ #}
+    <div class="card card-warning card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Bottom Button</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.apply_section_bottom_button_text %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.apply_section_bottom_button_url %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Apply Section
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,30 @@
+{# Renders a single bound form field with AdminLTE styling. #}
+<div class="form-group">
+    <label for="{{ field.id_for_label }}">
+        {{ field.label }}
+        {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+    </label>
+
+    {% if field.field.widget.input_type == 'checkbox' %}
+        <div class="form-check">
+            {{ field }}
+            <label class="form-check-label" for="{{ field.id_for_label }}">
+                {{ field.help_text|default:"Enable" }}
+            </label>
+        </div>
+    {% else %}
+        {% if field.value and field.field.widget.input_type == 'file' %}
+            <div class="mb-2">
+                <img src="{{ field.value.url }}" style="max-height:80px;border-radius:4px;border:1px solid #ddd;">
+            </div>
+        {% endif %}
+        {{ field }}
+        {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+        {% endif %}
+    {% endif %}
+
+    {% for error in field.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>

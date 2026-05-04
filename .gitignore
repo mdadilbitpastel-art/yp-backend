@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Django
+*.log
+*.sqlite3
+db.sqlite3
+local_settings.py
+staticfiles/
+
+# Media uploads (keep folder, ignore contents)
+media/*
+!media/.gitkeep
+
+# Env
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store

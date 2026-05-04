@@ -1,0 +1,84 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Header{% endblock %}
+{% block page_title %}Header Management{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item active">Header Management</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Logo ------------ #}
+    <div class="card card-success card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Logo</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.logo %}
+        </div>
+    </div>
+
+    {# ------------ CTA button ------------ #}
+    <div class="card card-warning card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Header Button</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.button_text %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.button_url %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------ Tabs (auto-populated, editable labels) ------------ #}
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-bars mr-1"></i> Header Tabs</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                Tabs auto-populate from registered management modules. Edit the label
+                shown in the public header below — leave a label blank to fall back to
+                the module's default name.
+            </p>
+            {% for module, field in form.tab_fields %}
+            <div class="form-group row align-items-center">
+                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
+                    <i class="{{ module.icon }} mr-2 text-muted"></i>
+                    {{ field.label }}
+                    <small class="text-muted ml-1">({{ module.key }})</small>
+                </label>
+                <div class="col-sm-9">
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted mb-0">No management modules registered yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Header
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

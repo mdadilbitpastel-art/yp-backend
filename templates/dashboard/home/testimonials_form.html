@@ -1,0 +1,79 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Testimonials Section{% endblock %}
+{% block page_title %}Testimonials Section{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item">Home Management</li>
+    <li class="breadcrumb-item active">Testimonials Section</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Heading ------------ #}
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-quote-right mr-1"></i> Heading</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.title %}
+        </div>
+    </div>
+
+    {# ------------ Background image ------------ #}
+    <div class="card card-success card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Background Image</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.background_image %}
+        </div>
+    </div>
+
+    {# ------------ 3 fixed user cards ------------ #}
+    {% for position, fields in form.user_groups %}
+    <div class="card card-info card-outline collapsed-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-user mr-1"></i> User {{ position }}
+                {% if fields.name.value %}
+                    <small class="text-muted ml-2">— {{ fields.name.value }}</small>
+                {% endif %}
+            </h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=fields.name %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=fields.profile_image %}
+                </div>
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=fields.message %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Testimonials Section
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

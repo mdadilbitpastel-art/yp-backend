@@ -1,0 +1,159 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Footer{% endblock %}
+{% block page_title %}Footer Management{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item active">Footer Management</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Logo ------------ #}
+    <div class="card card-success card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Logo</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.logo %}
+        </div>
+    </div>
+
+    {# ------------ Details ------------ #}
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Details</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=form.title %}
+                </div>
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=form.address %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.email %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.copyright_text %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------ Text links ------------ #}
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-link mr-1"></i> Text Links</h3>
+        </div>
+        <div class="card-body">
+            {{ link_formset.management_form }}
+            {% if link_formset.non_form_errors %}
+                <div class="alert alert-danger">{{ link_formset.non_form_errors|join:" " }}</div>
+            {% endif %}
+
+            <div id="footer-links">
+                {% for link_form in link_formset %}
+                <div class="footer-link-row border rounded p-3 mb-2">
+                    {% for hidden in link_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ link_form.DELETE.html_name }}" value="" class="delete-flag">
+                    <div class="row">
+                        <div class="col-md-5">
+                            {% include "dashboard/home/_field.html" with field=link_form.label %}
+                        </div>
+                        <div class="col-md-5">
+                            {% include "dashboard/home/_field.html" with field=link_form.url %}
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="d-block">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
+                                    <i class="fas fa-trash mr-1"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-footer-link" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Link
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Footer
+            </button>
+        </div>
+    </div>
+</form>
+
+{# Hidden empty-form template used by the add-link script. #}
+<template id="footer-link-empty">
+    <div class="footer-link-row border rounded p-3 mb-2">
+        {% with link_formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="row">
+                <div class="col-md-5">
+                    {% include "dashboard/home/_field.html" with field=empty.label %}
+                </div>
+                <div class="col-md-5">
+                    {% include "dashboard/home/_field.html" with field=empty.url %}
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const prefix = "{{ link_formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('footer-links');
+    const addBtn = document.getElementById('add-footer-link');
+    const tpl = document.getElementById('footer-link-empty');
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.footer-link-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+    });
+})();
+</script>
+{% endblock %}
