@@ -19,7 +19,7 @@
     {# ------------ Section heading ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Heading</h3>
+            <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.apply_section_title %}
@@ -27,49 +27,66 @@
         </div>
     </div>
 
-    {# ------------ 3 fixed company cards ------------ #}
-    {% for position, fields in form.company_groups %}
-    <div class="card card-info card-outline collapsed-card">
+    {# ------------ Companies (manual list, add/delete) ------------ #}
+    <div class="card card-info card-outline">
         <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-building mr-1"></i> Company {{ position }}
-                {% if fields.title.value %}
-                    <small class="text-muted ml-2">— {{ fields.title.value }}</small>
-                {% endif %}
-            </h3>
-            <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
+            <h3 class="card-title"><i class="fas fa-building mr-1"></i> Companies</h3>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    {% include "dashboard/home/_field.html" with field=fields.label %}
+            {{ company_formset.management_form }}
+            {% if company_formset.non_form_errors %}
+                <div class="alert alert-danger">{{ company_formset.non_form_errors|join:" " }}</div>
+            {% endif %}
+
+            <div id="apply-companies">
+                {% for company_form in company_formset %}
+                <div class="apply-company-row border rounded p-3 mb-3">
+                    {% for hidden in company_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ company_form.DELETE.html_name }}" value="" class="delete-flag">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0 text-muted">
+                            <i class="fas fa-building mr-1"></i>
+                            Company {{ forloop.counter }}
+                            {% if company_form.title.value %}
+                                <small>— {{ company_form.title.value }}</small>
+                            {% endif %}
+                        </h5>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% include "dashboard/home/_field.html" with field=company_form.label %}
+                        </div>
+                        <div class="col-md-8">
+                            {% include "dashboard/home/_field.html" with field=company_form.title %}
+                        </div>
+                        <div class="col-md-12">
+                            {% include "dashboard/home/_field.html" with field=company_form.description %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=company_form.button_text %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=company_form.button_url %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=company_form.large_image %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=company_form.small_image %}
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-8">
-                    {% include "dashboard/home/_field.html" with field=fields.title %}
-                </div>
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=fields.description %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=fields.button_text %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=fields.button_url %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=fields.large_image %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=fields.small_image %}
-                </div>
+                {% endfor %}
             </div>
+
+            <button type="button" id="add-apply-company" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Company
+            </button>
         </div>
     </div>
-    {% endfor %}
 
     {# ------------ Bottom button ------------ #}
     <div class="card card-warning card-outline">
@@ -96,4 +113,77 @@
         </div>
     </div>
 </form>
+
+{# Hidden empty-form template used by the add-company script. #}
+<template id="apply-company-empty">
+    <div class="apply-company-row border rounded p-3 mb-3">
+        {% with company_formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0 text-muted">
+                    <i class="fas fa-building mr-1"></i> New Company
+                </h5>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
+                    <i class="fas fa-trash mr-1"></i> Delete
+                </button>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    {% include "dashboard/home/_field.html" with field=empty.label %}
+                </div>
+                <div class="col-md-8">
+                    {% include "dashboard/home/_field.html" with field=empty.title %}
+                </div>
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=empty.description %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.button_text %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.button_url %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.large_image %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.small_image %}
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const prefix = "{{ company_formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('apply-companies');
+    const addBtn = document.getElementById('add-apply-company');
+    const tpl = document.getElementById('apply-company-empty');
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.apply-company-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+    });
+})();
+</script>
 {% endblock %}

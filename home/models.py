@@ -9,12 +9,15 @@ page per section, each backed by its own model.
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from .validators import validate_image_extension, validate_image_size
+from .storage import video_storage
+from .validators import (
+    validate_image_extension,
+    validate_image_size,
+    validate_video_extension,
+    validate_video_size,
+)
 
 
-FEATURE_CARD_COUNT = 5
-NETWORK_STAT_COUNT = 4
-APPLY_COMPANY_COUNT = 3
 TESTIMONIAL_USER_COUNT = 3
 APP_BUTTON_COUNT = 3
 
@@ -48,8 +51,8 @@ class SingletonModel(models.Model):
 
 
 class HeaderSettings(SingletonModel):
-    """Site header — logo, single CTA button. Tabs auto-populate from the
-    dashboard module registry, so they aren't stored on this row."""
+    """Site header — logo, single CTA button. Tabs are managed manually as
+    related `HeaderTab` rows so editors control both the label and URL."""
 
     logo = models.ImageField(
         upload_to="header/",
@@ -59,11 +62,6 @@ class HeaderSettings(SingletonModel):
     )
     button_text = models.CharField(max_length=80, blank=True)
     button_url = models.URLField(blank=True)
-    tab_labels = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text="Per-module overrides for header tab labels — keyed by module key.",
-    )
 
     class Meta:
         verbose_name = "Header"
@@ -71,6 +69,25 @@ class HeaderSettings(SingletonModel):
 
     def __str__(self) -> str:
         return self.button_text or "Header"
+
+
+class HeaderTab(models.Model):
+    """A single navigation tab displayed in the site header."""
+
+    header = models.ForeignKey(
+        HeaderSettings,
+        on_delete=models.CASCADE,
+        related_name="tabs",
+    )
+    order = models.PositiveIntegerField(default=0)
+    label = models.CharField(max_length=80)
+    url = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self) -> str:
+        return self.label
 
 
 class SocialMediaSection(SingletonModel):
@@ -294,7 +311,8 @@ class HeroSection(SingletonModel):
 
 
 class FeatureSection(SingletonModel):
-    """Feature highlights — heading + 5 fixed cards."""
+    """Feature highlights — heading + a manual list of cards managed via
+    the related `FeatureCard` model."""
 
     features_title = models.CharField(max_length=255, blank=True)
     features_description = models.TextField(blank=True)
@@ -304,51 +322,6 @@ class FeatureSection(SingletonModel):
         help_text="Shared button label used on every feature card.",
     )
 
-    feature_1_title = models.CharField(max_length=255, blank=True)
-    feature_1_icon = models.ImageField(
-        upload_to="home/features/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    feature_1_button_url = models.URLField(blank=True)
-
-    feature_2_title = models.CharField(max_length=255, blank=True)
-    feature_2_icon = models.ImageField(
-        upload_to="home/features/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    feature_2_button_url = models.URLField(blank=True)
-
-    feature_3_title = models.CharField(max_length=255, blank=True)
-    feature_3_icon = models.ImageField(
-        upload_to="home/features/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    feature_3_button_url = models.URLField(blank=True)
-
-    feature_4_title = models.CharField(max_length=255, blank=True)
-    feature_4_icon = models.ImageField(
-        upload_to="home/features/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    feature_4_button_url = models.URLField(blank=True)
-
-    feature_5_title = models.CharField(max_length=255, blank=True)
-    feature_5_icon = models.ImageField(
-        upload_to="home/features/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    feature_5_button_url = models.URLField(blank=True)
-
     class Meta:
         verbose_name = "Feature Section"
         verbose_name_plural = "Feature Section"
@@ -357,18 +330,40 @@ class FeatureSection(SingletonModel):
         return self.features_title or "Feature Section"
 
     def feature_cards(self) -> list[dict]:
-        cards = []
-        for i in range(1, FEATURE_CARD_COUNT + 1):
-            icon = getattr(self, f"feature_{i}_icon")
-            cards.append(
-                {
-                    "position": i,
-                    "title": getattr(self, f"feature_{i}_title"),
-                    "icon": icon if icon else None,
-                    "button_url": getattr(self, f"feature_{i}_button_url"),
-                }
-            )
-        return cards
+        return [
+            {
+                "position": index,
+                "title": card.title,
+                "icon": card.icon if card.icon else None,
+                "button_url": card.button_url,
+            }
+            for index, card in enumerate(self.cards.all(), start=1)
+        ]
+
+
+class FeatureCard(models.Model):
+    """A single feature highlight card — title, icon image, and CTA URL."""
+
+    section = models.ForeignKey(
+        FeatureSection,
+        on_delete=models.CASCADE,
+        related_name="cards",
+    )
+    order = models.PositiveIntegerField(default=0)
+    title = models.CharField(max_length=255, blank=True)
+    icon = models.ImageField(
+        upload_to="home/features/",
+        validators=[validate_image_size, validate_image_extension],
+        blank=True,
+        null=True,
+    )
+    button_url = models.URLField(blank=True)
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self) -> str:
+        return self.title or f"Feature Card {self.pk}"
 
 
 class AboutSection(SingletonModel):
@@ -399,22 +394,17 @@ class AboutSection(SingletonModel):
 
 
 class NetworkSection(SingletonModel):
-    """Stats / Network section — heading, optional video, 4 fixed stats."""
+    """Stats / Network section — heading, optional video, plus a manual list
+    of stats managed via the related `NetworkStat` model."""
 
     network_section_title = models.CharField(max_length=255, blank=True)
-    network_section_video_url = models.URLField(blank=True)
-
-    network_stat_1_value = models.CharField(max_length=80, blank=True)
-    network_stat_1_label = models.CharField(max_length=160, blank=True)
-
-    network_stat_2_value = models.CharField(max_length=80, blank=True)
-    network_stat_2_label = models.CharField(max_length=160, blank=True)
-
-    network_stat_3_value = models.CharField(max_length=80, blank=True)
-    network_stat_3_label = models.CharField(max_length=160, blank=True)
-
-    network_stat_4_value = models.CharField(max_length=80, blank=True)
-    network_stat_4_label = models.CharField(max_length=160, blank=True)
+    network_section_video = models.FileField(
+        upload_to="home/network/",
+        storage=video_storage,
+        validators=[validate_video_size, validate_video_extension],
+        blank=True,
+        null=True,
+    )
 
     class Meta:
         verbose_name = "Network Section"
@@ -424,16 +414,33 @@ class NetworkSection(SingletonModel):
         return self.network_section_title or "Network Section"
 
     def network_stats(self) -> list[dict]:
-        stats = []
-        for i in range(1, NETWORK_STAT_COUNT + 1):
-            stats.append(
-                {
-                    "position": i,
-                    "value": getattr(self, f"network_stat_{i}_value"),
-                    "label": getattr(self, f"network_stat_{i}_label"),
-                }
-            )
-        return stats
+        return [
+            {
+                "position": index,
+                "value": stat.value,
+                "label": stat.label,
+            }
+            for index, stat in enumerate(self.stats.all(), start=1)
+        ]
+
+
+class NetworkStat(models.Model):
+    """A single stat shown in the Network section — value + label."""
+
+    section = models.ForeignKey(
+        NetworkSection,
+        on_delete=models.CASCADE,
+        related_name="stats",
+    )
+    order = models.PositiveIntegerField(default=0)
+    value = models.CharField(max_length=80, blank=True)
+    label = models.CharField(max_length=160, blank=True)
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self) -> str:
+        return f"{self.value} {self.label}".strip() or f"Network Stat {self.pk}"
 
 
 class TalentPoolSection(SingletonModel):
@@ -464,66 +471,13 @@ class TalentPoolSection(SingletonModel):
 
 
 class ApplySection(SingletonModel):
-    """Apply section — heading + sub-heading + 3 fixed company cards."""
+    """Apply section — heading + sub-heading + a manual list of company
+    cards managed via the related `ApplyCompany` model + a bottom button."""
 
     apply_section_title = models.CharField(max_length=255, blank=True)
     apply_section_subtitle = models.CharField(max_length=255, blank=True)
     apply_section_bottom_button_text = models.CharField(max_length=80, blank=True)
     apply_section_bottom_button_url = models.URLField(blank=True)
-
-    apply_company_1_label = models.CharField(max_length=120, blank=True)
-    apply_company_1_title = models.CharField(max_length=255, blank=True)
-    apply_company_1_description = models.TextField(blank=True)
-    apply_company_1_button_text = models.CharField(max_length=80, blank=True)
-    apply_company_1_button_url = models.URLField(blank=True)
-    apply_company_1_large_image = models.ImageField(
-        upload_to="home/apply/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    apply_company_1_small_image = models.ImageField(
-        upload_to="home/apply/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
-    apply_company_2_label = models.CharField(max_length=120, blank=True)
-    apply_company_2_title = models.CharField(max_length=255, blank=True)
-    apply_company_2_description = models.TextField(blank=True)
-    apply_company_2_button_text = models.CharField(max_length=80, blank=True)
-    apply_company_2_button_url = models.URLField(blank=True)
-    apply_company_2_large_image = models.ImageField(
-        upload_to="home/apply/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    apply_company_2_small_image = models.ImageField(
-        upload_to="home/apply/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
-    apply_company_3_label = models.CharField(max_length=120, blank=True)
-    apply_company_3_title = models.CharField(max_length=255, blank=True)
-    apply_company_3_description = models.TextField(blank=True)
-    apply_company_3_button_text = models.CharField(max_length=80, blank=True)
-    apply_company_3_button_url = models.URLField(blank=True)
-    apply_company_3_large_image = models.ImageField(
-        upload_to="home/apply/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    apply_company_3_small_image = models.ImageField(
-        upload_to="home/apply/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "Apply Section"
@@ -533,20 +487,50 @@ class ApplySection(SingletonModel):
         return self.apply_section_title or "Apply Section"
 
     def apply_companies(self) -> list[dict]:
-        companies = []
-        for i in range(1, APPLY_COMPANY_COUNT + 1):
-            large = getattr(self, f"apply_company_{i}_large_image")
-            small = getattr(self, f"apply_company_{i}_small_image")
-            companies.append(
-                {
-                    "position": i,
-                    "label": getattr(self, f"apply_company_{i}_label"),
-                    "title": getattr(self, f"apply_company_{i}_title"),
-                    "description": getattr(self, f"apply_company_{i}_description"),
-                    "button_text": getattr(self, f"apply_company_{i}_button_text"),
-                    "button_url": getattr(self, f"apply_company_{i}_button_url"),
-                    "large_image": large if large else None,
-                    "small_image": small if small else None,
-                }
-            )
-        return companies
+        return [
+            {
+                "position": index,
+                "label": company.label,
+                "title": company.title,
+                "description": company.description,
+                "button_text": company.button_text,
+                "button_url": company.button_url,
+                "large_image": company.large_image if company.large_image else None,
+                "small_image": company.small_image if company.small_image else None,
+            }
+            for index, company in enumerate(self.companies.all(), start=1)
+        ]
+
+
+class ApplyCompany(models.Model):
+    """A single company card shown in the Apply section."""
+
+    section = models.ForeignKey(
+        ApplySection,
+        on_delete=models.CASCADE,
+        related_name="companies",
+    )
+    order = models.PositiveIntegerField(default=0)
+    label = models.CharField(max_length=120, blank=True)
+    title = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    button_text = models.CharField(max_length=80, blank=True)
+    button_url = models.URLField(blank=True)
+    large_image = models.ImageField(
+        upload_to="home/apply/",
+        validators=[validate_image_size, validate_image_extension],
+        blank=True,
+        null=True,
+    )
+    small_image = models.ImageField(
+        upload_to="home/apply/",
+        validators=[validate_image_size, validate_image_extension],
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self) -> str:
+        return self.title or self.label or f"Apply Company {self.pk}"

@@ -28,14 +28,18 @@ from home.models import (
 from .forms import (
     AboutSectionForm,
     AppSectionForm,
+    ApplyCompanyFormSet,
     ApplySectionForm,
     DashboardLoginForm,
+    FeatureCardFormSet,
     FeatureSectionForm,
     FooterLinkFormSet,
     FooterSettingsForm,
     HeaderSettingsForm,
+    HeaderTabFormSet,
     HeroSectionForm,
     NetworkSectionForm,
+    NetworkStatFormSet,
     SocialMediaCardFormSet,
     SocialMediaSectionForm,
     TalentPoolSectionForm,
@@ -83,9 +87,28 @@ class HeaderEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return HeaderSettings.load()
 
-    def form_valid(self, form):
-        messages.success(self.request, "Header saved successfully.")
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "tab_formset",
+            HeaderTabFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        tab_formset = HeaderTabFormSet(
+            request.POST, request.FILES, instance=self.object
+        )
+        if form.is_valid() and tab_formset.is_valid():
+            form.save()
+            tab_formset.save()
+            messages.success(request, "Header saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, tab_formset=tab_formset)
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -162,9 +185,28 @@ class FeatureEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return FeatureSection.load()
 
-    def form_valid(self, form):
-        messages.success(self.request, "Feature section saved successfully.")
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "card_formset",
+            FeatureCardFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        card_formset = FeatureCardFormSet(
+            request.POST, request.FILES, instance=self.object
+        )
+        if form.is_valid() and card_formset.is_valid():
+            form.save()
+            card_formset.save()
+            messages.success(request, "Feature section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, card_formset=card_formset)
+        )
 
 
 class AboutEditView(LoginRequiredMixin, UpdateView):
@@ -190,9 +232,26 @@ class NetworkEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return NetworkSection.load()
 
-    def form_valid(self, form):
-        messages.success(self.request, "Network section saved successfully.")
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "stat_formset",
+            NetworkStatFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        stat_formset = NetworkStatFormSet(request.POST, instance=self.object)
+        if form.is_valid() and stat_formset.is_valid():
+            form.save()
+            stat_formset.save()
+            messages.success(request, "Network section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, stat_formset=stat_formset)
+        )
 
 
 class TalentPoolEditView(LoginRequiredMixin, UpdateView):
@@ -218,9 +277,28 @@ class ApplyEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return ApplySection.load()
 
-    def form_valid(self, form):
-        messages.success(self.request, "Apply section saved successfully.")
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "company_formset",
+            ApplyCompanyFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        company_formset = ApplyCompanyFormSet(
+            request.POST, request.FILES, instance=self.object
+        )
+        if form.is_valid() and company_formset.is_valid():
+            form.save()
+            company_formset.save()
+            messages.success(request, "Apply section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, company_formset=company_formset)
+        )
 
 
 class AppSectionEditView(LoginRequiredMixin, UpdateView):

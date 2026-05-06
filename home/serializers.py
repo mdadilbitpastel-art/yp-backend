@@ -90,9 +90,10 @@ class AboutSectionSerializer(serializers.Serializer):
 
 class NetworkSectionSerializer(serializers.Serializer):
     def to_representation(self, instance):
+        request = self.context.get("request")
         return {
             "title": instance.network_section_title,
-            "video_url": instance.network_section_video_url,
+            "video_url": _absolute_url(instance.network_section_video, request),
             "stats": instance.network_stats(),
         }
 

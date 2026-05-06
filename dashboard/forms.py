@@ -5,19 +5,20 @@ from django.contrib.auth.forms import AuthenticationForm
 
 from home.models import (
     APP_BUTTON_COUNT,
-    APPLY_COMPANY_COUNT,
-    FEATURE_CARD_COUNT,
-    NETWORK_STAT_COUNT,
     TESTIMONIAL_USER_COUNT,
     AboutSection,
     AppSection,
+    ApplyCompany,
     ApplySection,
+    FeatureCard,
     FeatureSection,
     FooterLink,
     FooterSettings,
     HeaderSettings,
+    HeaderTab,
     HeroSection,
     NetworkSection,
+    NetworkStat,
     SocialMediaCard,
     SocialMediaSection,
     TalentPoolSection,
@@ -53,14 +54,6 @@ class BootstrapFormMixin:
 
 class DashboardLoginForm(BootstrapFormMixin, AuthenticationForm):
     pass
-
-
-def _default_tab_label(module_title: str) -> str:
-    """Strip the trailing ' Management' suffix used in module titles."""
-    suffix = " Management"
-    if module_title.endswith(suffix):
-        return module_title[: -len(suffix)]
-    return module_title
 
 
 class FooterSettingsForm(BootstrapFormMixin, forms.ModelForm):
@@ -100,10 +93,8 @@ FooterLinkFormSet = forms.inlineformset_factory(
 
 
 class HeaderSettingsForm(BootstrapFormMixin, forms.ModelForm):
-    """Site-wide header — logo, CTA button, plus a dynamic editable label
-    per registered (non-header) management module."""
-
-    TAB_FIELD_PREFIX = "tab_label__"
+    """Site-wide header — logo and CTA button. Tabs live on the inline
+    `HeaderTabFormSet`."""
 
     class Meta:
         model = HeaderSettings
@@ -115,46 +106,21 @@ class HeaderSettingsForm(BootstrapFormMixin, forms.ModelForm):
             "button_url": "Button URL",
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Local import to avoid a circular reference with the sections registry.
-        from .sections import DASHBOARD_MODULES
 
-        stored = (self.instance.tab_labels or {}) if self.instance else {}
-        self._tab_modules = []
-        for module in DASHBOARD_MODULES:
-            # Skip flat modules (Header itself, Footer, …) — header tabs only
-            # represent content management modules, not site-chrome modules.
-            if module.get("flat"):
-                continue
-            key = module["key"]
-            field_name = f"{self.TAB_FIELD_PREFIX}{key}"
-            self.fields[field_name] = forms.CharField(
-                required=False,
-                max_length=80,
-                label=_default_tab_label(module["title"]),
-                initial=stored.get(key) or _default_tab_label(module["title"]),
-            )
-            self.fields[field_name].widget.attrs.setdefault("class", "form-control")
-            self._tab_modules.append((module, field_name))
+class HeaderTabForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = HeaderTab
+        fields = ["label", "url"]
+        labels = {"label": "Tab Name", "url": "Tab Link"}
 
-    def tab_fields(self):
-        """Yield `(module, bound_field)` so the template can render the
-        editable list of header tab labels."""
-        for module, field_name in self._tab_modules:
-            yield module, self[field_name]
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        labels = {}
-        for module, field_name in self._tab_modules:
-            value = (self.cleaned_data.get(field_name) or "").strip()
-            if value:
-                labels[module["key"]] = value
-        instance.tab_labels = labels
-        if commit:
-            instance.save()
-        return instance
+HeaderTabFormSet = forms.inlineformset_factory(
+    HeaderSettings,
+    HeaderTab,
+    form=HeaderTabForm,
+    extra=0,
+    can_delete=True,
+)
 
 
 class HeroSectionForm(BootstrapFormMixin, forms.ModelForm):
@@ -182,22 +148,9 @@ class HeroSectionForm(BootstrapFormMixin, forms.ModelForm):
         }
 
 
-def _feature_card_field_names() -> list[str]:
-    """Flat list of the 15 per-card fields, in card-then-field order."""
-    suffixes = (
-        "title",
-        "icon",
-        "button_url",
-    )
-    return [
-        f"feature_{i}_{suffix}"
-        for i in range(1, FEATURE_CARD_COUNT + 1)
-        for suffix in suffixes
-    ]
-
-
 class FeatureSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Feature section editor — section heading + 5 fixed cards."""
+    """Feature section editor — section heading + shared card button text.
+    Cards live on the inline `FeatureCardFormSet`."""
 
     class Meta:
         model = FeatureSection
@@ -205,137 +158,124 @@ class FeatureSectionForm(BootstrapFormMixin, forms.ModelForm):
             "features_title",
             "features_description",
             "features_button_text",
-            *_feature_card_field_names(),
         ]
         widgets = {
             "features_description": forms.Textarea(attrs={"rows": 3}),
-            **{f"feature_{i}_icon": CleanFileInput() for i in range(1, FEATURE_CARD_COUNT + 1)},
         }
         labels = {
             "features_title": "Title",
             "features_description": "Description",
             "features_button_text": "Button Text (shared across all cards)",
-            **{f"feature_{i}_title": "Title" for i in range(1, FEATURE_CARD_COUNT + 1)},
-            **{f"feature_{i}_icon": "Icon" for i in range(1, FEATURE_CARD_COUNT + 1)},
-            **{f"feature_{i}_button_url": "Button URL" for i in range(1, FEATURE_CARD_COUNT + 1)},
         }
 
-    def card_groups(self):
-        """Yield `(position, fields_dict)` tuples so the template can loop cards."""
-        for i in range(1, FEATURE_CARD_COUNT + 1):
-            yield i, {
-                "title": self[f"feature_{i}_title"],
-                "icon": self[f"feature_{i}_icon"],
-                "button_url": self[f"feature_{i}_button_url"],
-            }
+
+class FeatureCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = FeatureCard
+        fields = ["title", "icon", "button_url"]
+        widgets = {"icon": CleanFileInput()}
+        labels = {"title": "Title", "icon": "Icon", "button_url": "Button URL"}
 
 
-def _network_stat_field_names() -> list[str]:
-    """Flat list of the 8 per-stat fields, in stat-then-field order."""
-    suffixes = ("value", "label")
-    return [
-        f"network_stat_{i}_{suffix}"
-        for i in range(1, NETWORK_STAT_COUNT + 1)
-        for suffix in suffixes
-    ]
+FeatureCardFormSet = forms.inlineformset_factory(
+    FeatureSection,
+    FeatureCard,
+    form=FeatureCardForm,
+    extra=0,
+    can_delete=True,
+)
 
 
 class NetworkSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Stats / Network section editor — section heading + 4 fixed stats."""
+    """Stats / Network section editor — section heading + optional video
+    upload. Stats live on the inline `NetworkStatFormSet`."""
 
     class Meta:
         model = NetworkSection
         fields = [
             "network_section_title",
-            "network_section_video_url",
-            *_network_stat_field_names(),
+            "network_section_video",
         ]
+        widgets = {
+            "network_section_video": CleanFileInput(attrs={"accept": "video/*"}),
+        }
         labels = {
             "network_section_title": "Title",
-            "network_section_video_url": "Video URL",
-            **{f"network_stat_{i}_value": "Value" for i in range(1, NETWORK_STAT_COUNT + 1)},
-            **{f"network_stat_{i}_label": "Label" for i in range(1, NETWORK_STAT_COUNT + 1)},
+            "network_section_video": "Video",
         }
 
-    def stat_groups(self):
-        """Yield `(position, fields_dict)` tuples so the template can loop stats."""
-        for i in range(1, NETWORK_STAT_COUNT + 1):
-            yield i, {
-                "value": self[f"network_stat_{i}_value"],
-                "label": self[f"network_stat_{i}_label"],
-            }
+
+class NetworkStatForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = NetworkStat
+        fields = ["value", "label"]
+        labels = {"value": "Value", "label": "Label"}
 
 
-def _apply_company_field_names() -> list[str]:
-    """Flat list of the 21 per-company fields, in company-then-field order."""
-    suffixes = (
-        "label",
-        "title",
-        "description",
-        "button_text",
-        "button_url",
-        "large_image",
-        "small_image",
-    )
-    return [
-        f"apply_company_{i}_{suffix}"
-        for i in range(1, APPLY_COMPANY_COUNT + 1)
-        for suffix in suffixes
-    ]
+NetworkStatFormSet = forms.inlineformset_factory(
+    NetworkSection,
+    NetworkStat,
+    form=NetworkStatForm,
+    extra=0,
+    can_delete=True,
+)
 
 
 class ApplySectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Apply section editor — heading + sub-heading + 3 fixed company cards."""
+    """Apply section editor — heading + sub-heading + bottom button. Company
+    cards live on the inline `ApplyCompanyFormSet`."""
 
     class Meta:
         model = ApplySection
         fields = [
             "apply_section_title",
             "apply_section_subtitle",
-            *_apply_company_field_names(),
             "apply_section_bottom_button_text",
             "apply_section_bottom_button_url",
         ]
-        widgets = {
-            **{
-                f"apply_company_{i}_description": forms.Textarea(attrs={"rows": 3})
-                for i in range(1, APPLY_COMPANY_COUNT + 1)
-            },
-            **{
-                f"apply_company_{i}_large_image": CleanFileInput()
-                for i in range(1, APPLY_COMPANY_COUNT + 1)
-            },
-            **{
-                f"apply_company_{i}_small_image": CleanFileInput()
-                for i in range(1, APPLY_COMPANY_COUNT + 1)
-            },
-        }
         labels = {
             "apply_section_title": "Heading",
             "apply_section_subtitle": "Sub-heading",
             "apply_section_bottom_button_text": "Bottom Button Text",
             "apply_section_bottom_button_url": "Bottom Button URL",
-            **{f"apply_company_{i}_label": "Label" for i in range(1, APPLY_COMPANY_COUNT + 1)},
-            **{f"apply_company_{i}_title": "Title" for i in range(1, APPLY_COMPANY_COUNT + 1)},
-            **{f"apply_company_{i}_description": "Description" for i in range(1, APPLY_COMPANY_COUNT + 1)},
-            **{f"apply_company_{i}_button_text": "Button Text" for i in range(1, APPLY_COMPANY_COUNT + 1)},
-            **{f"apply_company_{i}_button_url": "Button URL" for i in range(1, APPLY_COMPANY_COUNT + 1)},
-            **{f"apply_company_{i}_large_image": "Large Image" for i in range(1, APPLY_COMPANY_COUNT + 1)},
-            **{f"apply_company_{i}_small_image": "Small Image" for i in range(1, APPLY_COMPANY_COUNT + 1)},
         }
 
-    def company_groups(self):
-        """Yield `(position, fields_dict)` tuples so the template can loop companies."""
-        for i in range(1, APPLY_COMPANY_COUNT + 1):
-            yield i, {
-                "label": self[f"apply_company_{i}_label"],
-                "title": self[f"apply_company_{i}_title"],
-                "description": self[f"apply_company_{i}_description"],
-                "button_text": self[f"apply_company_{i}_button_text"],
-                "button_url": self[f"apply_company_{i}_button_url"],
-                "large_image": self[f"apply_company_{i}_large_image"],
-                "small_image": self[f"apply_company_{i}_small_image"],
-            }
+
+class ApplyCompanyForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = ApplyCompany
+        fields = [
+            "label",
+            "title",
+            "description",
+            "button_text",
+            "button_url",
+            "large_image",
+            "small_image",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+            "large_image": CleanFileInput(),
+            "small_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+            "large_image": "Large Image",
+            "small_image": "Small Image",
+        }
+
+
+ApplyCompanyFormSet = forms.inlineformset_factory(
+    ApplySection,
+    ApplyCompany,
+    form=ApplyCompanyForm,
+    extra=0,
+    can_delete=True,
+)
 
 
 class TalentPoolSectionForm(BootstrapFormMixin, forms.ModelForm):
@@ -375,7 +315,7 @@ class SocialMediaSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = SocialMediaSection
         fields = ["heading"]
-        labels = {"heading": "Heading"}
+        labels = {"heading": "Title"}
 
 
 class SocialMediaCardForm(BootstrapFormMixin, forms.ModelForm):

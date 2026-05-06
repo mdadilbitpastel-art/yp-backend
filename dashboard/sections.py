@@ -17,7 +17,7 @@ DASHBOARD_MODULES = [
         "key": "header",
         "title": "Header Management",
         "icon": "fas fa-window-maximize",
-        "description": "Site-wide header — logo, CTA button, and auto-discovered tabs.",
+        "description": "Site-wide header — logo, CTA button, and a manual list of navigation tabs.",
         "flat": True,
         "index_url": "dashboard:header_edit",
         "loader": "home.models.HeaderSettings",
@@ -34,7 +34,7 @@ DASHBOARD_MODULES = [
             {
                 "key": "hero",
                 "title": "Hero Section",
-                "icon": "fas fa-image",
+                "icon": "fas fa-bullhorn",
                 "url_name": "dashboard:hero_edit",
                 "description": "Top banner: headline, description, CTAs, background.",
                 "loader": "home.models.HeroSection",

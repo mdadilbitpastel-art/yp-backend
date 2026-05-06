@@ -29,7 +29,12 @@
       "Bash(.venv/Scripts/python.exe manage.py migrate)",
       "Bash(python manage.py makemigrations --dry-run --check home)",
       "Bash(chmod +x *)",
-      "Bash(python -c \"import ast; ast.parse\\(open\\('dashboard/forms.py'\\).read\\(\\)\\); ast.parse\\(open\\('home/signals.py'\\).read\\(\\)\\); ast.parse\\(open\\('home/apps.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")"
+      "Bash(python -c \"import ast; ast.parse\\(open\\('dashboard/forms.py'\\).read\\(\\)\\); ast.parse\\(open\\('home/signals.py'\\).read\\(\\)\\); ast.parse\\(open\\('home/apps.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations --dry-run --check home)",
+      "Bash(.venv/Scripts/python.exe manage.py migrate home)",
+      "Bash(.venv/Scripts/python.exe -c \"import django, os; os.environ.setdefault\\('DJANGO_SETTINGS_MODULE','young_professionals.settings'\\); django.setup\\(\\); from home.models import FeatureSection, FeatureCard; s = FeatureSection.load\\(\\); print\\('section ok:', s.features_title\\); print\\('cards:', list\\(FeatureCard.objects.values\\('order','title','icon','button_url'\\)\\)\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import django, os; os.environ.setdefault\\('DJANGO_SETTINGS_MODULE','young_professionals.settings'\\); django.setup\\(\\); from home.models import NetworkSection, NetworkStat; s = NetworkSection.load\\(\\); print\\('section:', s.network_section_title\\); print\\('stats:', list\\(NetworkStat.objects.values\\('order','value','label'\\)\\)\\)\")",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations home --name network_video_storage)"
     ]
   }
 }

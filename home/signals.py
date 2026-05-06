@@ -2,23 +2,30 @@
 
 When a model's FileField/ImageField is cleared (X icon in dashboard) or
 replaced with a new upload, the old file is left orphaned in remote
-storage (Cloudinary). These pre_save handlers compare the persisted value
-with the incoming value and delete the obsolete file from storage.
+storage (Cloudinary). The pre_save handler compares the persisted value
+with the incoming value and deletes the obsolete file. The pre_delete
+handler covers the related-row case — when a formset row (e.g. a
+FeatureCard or SocialMediaCard) is removed, its attached files are
+purged from storage too.
 """
 
 import logging
 
 from django.db.models import FileField
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_delete, pre_save
 
 logger = logging.getLogger(__name__)
+
+
+def _file_fields(sender):
+    return [f for f in sender._meta.get_fields() if isinstance(f, FileField)]
 
 
 def _delete_obsolete_files(sender, instance, **kwargs):
     if not instance.pk:
         return
 
-    file_fields = [f for f in sender._meta.get_fields() if isinstance(f, FileField)]
+    file_fields = _file_fields(sender)
     if not file_fields:
         return
 
@@ -43,11 +50,27 @@ def _delete_obsolete_files(sender, instance, **kwargs):
             )
 
 
+def _delete_files_on_instance_delete(sender, instance, **kwargs):
+    for field in _file_fields(sender):
+        file_value = getattr(instance, field.name)
+        if not file_value:
+            continue
+        try:
+            file_value.delete(save=False)
+        except Exception as exc:
+            logger.warning(
+                "Failed to delete file %s on %s.%s during delete: %s",
+                file_value, sender.__name__, field.name, exc,
+            )
+
+
 def register():
-    """Wire up the pre_save handler for every model in the `home` app
-    that has at least one FileField/ImageField."""
+    """Wire up pre_save (replace/clear) and pre_delete (row removal)
+    handlers for every model in the `home` app that has at least one
+    FileField/ImageField."""
     from django.apps import apps
 
     for model in apps.get_app_config("home").get_models():
         if any(isinstance(f, FileField) for f in model._meta.get_fields()):
             pre_save.connect(_delete_obsolete_files, sender=model)
+            pre_delete.connect(_delete_files_on_instance_delete, sender=model)

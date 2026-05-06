@@ -42,34 +42,45 @@
         </div>
     </div>
 
-    {# ------------ Tabs (auto-populated, editable labels) ------------ #}
+    {# ------------ Tabs (manual list, add/delete) ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-bars mr-1"></i> Header Tabs</h3>
         </div>
         <div class="card-body">
-            <p class="text-muted mb-3">
-                Tabs auto-populate from registered management modules. Edit the label
-                shown in the public header below — leave a label blank to fall back to
-                the module's default name.
-            </p>
-            {% for module, field in form.tab_fields %}
-            <div class="form-group row align-items-center">
-                <label for="{{ field.id_for_label }}" class="col-sm-3 col-form-label">
-                    <i class="{{ module.icon }} mr-2 text-muted"></i>
-                    {{ field.label }}
-                    <small class="text-muted ml-1">({{ module.key }})</small>
-                </label>
-                <div class="col-sm-9">
-                    {{ field }}
-                    {% for error in field.errors %}
-                        <div class="invalid-feedback d-block">{{ error }}</div>
-                    {% endfor %}
+            {{ tab_formset.management_form }}
+            {% if tab_formset.non_form_errors %}
+                <div class="alert alert-danger">{{ tab_formset.non_form_errors|join:" " }}</div>
+            {% endif %}
+
+            <div id="header-tabs">
+                {% for tab_form in tab_formset %}
+                <div class="header-tab-row border rounded p-3 mb-2">
+                    {% for hidden in tab_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ tab_form.DELETE.html_name }}" value="" class="delete-flag">
+                    <div class="row">
+                        <div class="col-md-5">
+                            {% include "dashboard/home/_field.html" with field=tab_form.label %}
+                        </div>
+                        <div class="col-md-5">
+                            {% include "dashboard/home/_field.html" with field=tab_form.url %}
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="d-block">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
+                                    <i class="fas fa-trash mr-1"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <p class="text-muted mb-0">No management modules registered yet.</p>
-            {% endfor %}
+
+            <button type="button" id="add-header-tab" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Tab
+            </button>
         </div>
     </div>
 
@@ -81,4 +92,62 @@
         </div>
     </div>
 </form>
+
+{# Hidden empty-form template used by the add-tab script. #}
+<template id="header-tab-empty">
+    <div class="header-tab-row border rounded p-3 mb-2">
+        {% with tab_formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="row">
+                <div class="col-md-5">
+                    {% include "dashboard/home/_field.html" with field=empty.label %}
+                </div>
+                <div class="col-md-5">
+                    {% include "dashboard/home/_field.html" with field=empty.url %}
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const prefix = "{{ tab_formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('header-tabs');
+    const addBtn = document.getElementById('add-header-tab');
+    const tpl = document.getElementById('header-tab-empty');
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.header-tab-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+    });
+})();
+</script>
 {% endblock %}
