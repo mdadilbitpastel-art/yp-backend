@@ -234,8 +234,8 @@ class ApplySectionForm(BootstrapFormMixin, forms.ModelForm):
             "apply_section_bottom_button_url",
         ]
         labels = {
-            "apply_section_title": "Heading",
-            "apply_section_subtitle": "Sub-heading",
+            "apply_section_title": "Title",
+            "apply_section_subtitle": "Sub-title",
             "apply_section_bottom_button_text": "Bottom Button Text",
             "apply_section_bottom_button_url": "Bottom Button URL",
         }
