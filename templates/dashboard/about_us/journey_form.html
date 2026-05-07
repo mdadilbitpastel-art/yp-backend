@@ -1,11 +1,11 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}Testimonials Section{% endblock %}
-{% block page_title %}Testimonials Section{% endblock %}
+{% block title %}About Us — Journey Section{% endblock %}
+{% block page_title %}Journey Section{% endblock %}
 {% block breadcrumb %}
     <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
-    <li class="breadcrumb-item">Home Management</li>
-    <li class="breadcrumb-item active">Testimonials Section</li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:about_us_module' %}">About Management</a></li>
+    <li class="breadcrumb-item active">Journey Section</li>
 {% endblock %}
 
 {% block content %}
@@ -16,48 +16,40 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Heading ------------ #}
+    {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-quote-right mr-1"></i> Heading</h3>
+            <h3 class="card-title"><i class="fas fa-route mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.label %}
             {% include "dashboard/home/_field.html" with field=form.title %}
+            {% include "dashboard/home/_field.html" with field=form.subtitle %}
         </div>
     </div>
 
-    {# ------------ Background image ------------ #}
-    <div class="card card-success card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
-        </div>
-        <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.background_image %}
-        </div>
-    </div>
-
-    {# ------------ Dynamic users ------------ #}
+    {# ------------ Journey Cards (manual list, add/remove) ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user mr-1"></i> Users</h3>
+            <h3 class="card-title"><i class="fas fa-th-large mr-1"></i> Journey Cards</h3>
         </div>
         <div class="card-body">
-            {{ user_formset.management_form }}
-            {% if user_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ user_formset.non_form_errors|join:" " }}</div>
+            {{ card_formset.management_form }}
+            {% if card_formset.non_form_errors %}
+                <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="testimonial-users">
-                {% for user_form in user_formset %}
-                <div class="testimonial-user-row border rounded p-3 mb-3">
-                    {% for hidden in user_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ user_form.DELETE.html_name }}" value="" class="delete-flag">
+            <div id="journey-cards">
+                {% for card_form in card_formset %}
+                <div class="journey-card-row border rounded p-3 mb-3">
+                    {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="mb-0">
-                            <i class="fas fa-user mr-1 text-info"></i>
-                            User <span class="user-position">{{ forloop.counter }}</span>
-                            {% if user_form.instance.name %}
-                                <small class="text-muted ml-2">— {{ user_form.instance.name }}</small>
+                            <i class="fas fa-th-large mr-1 text-info"></i>
+                            Card <span class="card-position">{{ forloop.counter }}</span>
+                            {% if card_form.instance.title %}
+                                <small class="text-muted ml-2">— {{ card_form.instance.title }}</small>
                             {% endif %}
                         </h5>
                         <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
@@ -66,21 +58,21 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=user_form.name %}
+                            {% include "dashboard/home/_field.html" with field=card_form.image %}
                         </div>
                         <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=user_form.profile_image %}
+                            {% include "dashboard/home/_field.html" with field=card_form.title %}
                         </div>
                         <div class="col-md-12">
-                            {% include "dashboard/home/_field.html" with field=user_form.message %}
+                            {% include "dashboard/home/_field.html" with field=card_form.description %}
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-testimonial-user" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add User
+            <button type="button" id="add-journey-card" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Card
             </button>
         </div>
     </div>
@@ -88,22 +80,22 @@
     <div class="card">
         <div class="card-body text-right">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save mr-1"></i> Save Testimonials Section
+                <i class="fas fa-save mr-1"></i> Save Journey Section
             </button>
         </div>
     </div>
 </form>
 
-{# Hidden empty-form template used by the add-user script. #}
-<template id="testimonial-user-empty">
-    <div class="testimonial-user-row border rounded p-3 mb-3">
-        {% with user_formset.empty_form as empty %}
+{# Hidden empty-form template used by the add-card script. #}
+<template id="journey-card-empty">
+    <div class="journey-card-row border rounded p-3 mb-3">
+        {% with card_formset.empty_form as empty %}
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h5 class="mb-0">
-                    <i class="fas fa-user mr-1 text-info"></i>
-                    User <span class="user-position"></span>
+                    <i class="fas fa-th-large mr-1 text-info"></i>
+                    Card <span class="card-position"></span>
                 </h5>
                 <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
                     <i class="fas fa-times mr-1"></i> Remove
@@ -111,13 +103,13 @@
             </div>
             <div class="row">
                 <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
+                    {% include "dashboard/home/_field.html" with field=empty.image %}
                 </div>
                 <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.profile_image %}
+                    {% include "dashboard/home/_field.html" with field=empty.title %}
                 </div>
                 <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=empty.message %}
+                    {% include "dashboard/home/_field.html" with field=empty.description %}
                 </div>
             </div>
         {% endwith %}
@@ -128,19 +120,19 @@
 {% block extra_scripts %}
 <script>
 (function () {
-    const prefix = "{{ user_formset.prefix }}";
+    const prefix = "{{ card_formset.prefix }}";
     const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
-    const container = document.getElementById('testimonial-users');
-    const addBtn = document.getElementById('add-testimonial-user');
-    const tpl = document.getElementById('testimonial-user-empty');
+    const container = document.getElementById('journey-cards');
+    const addBtn = document.getElementById('add-journey-card');
+    const tpl = document.getElementById('journey-card-empty');
 
     function renumberPositions() {
-        const rows = container.querySelectorAll('.testimonial-user-row');
+        const rows = container.querySelectorAll('.journey-card-row');
         let visibleIndex = 0;
         rows.forEach(function (row) {
             if (row.style.display === 'none') return;
             visibleIndex += 1;
-            const label = row.querySelector('.user-position');
+            const label = row.querySelector('.card-position');
             if (label) label.textContent = visibleIndex;
         });
     }
@@ -159,7 +151,7 @@
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
         if (!btn) return;
-        const row = btn.closest('.testimonial-user-row');
+        const row = btn.closest('.journey-card-row');
         if (!row) return;
         const flag = row.querySelector('.delete-flag');
         if (flag) flag.value = 'on';

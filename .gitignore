@@ -31,3 +31,6 @@ media/*
 .vscode/
 *.swp
 .DS_Store
+
+#claude
+.claude/

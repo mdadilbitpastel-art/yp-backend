@@ -34,7 +34,21 @@
       "Bash(.venv/Scripts/python.exe manage.py migrate home)",
       "Bash(.venv/Scripts/python.exe -c \"import django, os; os.environ.setdefault\\('DJANGO_SETTINGS_MODULE','young_professionals.settings'\\); django.setup\\(\\); from home.models import FeatureSection, FeatureCard; s = FeatureSection.load\\(\\); print\\('section ok:', s.features_title\\); print\\('cards:', list\\(FeatureCard.objects.values\\('order','title','icon','button_url'\\)\\)\\)\")",
       "Bash(.venv/Scripts/python.exe -c \"import django, os; os.environ.setdefault\\('DJANGO_SETTINGS_MODULE','young_professionals.settings'\\); django.setup\\(\\); from home.models import NetworkSection, NetworkStat; s = NetworkSection.load\\(\\); print\\('section:', s.network_section_title\\); print\\('stats:', list\\(NetworkStat.objects.values\\('order','value','label'\\)\\)\\)\")",
-      "Bash(.venv/Scripts/python.exe manage.py makemigrations home --name network_video_storage)"
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations home --name network_video_storage)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us)",
+      "Bash(.venv/Scripts/python.exe manage.py migrate about_us)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations home --name testimonial_users_dynamic)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name mission_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name mission_side_image)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name founder_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name values_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name journey_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name pledge_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name team_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name community_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations home --name social_media_label_subtitle)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name social_media_section)",
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations --check --dry-run)"
     ]
   }
 }

@@ -1,10 +1,11 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}Header{% endblock %}
-{% block page_title %}Header Management{% endblock %}
+{% block title %}About Us — Social Media Section{% endblock %}
+{% block page_title %}Social Media Section{% endblock %}
 {% block breadcrumb %}
     <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
-    <li class="breadcrumb-item active">Header Management</li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:about_us_module' %}">About Management</a></li>
+    <li class="breadcrumb-item active">Social Media Section</li>
 {% endblock %}
 
 {% block content %}
@@ -15,55 +16,46 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Logo ------------ #}
-    <div class="card card-success card-outline">
+    {# ------------ Content ------------ #}
+    <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Logo</h3>
+            <h3 class="card-title"><i class="fas fa-share-alt mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.logo %}
+            {% include "dashboard/home/_field.html" with field=form.label %}
+            {% include "dashboard/home/_field.html" with field=form.heading %}
+            {% include "dashboard/home/_field.html" with field=form.subtitle %}
         </div>
     </div>
 
-    {# ------------ CTA button ------------ #}
-    <div class="card card-warning card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Header Button</h3>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=form.button_text %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=form.button_url %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# ------------ Tabs (manual list, add/delete) ------------ #}
+    {# ------------ Cards ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-bars mr-1"></i> Header Tabs</h3>
+            <h3 class="card-title"><i class="fas fa-th-large mr-1"></i> Social Cards</h3>
         </div>
         <div class="card-body">
-            {{ tab_formset.management_form }}
-            {% if tab_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ tab_formset.non_form_errors|join:" " }}</div>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-1"></i>
+                These social cards are shared with the
+                <a href="{% url 'dashboard:social_media_edit' %}">Home → Social Media section</a>.
+                Changes here will also appear there.
+            </div>
+            {{ card_formset.management_form }}
+            {% if card_formset.non_form_errors %}
+                <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="header-tabs">
-                {% for tab_form in tab_formset %}
-                <div class="header-tab-row border rounded p-3 mb-2">
-                    {% for hidden in tab_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ tab_form.DELETE.html_name }}" value="" class="delete-flag">
+            <div id="social-cards">
+                {% for card_form in card_formset %}
+                <div class="social-card-row border rounded p-3 mb-2">
+                    {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
                     <div class="row">
                         <div class="col-md-5">
-                            {% include "dashboard/home/_field.html" with field=tab_form.label %}
+                            {% include "dashboard/home/_field.html" with field=card_form.name %}
                         </div>
                         <div class="col-md-5">
-                            {% include "dashboard/home/_field.html" with field=tab_form.url %}
+                            {% include "dashboard/home/_field.html" with field=card_form.icon %}
                         </div>
                         <div class="col-md-2">
                             <div class="form-group">
@@ -78,8 +70,8 @@
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-header-tab" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Tab
+            <button type="button" id="add-social-card" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Card
             </button>
         </div>
     </div>
@@ -87,24 +79,24 @@
     <div class="card">
         <div class="card-body text-right">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save mr-1"></i> Save Header
+                <i class="fas fa-save mr-1"></i> Save Social Media Section
             </button>
         </div>
     </div>
 </form>
 
-{# Hidden empty-form template used by the add-tab script. #}
-<template id="header-tab-empty">
-    <div class="header-tab-row border rounded p-3 mb-2">
-        {% with tab_formset.empty_form as empty %}
+{# Hidden empty-form template used by the add-card script. #}
+<template id="social-card-empty">
+    <div class="social-card-row border rounded p-3 mb-2">
+        {% with card_formset.empty_form as empty %}
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
             <div class="row">
                 <div class="col-md-5">
-                    {% include "dashboard/home/_field.html" with field=empty.label %}
+                    {% include "dashboard/home/_field.html" with field=empty.name %}
                 </div>
                 <div class="col-md-5">
-                    {% include "dashboard/home/_field.html" with field=empty.url %}
+                    {% include "dashboard/home/_field.html" with field=empty.icon %}
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
@@ -123,11 +115,11 @@
 {% block extra_scripts %}
 <script>
 (function () {
-    const prefix = "{{ tab_formset.prefix }}";
+    const prefix = "{{ card_formset.prefix }}";
     const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
-    const container = document.getElementById('header-tabs');
-    const addBtn = document.getElementById('add-header-tab');
-    const tpl = document.getElementById('header-tab-empty');
+    const container = document.getElementById('social-cards');
+    const addBtn = document.getElementById('add-social-card');
+    const tpl = document.getElementById('social-card-empty');
 
     addBtn.addEventListener('click', function () {
         const index = parseInt(totalInput.value, 10);
@@ -142,7 +134,7 @@
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
         if (!btn) return;
-        const row = btn.closest('.header-tab-row');
+        const row = btn.closest('.social-card-row');
         if (!row) return;
         const flag = row.querySelector('.delete-flag');
         if (flag) flag.value = 'on';

@@ -18,7 +18,6 @@ from .validators import (
 )
 
 
-TESTIMONIAL_USER_COUNT = 3
 APP_BUTTON_COUNT = 3
 
 
@@ -91,9 +90,13 @@ class HeaderTab(models.Model):
 
 
 class SocialMediaSection(SingletonModel):
-    """Social Media homepage section — heading plus a dynamic list of cards."""
+    """Social Media homepage section — label + heading + subtitle plus a
+    dynamic list of cards. Cards (`SocialMediaCard` rows) are shared across
+    the home page and the About Us page."""
 
+    label = models.CharField(max_length=120, blank=True)
     heading = models.CharField(max_length=255, blank=True)
+    subtitle = models.CharField(max_length=255, blank=True)
 
     class Meta:
         verbose_name = "Social Media Section"
@@ -128,7 +131,8 @@ class SocialMediaCard(models.Model):
 
 
 class TestimonialsSection(SingletonModel):
-    """Testimonials homepage section — title, background image + 3 fixed users."""
+    """Testimonials homepage section — title, background image + a dynamic
+    list of users managed via the related `TestimonialUser` model."""
 
     title = models.CharField(max_length=255, blank=True)
     background_image = models.ImageField(
@@ -138,33 +142,6 @@ class TestimonialsSection(SingletonModel):
         null=True,
     )
 
-    testimonial_1_name = models.CharField(max_length=120, blank=True)
-    testimonial_1_profile_image = models.ImageField(
-        upload_to="home/testimonials/profiles/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    testimonial_1_message = models.TextField(blank=True)
-
-    testimonial_2_name = models.CharField(max_length=120, blank=True)
-    testimonial_2_profile_image = models.ImageField(
-        upload_to="home/testimonials/profiles/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    testimonial_2_message = models.TextField(blank=True)
-
-    testimonial_3_name = models.CharField(max_length=120, blank=True)
-    testimonial_3_profile_image = models.ImageField(
-        upload_to="home/testimonials/profiles/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    testimonial_3_message = models.TextField(blank=True)
-
     class Meta:
         verbose_name = "Testimonials Section"
         verbose_name_plural = "Testimonials Section"
@@ -173,18 +150,40 @@ class TestimonialsSection(SingletonModel):
         return self.title or "Testimonials Section"
 
     def testimonials(self) -> list[dict]:
-        users = []
-        for i in range(1, TESTIMONIAL_USER_COUNT + 1):
-            profile = getattr(self, f"testimonial_{i}_profile_image")
-            users.append(
-                {
-                    "position": i,
-                    "name": getattr(self, f"testimonial_{i}_name"),
-                    "profile_image": profile if profile else None,
-                    "message": getattr(self, f"testimonial_{i}_message"),
-                }
-            )
-        return users
+        return [
+            {
+                "position": index,
+                "name": user.name,
+                "profile_image": user.profile_image if user.profile_image else None,
+                "message": user.message,
+            }
+            for index, user in enumerate(self.users.all(), start=1)
+        ]
+
+
+class TestimonialUser(models.Model):
+    """A single testimonial — name, profile image, and message."""
+
+    section = models.ForeignKey(
+        TestimonialsSection,
+        on_delete=models.CASCADE,
+        related_name="users",
+    )
+    order = models.PositiveIntegerField(default=0)
+    name = models.CharField(max_length=120, blank=True)
+    profile_image = models.ImageField(
+        upload_to="home/testimonials/profiles/",
+        validators=[validate_image_size, validate_image_extension],
+        blank=True,
+        null=True,
+    )
+    message = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self) -> str:
+        return self.name or f"Testimonial {self.pk}"
 
 
 class AppSection(SingletonModel):
@@ -446,6 +445,7 @@ class NetworkStat(models.Model):
 class TalentPoolSection(SingletonModel):
     """Talent Pool section."""
 
+    talent_pool_section_label = models.CharField(max_length=120, blank=True)
     talent_pool_section_title = models.CharField(max_length=255, blank=True)
     talent_pool_section_subtitle = models.CharField(max_length=255, blank=True)
     talent_pool_section_description = models.TextField(blank=True)

@@ -102,6 +102,7 @@ class TalentPoolSectionSerializer(serializers.Serializer):
     def to_representation(self, instance):
         request = self.context.get("request")
         return {
+            "label": instance.talent_pool_section_label,
             "title": instance.talent_pool_section_title,
             "subtitle": instance.talent_pool_section_subtitle,
             "description": instance.talent_pool_section_description,

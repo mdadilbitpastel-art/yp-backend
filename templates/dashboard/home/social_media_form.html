@@ -16,13 +16,15 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Heading ------------ #}
+    {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-share-alt mr-1"></i> Heading</h3>
+            <h3 class="card-title"><i class="fas fa-share-alt mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.label %}
             {% include "dashboard/home/_field.html" with field=form.heading %}
+            {% include "dashboard/home/_field.html" with field=form.subtitle %}
         </div>
     </div>
 
@@ -32,6 +34,12 @@
             <h3 class="card-title"><i class="fas fa-th-large mr-1"></i> Social Cards</h3>
         </div>
         <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-1"></i>
+                These social cards are shared with the
+                <a href="{% url 'dashboard:about_us_social_media_edit' %}">About Us → Social Media section</a>.
+                Changes here will also appear there.
+            </div>
             {{ card_formset.management_form }}
             {% if card_formset.non_form_errors %}
                 <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
@@ -93,8 +101,8 @@
                 <div class="col-md-2">
                     <div class="form-group">
                         <label class="d-block">&nbsp;</label>
-                        <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
+                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
+                            <i class="fas fa-times mr-1"></i> Remove
                         </button>
                     </div>
                 </div>

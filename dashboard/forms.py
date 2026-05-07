@@ -3,9 +3,23 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 
+from about_us.models import (
+    AboutUsCommunityCard,
+    AboutUsCommunitySection,
+    AboutUsFounderSection,
+    AboutUsHeroSection,
+    AboutUsJourneyCard,
+    AboutUsJourneySection,
+    AboutUsMissionSection,
+    AboutUsPledgeSection,
+    AboutUsSocialMediaSection,
+    AboutUsTeamMember,
+    AboutUsTeamSection,
+    AboutUsValueCard,
+    AboutUsValuesSection,
+)
 from home.models import (
     APP_BUTTON_COUNT,
-    TESTIMONIAL_USER_COUNT,
     AboutSection,
     AppSection,
     ApplyCompany,
@@ -23,6 +37,7 @@ from home.models import (
     SocialMediaSection,
     TalentPoolSection,
     TestimonialsSection,
+    TestimonialUser,
 )
 
 
@@ -236,8 +251,8 @@ class ApplySectionForm(BootstrapFormMixin, forms.ModelForm):
         labels = {
             "apply_section_title": "Title",
             "apply_section_subtitle": "Sub-title",
-            "apply_section_bottom_button_text": "Bottom Button Text",
-            "apply_section_bottom_button_url": "Bottom Button URL",
+            "apply_section_bottom_button_text": "Button Text",
+            "apply_section_bottom_button_url": "Button URL",
         }
 
 
@@ -284,6 +299,7 @@ class TalentPoolSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = TalentPoolSection
         fields = [
+            "talent_pool_section_label",
             "talent_pool_section_title",
             "talent_pool_section_subtitle",
             "talent_pool_section_description",
@@ -298,6 +314,7 @@ class TalentPoolSectionForm(BootstrapFormMixin, forms.ModelForm):
             "talent_pool_section_image": CleanFileInput(),
         }
         labels = {
+            "talent_pool_section_label": "Label",
             "talent_pool_section_title": "Title",
             "talent_pool_section_subtitle": "Subtitle",
             "talent_pool_section_description": "Description",
@@ -310,12 +327,17 @@ class TalentPoolSectionForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class SocialMediaSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Social Media section — just the heading. Cards live on the inline formset."""
+    """Social Media section — label, heading/title, sub-title. Cards live on
+    the inline formset and are shared with the About Us page."""
 
     class Meta:
         model = SocialMediaSection
-        fields = ["heading"]
-        labels = {"heading": "Title"}
+        fields = ["label", "heading", "subtitle"]
+        labels = {
+            "label": "Label",
+            "heading": "Title",
+            "subtitle": "Sub-title",
+        }
 
 
 class SocialMediaCardForm(BootstrapFormMixin, forms.ModelForm):
@@ -335,53 +357,39 @@ SocialMediaCardFormSet = forms.inlineformset_factory(
 )
 
 
-def _testimonial_user_field_names() -> list[str]:
-    """Flat list of the 9 per-user fields, in user-then-field order."""
-    suffixes = ("name", "profile_image", "message")
-    return [
-        f"testimonial_{i}_{suffix}"
-        for i in range(1, TESTIMONIAL_USER_COUNT + 1)
-        for suffix in suffixes
-    ]
-
-
 class TestimonialsSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Testimonials section editor — background image + 3 fixed users."""
+    """Testimonials section editor — title + background image. Users live on
+    the inline `TestimonialUserFormSet`."""
 
     class Meta:
         model = TestimonialsSection
-        fields = [
-            "title",
-            "background_image",
-            *_testimonial_user_field_names(),
-        ]
+        fields = ["title", "background_image"]
+        widgets = {"background_image": CleanFileInput()}
+        labels = {"title": "Title", "background_image": "Background Image"}
+
+
+class TestimonialUserForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = TestimonialUser
+        fields = ["name", "profile_image", "message"]
         widgets = {
-            "background_image": CleanFileInput(),
-            **{
-                f"testimonial_{i}_profile_image": CleanFileInput()
-                for i in range(1, TESTIMONIAL_USER_COUNT + 1)
-            },
-            **{
-                f"testimonial_{i}_message": forms.Textarea(attrs={"rows": 3})
-                for i in range(1, TESTIMONIAL_USER_COUNT + 1)
-            },
+            "profile_image": CleanFileInput(),
+            "message": forms.Textarea(attrs={"rows": 3}),
         }
         labels = {
-            "title": "Title",
-            "background_image": "Background Image",
-            **{f"testimonial_{i}_name": "Name" for i in range(1, TESTIMONIAL_USER_COUNT + 1)},
-            **{f"testimonial_{i}_profile_image": "Profile Image" for i in range(1, TESTIMONIAL_USER_COUNT + 1)},
-            **{f"testimonial_{i}_message": "Message" for i in range(1, TESTIMONIAL_USER_COUNT + 1)},
+            "name": "Name",
+            "profile_image": "Profile Image",
+            "message": "Message",
         }
 
-    def user_groups(self):
-        """Yield `(position, fields_dict)` tuples so the template can loop users."""
-        for i in range(1, TESTIMONIAL_USER_COUNT + 1):
-            yield i, {
-                "name": self[f"testimonial_{i}_name"],
-                "profile_image": self[f"testimonial_{i}_profile_image"],
-                "message": self[f"testimonial_{i}_message"],
-            }
+
+TestimonialUserFormSet = forms.inlineformset_factory(
+    TestimonialsSection,
+    TestimonialUser,
+    form=TestimonialUserForm,
+    extra=0,
+    can_delete=True,
+)
 
 
 def _app_button_field_names() -> list[str]:
@@ -424,6 +432,271 @@ class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
                 "text": self[f"button_{i}_text"],
                 "url": self[f"button_{i}_url"],
             }
+
+
+class AboutUsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — top hero section editor."""
+
+    class Meta:
+        model = AboutUsHeroSection
+        fields = ["label", "title", "description", "background_image"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "background_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "background_image": "Background Image",
+        }
+
+
+class AboutUsSocialMediaSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us — social media section parent fields (label/heading/sub-title).
+    The About Us page has its own copy of these fields, independent of the
+    home page. Cards are shared via the home `SocialMediaCardFormSet`."""
+
+    class Meta:
+        model = AboutUsSocialMediaSection
+        fields = ["label", "heading", "subtitle"]
+        labels = {
+            "label": "Label",
+            "heading": "Title",
+            "subtitle": "Sub-title",
+        }
+
+
+class AboutUsCommunitySectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — community section editor. Cards live on the inline
+    `AboutUsCommunityCardFormSet`."""
+
+    class Meta:
+        model = AboutUsCommunitySection
+        fields = ["label", "title", "subtitle"]
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "subtitle": "Sub-title",
+        }
+
+
+class AboutUsCommunityCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = AboutUsCommunityCard
+        fields = ["image", "name", "description", "button_text", "button_url"]
+        widgets = {
+            "image": CleanFileInput(),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "image": "Image",
+            "name": "Name",
+            "description": "Description",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+        }
+
+
+AboutUsCommunityCardFormSet = forms.inlineformset_factory(
+    AboutUsCommunitySection,
+    AboutUsCommunityCard,
+    form=AboutUsCommunityCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class AboutUsTeamSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — team section editor. Members live on the inline
+    `AboutUsTeamMemberFormSet`."""
+
+    class Meta:
+        model = AboutUsTeamSection
+        fields = ["label", "title", "subtitle"]
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "subtitle": "Sub-title",
+        }
+
+
+class AboutUsTeamMemberForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = AboutUsTeamMember
+        fields = [
+            "profile_image",
+            "name",
+            "designation",
+            "email_icon",
+            "email_url",
+            "view_profile_text",
+            "view_profile_url",
+        ]
+        widgets = {
+            "profile_image": CleanFileInput(),
+            "email_icon": CleanFileInput(),
+        }
+        labels = {
+            "profile_image": "Profile Image",
+            "name": "Name",
+            "designation": "Designation",
+            "email_icon": "Email Icon",
+            "email_url": "Email URL",
+            "view_profile_text": "View Profile Link Text",
+            "view_profile_url": "View Profile URL",
+        }
+
+
+AboutUsTeamMemberFormSet = forms.inlineformset_factory(
+    AboutUsTeamSection,
+    AboutUsTeamMember,
+    form=AboutUsTeamMemberForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class AboutUsPledgeSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — pledge section editor."""
+
+    class Meta:
+        model = AboutUsPledgeSection
+        fields = ["label", "title", "description", "side_image"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "side_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "side_image": "Side Image",
+        }
+
+
+class AboutUsJourneySectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — journey section editor. Cards live on the inline
+    `AboutUsJourneyCardFormSet`."""
+
+    class Meta:
+        model = AboutUsJourneySection
+        fields = ["label", "title", "subtitle"]
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "subtitle": "Sub-title",
+        }
+
+
+class AboutUsJourneyCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = AboutUsJourneyCard
+        fields = ["image", "title", "description"]
+        widgets = {
+            "image": CleanFileInput(),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "image": "Image",
+            "title": "Title",
+            "description": "Description",
+        }
+
+
+AboutUsJourneyCardFormSet = forms.inlineformset_factory(
+    AboutUsJourneySection,
+    AboutUsJourneyCard,
+    form=AboutUsJourneyCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class AboutUsValuesSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — values section editor. Cards live on the inline
+    `AboutUsValueCardFormSet`."""
+
+    class Meta:
+        model = AboutUsValuesSection
+        fields = ["label", "title", "subtitle"]
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "subtitle": "Sub-title",
+        }
+
+
+class AboutUsValueCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = AboutUsValueCard
+        fields = ["icon", "label", "note"]
+        widgets = {
+            "icon": CleanFileInput(),
+            "note": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {"icon": "Icon", "label": "Label", "note": "Note"}
+
+
+AboutUsValueCardFormSet = forms.inlineformset_factory(
+    AboutUsValuesSection,
+    AboutUsValueCard,
+    form=AboutUsValueCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class AboutUsFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — founder section editor."""
+
+    class Meta:
+        model = AboutUsFounderSection
+        fields = [
+            "label",
+            "founder_name",
+            "designation",
+            "description",
+            "founder_message",
+            "button_text",
+            "button_url",
+            "side_image",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "founder_message": forms.Textarea(attrs={"rows": 4}),
+            "side_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "founder_name": "Founder Name",
+            "designation": "Designation",
+            "description": "Description",
+            "founder_message": "Founder Message",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+            "side_image": "Side Image",
+        }
+
+
+class AboutUsMissionSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """About Us page — mission section editor. Stats are shared with the home
+    Network section, so the dashboard view binds `NetworkStatFormSet` to
+    `NetworkSection.load()` (not to AboutUsMissionSection)."""
+
+    class Meta:
+        model = AboutUsMissionSection
+        fields = ["label", "title", "description", "side_image"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "side_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "side_image": "Side Image",
+        }
 
 
 class AboutSectionForm(BootstrapFormMixin, forms.ModelForm):

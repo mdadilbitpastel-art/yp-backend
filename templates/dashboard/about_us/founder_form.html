@@ -1,11 +1,11 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}App Section{% endblock %}
-{% block page_title %}App Section{% endblock %}
+{% block title %}About Us — Founder Section{% endblock %}
+{% block page_title %}Founder Section{% endblock %}
 {% block breadcrumb %}
     <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
-    <li class="breadcrumb-item">Home Management</li>
-    <li class="breadcrumb-item active">App Section</li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:about_us_module' %}">About Management</a></li>
+    <li class="breadcrumb-item active">Founder Section</li>
 {% endblock %}
 
 {% block content %}
@@ -16,39 +16,40 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Content ------------ #}
+    {# ------------ Founder Details ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-mobile-alt mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-user-tie mr-1"></i> Founder Details</h3>
         </div>
         <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.title %}
+            {% include "dashboard/home/_field.html" with field=form.label %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.founder_name %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.designation %}
+                </div>
+            </div>
             {% include "dashboard/home/_field.html" with field=form.description %}
+            {% include "dashboard/home/_field.html" with field=form.founder_message %}
         </div>
     </div>
 
-    {# ------------ Buttons ------------ #}
+    {# ------------ Call-to-action button ------------ #}
     <div class="card card-warning card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Call to Action Buttons</h3>
         </div>
         <div class="card-body">
-            {% for position, fields in form.button_groups %}
             <div class="row">
-                <div class="col-md-12">
-                    <h6 class="text-muted">
-                        {% if position == 3 %}Download Button{% else %}Button {{ position }}{% endif %}
-                    </h6>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.button_text %}
                 </div>
                 <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=fields.text %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=fields.url %}
+                    {% include "dashboard/home/_field.html" with field=form.button_url %}
                 </div>
             </div>
-            {% if not forloop.last %}<hr class="my-2">{% endif %}
-            {% endfor %}
         </div>
     </div>
 
@@ -58,21 +59,14 @@
             <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=form.side_image %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=form.barcode_image %}
-                </div>
-            </div>
+            {% include "dashboard/home/_field.html" with field=form.side_image %}
         </div>
     </div>
 
     <div class="card">
         <div class="card-body text-right">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save mr-1"></i> Save App Section
+                <i class="fas fa-save mr-1"></i> Save Founder Section
             </button>
         </div>
     </div>

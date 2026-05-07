@@ -13,6 +13,7 @@ urlpatterns = [
     path("", RedirectView.as_view(pattern_name="dashboard:index", permanent=False)),
     path("dashboard/", include("dashboard.urls", namespace="dashboard")),
     path("api/home/", include("home.urls")),
+    path("api/about-us/", include("about_us.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

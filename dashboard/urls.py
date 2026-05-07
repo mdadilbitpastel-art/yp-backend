@@ -31,4 +31,16 @@ urlpatterns = [
     path("home/social-media/", views.SocialMediaEditView.as_view(), name="social_media_edit"),
     path("home/testimonials/", views.TestimonialsEditView.as_view(), name="testimonials_edit"),
     path("home/app/", views.AppSectionEditView.as_view(), name="app_edit"),
+
+    # About Us Management
+    path("about-us/", views.AboutUsModuleView.as_view(), name="about_us_module"),
+    path("about-us/hero/", views.AboutUsHeroEditView.as_view(), name="about_us_hero_edit"),
+    path("about-us/mission/", views.AboutUsMissionEditView.as_view(), name="about_us_mission_edit"),
+    path("about-us/founder/", views.AboutUsFounderEditView.as_view(), name="about_us_founder_edit"),
+    path("about-us/values/", views.AboutUsValuesEditView.as_view(), name="about_us_values_edit"),
+    path("about-us/journey/", views.AboutUsJourneyEditView.as_view(), name="about_us_journey_edit"),
+    path("about-us/pledge/", views.AboutUsPledgeEditView.as_view(), name="about_us_pledge_edit"),
+    path("about-us/team/", views.AboutUsTeamEditView.as_view(), name="about_us_team_edit"),
+    path("about-us/community/", views.AboutUsCommunityEditView.as_view(), name="about_us_community_edit"),
+    path("about-us/social-media/", views.AboutUsSocialMediaEditView.as_view(), name="about_us_social_media_edit"),
 ]

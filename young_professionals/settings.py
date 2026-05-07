@@ -53,6 +53,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "home.apps.HomeConfig",
+    "about_us.apps.AboutUsConfig",
     "dashboard.apps.DashboardConfig",
 ]
 
