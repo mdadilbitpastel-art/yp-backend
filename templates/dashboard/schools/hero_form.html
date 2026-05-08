@@ -1,0 +1,80 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Schools — Hero Section{% endblock %}
+{% block page_title %}Hero Section{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:schools_module' %}">Schools Management</a></li>
+    <li class="breadcrumb-item active">Hero Section</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Content ------------ #}
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-bullhorn mr-1"></i> Content</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=form.label %}
+                </div>
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=form.title %}
+                </div>
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=form.description %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------ Buttons ------------ #}
+    <div class="card card-warning card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Call to Action Buttons</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.primary_button_text %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.primary_button_url %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.secondary_button_text %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.secondary_button_url %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ------------ Image ------------ #}
+    <div class="card card-success card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.side_image %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Hero Section
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

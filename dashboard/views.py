@@ -22,6 +22,20 @@ from about_us.models import (
     AboutUsTeamSection,
     AboutUsValuesSection,
 )
+from employers.models import (
+    EmployersEventsSection,
+    EmployersHeroSection,
+    EmployersMissionSection,
+    EmployersOfferSection,
+)
+from schools.models import (
+    SchoolsBenchmarkSection,
+    SchoolsEmployerSection,
+    SchoolsFaqSection,
+    SchoolsHelpSection,
+    SchoolsHeroSection,
+    SchoolsSubscribeSection,
+)
 from home.models import (
     AboutSection,
     AppSection,
@@ -62,8 +76,26 @@ from .forms import (
     HeaderSettingsForm,
     HeaderTabFormSet,
     HeroSectionForm,
+    EmployersEventImageFormSet,
+    EmployersEventsSectionForm,
+    EmployersHeroSectionForm,
+    EmployersMissionPointFormSet,
+    EmployersMissionSectionForm,
+    EmployersOfferCardFormSet,
+    EmployersOfferSectionForm,
     NetworkSectionForm,
     NetworkStatFormSet,
+    SchoolsBenchmarkCardFormSet,
+    SchoolsBenchmarkSectionForm,
+    SchoolsEmployerFormSet,
+    SchoolsEmployerSectionForm,
+    SchoolsFaqItemFormSet,
+    SchoolsFaqSectionForm,
+    SchoolsHelpCardFormSet,
+    SchoolsHelpSectionForm,
+    SchoolsHeroSectionForm,
+    SchoolsSubscribeFieldFormSet,
+    SchoolsSubscribeSectionForm,
     SocialMediaCardFormSet,
     SocialMediaSectionForm,
     TalentPoolSectionForm,
@@ -200,6 +232,364 @@ class AboutUsModuleView(LoginRequiredMixin, TemplateView):
         ctx["sections"] = stats["sections"]
         ctx["stats"] = stats
         return ctx
+
+
+# ---------------------------------------------------------------------------
+# Schools Management — module landing + per-section edit views
+# ---------------------------------------------------------------------------
+class SchoolsModuleView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/schools/index.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        module = get_module("schools")
+        stats = module_stats(module)
+        ctx["module"] = module
+        ctx["sections"] = stats["sections"]
+        ctx["stats"] = stats
+        return ctx
+
+
+class SchoolsHeroEditView(LoginRequiredMixin, UpdateView):
+    model = SchoolsHeroSection
+    form_class = SchoolsHeroSectionForm
+    template_name = "dashboard/schools/hero_form.html"
+    success_url = reverse_lazy("dashboard:schools_hero_edit")
+
+    def get_object(self, queryset=None):
+        return SchoolsHeroSection.load()
+
+    def form_valid(self, form):
+        messages.success(self.request, "Schools hero section saved successfully.")
+        return super().form_valid(form)
+
+
+class SchoolsHelpEditView(LoginRequiredMixin, UpdateView):
+    model = SchoolsHelpSection
+    form_class = SchoolsHelpSectionForm
+    template_name = "dashboard/schools/help_form.html"
+    success_url = reverse_lazy("dashboard:schools_help_edit")
+
+    def get_object(self, queryset=None):
+        return SchoolsHelpSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "card_formset",
+            SchoolsHelpCardFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        card_formset = SchoolsHelpCardFormSet(request.POST, instance=self.object)
+        if form.is_valid() and card_formset.is_valid():
+            form.save()
+            card_formset.save()
+            messages.success(request, "Schools help section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, card_formset=card_formset)
+        )
+
+
+class SchoolsEmployerEditView(LoginRequiredMixin, UpdateView):
+    model = SchoolsEmployerSection
+    form_class = SchoolsEmployerSectionForm
+    template_name = "dashboard/schools/employer_form.html"
+    success_url = reverse_lazy("dashboard:schools_employer_edit")
+
+    def get_object(self, queryset=None):
+        return SchoolsEmployerSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "employer_formset",
+            SchoolsEmployerFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        employer_formset = SchoolsEmployerFormSet(
+            request.POST, request.FILES, instance=self.object
+        )
+        if form.is_valid() and employer_formset.is_valid():
+            form.save()
+            employer_formset.save()
+            messages.success(request, "Schools employer section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, employer_formset=employer_formset)
+        )
+
+
+class SchoolsBenchmarkEditView(LoginRequiredMixin, UpdateView):
+    model = SchoolsBenchmarkSection
+    form_class = SchoolsBenchmarkSectionForm
+    template_name = "dashboard/schools/benchmark_form.html"
+    success_url = reverse_lazy("dashboard:schools_benchmark_edit")
+
+    def get_object(self, queryset=None):
+        return SchoolsBenchmarkSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "card_formset",
+            SchoolsBenchmarkCardFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        card_formset = SchoolsBenchmarkCardFormSet(request.POST, instance=self.object)
+        if form.is_valid() and card_formset.is_valid():
+            form.save()
+            card_formset.save()
+            messages.success(request, "Schools benchmark section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, card_formset=card_formset)
+        )
+
+
+class SchoolsSubscribeEditView(LoginRequiredMixin, UpdateView):
+    model = SchoolsSubscribeSection
+    form_class = SchoolsSubscribeSectionForm
+    template_name = "dashboard/schools/subscribe_form.html"
+    success_url = reverse_lazy("dashboard:schools_subscribe_edit")
+
+    def get_object(self, queryset=None):
+        return SchoolsSubscribeSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "field_formset",
+            SchoolsSubscribeFieldFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        field_formset = SchoolsSubscribeFieldFormSet(
+            request.POST, instance=self.object
+        )
+        if form.is_valid() and field_formset.is_valid():
+            form.save()
+            field_formset.save()
+            messages.success(request, "Schools subscribe section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, field_formset=field_formset)
+        )
+
+
+# ---------------------------------------------------------------------------
+# Employers Management — module landing + per-section edit views
+# ---------------------------------------------------------------------------
+class EmployersModuleView(LoginRequiredMixin, TemplateView):
+    template_name = "dashboard/employers/index.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        module = get_module("employers")
+        stats = module_stats(module)
+        ctx["module"] = module
+        ctx["sections"] = stats["sections"]
+        ctx["stats"] = stats
+        return ctx
+
+
+class EmployersHeroEditView(LoginRequiredMixin, UpdateView):
+    model = EmployersHeroSection
+    form_class = EmployersHeroSectionForm
+    template_name = "dashboard/employers/hero_form.html"
+    success_url = reverse_lazy("dashboard:employers_hero_edit")
+
+    def get_object(self, queryset=None):
+        return EmployersHeroSection.load()
+
+    def form_valid(self, form):
+        messages.success(self.request, "Employers hero section saved successfully.")
+        return super().form_valid(form)
+
+
+class EmployersMissionEditView(LoginRequiredMixin, UpdateView):
+    model = EmployersMissionSection
+    form_class = EmployersMissionSectionForm
+    template_name = "dashboard/employers/mission_form.html"
+    success_url = reverse_lazy("dashboard:employers_mission_edit")
+
+    def get_object(self, queryset=None):
+        return EmployersMissionSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "point_formset",
+            EmployersMissionPointFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        point_formset = EmployersMissionPointFormSet(
+            request.POST, instance=self.object
+        )
+        if form.is_valid() and point_formset.is_valid():
+            form.save()
+            point_formset.save()
+            messages.success(request, "Employers mission section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, point_formset=point_formset)
+        )
+
+
+class EmployersEventsEditView(LoginRequiredMixin, UpdateView):
+    model = EmployersEventsSection
+    form_class = EmployersEventsSectionForm
+    template_name = "dashboard/employers/events_form.html"
+    success_url = reverse_lazy("dashboard:employers_events_edit")
+
+    def get_object(self, queryset=None):
+        return EmployersEventsSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "image_formset",
+            EmployersEventImageFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        image_formset = EmployersEventImageFormSet(
+            request.POST, request.FILES, instance=self.object
+        )
+        if form.is_valid() and image_formset.is_valid():
+            form.save()
+            image_formset.save()
+            messages.success(request, "Employers events section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, image_formset=image_formset)
+        )
+
+
+class EmployersOfferEditView(LoginRequiredMixin, UpdateView):
+    model = EmployersOfferSection
+    form_class = EmployersOfferSectionForm
+    template_name = "dashboard/employers/offer_form.html"
+    success_url = reverse_lazy("dashboard:employers_offer_edit")
+
+    def get_object(self, queryset=None):
+        return EmployersOfferSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "card_formset",
+            EmployersOfferCardFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        card_formset = EmployersOfferCardFormSet(
+            request.POST, request.FILES, instance=self.object
+        )
+        if form.is_valid() and card_formset.is_valid():
+            form.save()
+            card_formset.save()
+            messages.success(request, "Employers offer section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, card_formset=card_formset)
+        )
+
+
+class EmployersNetworkEditView(LoginRequiredMixin, UpdateView):
+    """Employers — network section editor.
+
+    Shares the same `NetworkSection` singleton as Home → Network and the
+    same `NetworkStat` rows as About Us → Mission. Edits made here are
+    immediately reflected in those pages and vice versa.
+    """
+
+    model = NetworkSection
+    form_class = NetworkSectionForm
+    template_name = "dashboard/employers/network_form.html"
+    success_url = reverse_lazy("dashboard:employers_network_edit")
+
+    def get_object(self, queryset=None):
+        return NetworkSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "stat_formset",
+            NetworkStatFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        stat_formset = NetworkStatFormSet(
+            request.POST, request.FILES, instance=self.object
+        )
+        if form.is_valid() and stat_formset.is_valid():
+            form.save()
+            stat_formset.save()
+            messages.success(request, "Network section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, stat_formset=stat_formset)
+        )
+
+
+class SchoolsFaqEditView(LoginRequiredMixin, UpdateView):
+    model = SchoolsFaqSection
+    form_class = SchoolsFaqSectionForm
+    template_name = "dashboard/schools/faq_form.html"
+    success_url = reverse_lazy("dashboard:schools_faq_edit")
+
+    def get_object(self, queryset=None):
+        return SchoolsFaqSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault(
+            "item_formset",
+            SchoolsFaqItemFormSet(instance=self.object),
+        )
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.get_form()
+        item_formset = SchoolsFaqItemFormSet(request.POST, instance=self.object)
+        if form.is_valid() and item_formset.is_valid():
+            form.save()
+            item_formset.save()
+            messages.success(request, "Schools FAQ section saved successfully.")
+            return redirect(self.get_success_url())
+        return self.render_to_response(
+            self.get_context_data(form=form, item_formset=item_formset)
+        )
 
 
 class AboutUsHeroEditView(LoginRequiredMixin, UpdateView):

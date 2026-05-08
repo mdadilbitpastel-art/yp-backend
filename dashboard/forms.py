@@ -18,6 +18,28 @@ from about_us.models import (
     AboutUsValueCard,
     AboutUsValuesSection,
 )
+from employers.models import (
+    EmployersEventImage,
+    EmployersEventsSection,
+    EmployersHeroSection,
+    EmployersMissionPoint,
+    EmployersMissionSection,
+    EmployersOfferCard,
+    EmployersOfferSection,
+)
+from schools.models import (
+    SchoolsBenchmarkCard,
+    SchoolsBenchmarkSection,
+    SchoolsEmployer,
+    SchoolsEmployerSection,
+    SchoolsFaqItem,
+    SchoolsFaqSection,
+    SchoolsHelpCard,
+    SchoolsHelpSection,
+    SchoolsHeroSection,
+    SchoolsSubscribeField,
+    SchoolsSubscribeSection,
+)
 from home.models import (
     APP_BUTTON_COUNT,
     AboutSection,
@@ -697,6 +719,399 @@ class AboutUsMissionSectionForm(BootstrapFormMixin, forms.ModelForm):
             "description": "Description",
             "side_image": "Side Image",
         }
+
+
+class SchoolsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Schools page — top hero section editor. Label, title, description,
+    two CTA buttons, side image."""
+
+    class Meta:
+        model = SchoolsHeroSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "primary_button_text",
+            "primary_button_url",
+            "secondary_button_text",
+            "secondary_button_url",
+            "side_image",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "side_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "primary_button_text": "Primary Button Text",
+            "primary_button_url": "Primary Button URL",
+            "secondary_button_text": "Secondary Button Text",
+            "secondary_button_url": "Secondary Button URL",
+            "side_image": "Side Image",
+        }
+
+
+class SchoolsHelpSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Schools page — help section editor. Cards live on the inline
+    `SchoolsHelpCardFormSet`."""
+
+    class Meta:
+        model = SchoolsHelpSection
+        fields = ["label", "title"]
+        labels = {
+            "label": "Label",
+            "title": "Title",
+        }
+
+
+class SchoolsHelpCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = SchoolsHelpCard
+        fields = ["title", "description"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "title": "Title",
+            "description": "Description",
+        }
+
+
+SchoolsHelpCardFormSet = forms.inlineformset_factory(
+    SchoolsHelpSection,
+    SchoolsHelpCard,
+    form=SchoolsHelpCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class SchoolsEmployerSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Schools page — employer section editor. Logos live on the inline
+    `SchoolsEmployerFormSet`."""
+
+    class Meta:
+        model = SchoolsEmployerSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "button_text",
+            "button_url",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+        }
+
+
+class SchoolsEmployerForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = SchoolsEmployer
+        fields = ["name", "logo"]
+        widgets = {"logo": CleanFileInput()}
+        labels = {"name": "Name", "logo": "Logo"}
+
+
+SchoolsEmployerFormSet = forms.inlineformset_factory(
+    SchoolsEmployerSection,
+    SchoolsEmployer,
+    form=SchoolsEmployerForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class SchoolsBenchmarkSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Schools page — benchmark section editor. Cards live on the inline
+    `SchoolsBenchmarkCardFormSet`."""
+
+    class Meta:
+        model = SchoolsBenchmarkSection
+        fields = ["label", "title", "description"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+        }
+
+
+class SchoolsBenchmarkCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = SchoolsBenchmarkCard
+        fields = ["title", "description"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "title": "Title",
+            "description": "Description",
+        }
+
+
+SchoolsBenchmarkCardFormSet = forms.inlineformset_factory(
+    SchoolsBenchmarkSection,
+    SchoolsBenchmarkCard,
+    form=SchoolsBenchmarkCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class SchoolsSubscribeSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Schools page — subscribe section editor. Form fields live on the
+    inline `SchoolsSubscribeFieldFormSet`."""
+
+    class Meta:
+        model = SchoolsSubscribeSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "button_text",
+            "button_url",
+            "side_image",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "side_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "button_text": "Subscribe Button Text",
+            "button_url": "Subscribe Button URL",
+            "side_image": "Side Image",
+        }
+
+
+class SchoolsSubscribeFieldForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = SchoolsSubscribeField
+        fields = ["field_name", "placeholder"]
+        labels = {
+            "field_name": "Field Name",
+            "placeholder": "Placeholder",
+        }
+
+
+SchoolsSubscribeFieldFormSet = forms.inlineformset_factory(
+    SchoolsSubscribeSection,
+    SchoolsSubscribeField,
+    form=SchoolsSubscribeFieldForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class SchoolsFaqSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Schools page — FAQ section editor. Q&A items live on the inline
+    `SchoolsFaqItemFormSet`."""
+
+    class Meta:
+        model = SchoolsFaqSection
+        fields = ["label", "title", "description"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+        }
+
+
+class SchoolsFaqItemForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = SchoolsFaqItem
+        fields = ["question", "answer"]
+        widgets = {
+            "answer": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "question": "Question",
+            "answer": "Answer",
+        }
+
+
+SchoolsFaqItemFormSet = forms.inlineformset_factory(
+    SchoolsFaqSection,
+    SchoolsFaqItem,
+    form=SchoolsFaqItemForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class EmployersHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Employers page — top hero section editor. Label, title, description,
+    two CTA buttons, side image."""
+
+    class Meta:
+        model = EmployersHeroSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "primary_button_text",
+            "primary_button_url",
+            "secondary_button_text",
+            "secondary_button_url",
+            "side_image",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "side_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "primary_button_text": "Primary Button Text",
+            "primary_button_url": "Primary Button URL",
+            "secondary_button_text": "Secondary Button Text",
+            "secondary_button_url": "Secondary Button URL",
+            "side_image": "Side Image",
+        }
+
+
+class EmployersMissionSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Employers page — mission section editor. Points live on the inline
+    `EmployersMissionPointFormSet`."""
+
+    class Meta:
+        model = EmployersMissionSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "button_text",
+            "button_url",
+            "side_image",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "side_image": CleanFileInput(),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+            "side_image": "Side Image",
+        }
+
+
+class EmployersMissionPointForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = EmployersMissionPoint
+        fields = ["text"]
+        labels = {"text": "Point Text"}
+
+
+EmployersMissionPointFormSet = forms.inlineformset_factory(
+    EmployersMissionSection,
+    EmployersMissionPoint,
+    form=EmployersMissionPointForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class EmployersOfferSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Employers page — offer section editor. Cards live on the inline
+    `EmployersOfferCardFormSet`."""
+
+    class Meta:
+        model = EmployersOfferSection
+        fields = ["label", "title", "description"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+        }
+
+
+class EmployersOfferCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = EmployersOfferCard
+        fields = ["icon", "title", "description"]
+        widgets = {
+            "icon": CleanFileInput(),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "icon": "Icon",
+            "title": "Title",
+            "description": "Description",
+        }
+
+
+EmployersOfferCardFormSet = forms.inlineformset_factory(
+    EmployersOfferSection,
+    EmployersOfferCard,
+    form=EmployersOfferCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class EmployersEventsSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Employers page — events section editor. Images live on the inline
+    `EmployersEventImageFormSet`."""
+
+    class Meta:
+        model = EmployersEventsSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "button_text",
+            "button_url",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+        }
+
+
+class EmployersEventImageForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = EmployersEventImage
+        fields = ["image"]
+        widgets = {"image": CleanFileInput()}
+        labels = {"image": "Image"}
+
+
+EmployersEventImageFormSet = forms.inlineformset_factory(
+    EmployersEventsSection,
+    EmployersEventImage,
+    form=EmployersEventImageForm,
+    extra=0,
+    can_delete=True,
+)
 
 
 class AboutSectionForm(BootstrapFormMixin, forms.ModelForm):

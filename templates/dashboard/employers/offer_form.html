@@ -1,0 +1,165 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Employers — Offers Section{% endblock %}
+{% block page_title %}Offers Section{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:employers_module' %}">Employers Management</a></li>
+    <li class="breadcrumb-item active">Offers Section</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Content ------------ #}
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-gift mr-1"></i> Content</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.label %}
+            {% include "dashboard/home/_field.html" with field=form.title %}
+            {% include "dashboard/home/_field.html" with field=form.description %}
+        </div>
+    </div>
+
+    {# ------------ Offer Cards (manual list, add/remove) ------------ #}
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-th-large mr-1"></i> Offer Cards</h3>
+        </div>
+        <div class="card-body">
+            {{ card_formset.management_form }}
+            {% if card_formset.non_form_errors %}
+                <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
+            {% endif %}
+
+            <div id="offer-cards">
+                {% for card_form in card_formset %}
+                <div class="offer-card-row border rounded p-3 mb-3">
+                    {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">
+                            <i class="fas fa-th-large mr-1 text-info"></i>
+                            Card <span class="card-position">{{ forloop.counter }}</span>
+                            {% if card_form.instance.title %}
+                                <small class="text-muted ml-2">— {{ card_form.instance.title }}</small>
+                            {% endif %}
+                        </h5>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=card_form.icon %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=card_form.title %}
+                        </div>
+                        <div class="col-md-12">
+                            {% include "dashboard/home/_field.html" with field=card_form.description %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-offer-card" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Offer Card
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Offer Section
+            </button>
+        </div>
+    </div>
+</form>
+
+{# Hidden empty-form template used by the add-card script. #}
+<template id="offer-card-empty">
+    <div class="offer-card-row border rounded p-3 mb-3">
+        {% with card_formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">
+                    <i class="fas fa-th-large mr-1 text-info"></i>
+                    Card <span class="card-position"></span>
+                </h5>
+                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
+                    <i class="fas fa-times mr-1"></i> Remove
+                </button>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.icon %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.title %}
+                </div>
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=empty.description %}
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const prefix = "{{ card_formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('offer-cards');
+    const addBtn = document.getElementById('add-offer-card');
+    const tpl = document.getElementById('offer-card-empty');
+
+    function renumberPositions() {
+        const rows = container.querySelectorAll('.offer-card-row');
+        let visibleIndex = 0;
+        rows.forEach(function (row) {
+            if (row.style.display === 'none') return;
+            visibleIndex += 1;
+            const label = row.querySelector('.card-position');
+            if (label) label.textContent = visibleIndex;
+        });
+    }
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+        renumberPositions();
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.offer-card-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+        renumberPositions();
+    });
+
+    renumberPositions();
+})();
+</script>
+{% endblock %}

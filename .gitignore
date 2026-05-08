@@ -4,11 +4,26 @@ __pycache__/
 *.egg-info/
 .eggs/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# Coverage
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Build / packaging
+build/
+dist/
+*.egg
 
 # Virtualenv
 .venv/
 venv/
 env/
+ENV/
 
 # Django
 *.log
@@ -26,11 +41,32 @@ media/*
 .env.*
 !.env.example
 
-# IDE
+# Docker
+docker-compose.override.yml
+docker-compose.override.yaml
+.docker/
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Node (in case any frontend tooling lands here)
+node_modules/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+
+# IDE / editors
 .idea/
 .vscode/
+*.iml
 *.swp
-.DS_Store
+*.swo
+*~
 
-#claude
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code local settings
 .claude/

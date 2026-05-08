@@ -11,6 +11,45 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/plugins/fontawesome-free/css/all.min.css">
 
     <style>
+        /* Wider sidebar so long top-level titles (e.g. "Employers
+           Management") fit before the right-arrow caret without wrapping
+           or sliding under it. AdminLTE's default is 250px; we bump to
+           260px and shift the content panes to match. The collapsed-state
+           width (4.6rem) is left to AdminLTE's own rules. */
+        .main-sidebar,
+        .main-sidebar::before {
+            width: 260px;
+        }
+        body:not(.sidebar-collapse) .content-wrapper,
+        body:not(.sidebar-collapse) .main-header,
+        body:not(.sidebar-collapse) .main-footer {
+            margin-left: 260px;
+        }
+        @media (max-width: 991.98px) {
+            body:not(.sidebar-collapse) .content-wrapper,
+            body:not(.sidebar-collapse) .main-header,
+            body:not(.sidebar-collapse) .main-footer {
+                margin-left: 0;
+            }
+        }
+        /* Trim the link's horizontal padding and the icon's footprint so
+           the text starts further left and finishes well before the
+           right-arrow caret — no more overlap with long titles. */
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link {
+            padding-left: 0.6rem;
+            padding-right: 0.6rem;
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link > .nav-icon {
+            width: 1.4rem;
+            margin-right: 0.15rem;
+            font-size: 1.1rem;
+        }
+        /* Pull the right-arrow caret in slightly so a touch more of the
+           label is visible in the freed-up space. */
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link > p > .right {
+            right: 0.5rem;
+        }
+
         /* Visually nest the treeview submenu under its parent. */
         .main-sidebar .nav-sidebar .nav-treeview {
             margin-left: 1.25rem;

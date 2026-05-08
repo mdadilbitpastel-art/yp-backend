@@ -43,4 +43,21 @@ urlpatterns = [
     path("about-us/team/", views.AboutUsTeamEditView.as_view(), name="about_us_team_edit"),
     path("about-us/community/", views.AboutUsCommunityEditView.as_view(), name="about_us_community_edit"),
     path("about-us/social-media/", views.AboutUsSocialMediaEditView.as_view(), name="about_us_social_media_edit"),
+
+    # Schools Management
+    path("schools/", views.SchoolsModuleView.as_view(), name="schools_module"),
+    path("schools/hero/", views.SchoolsHeroEditView.as_view(), name="schools_hero_edit"),
+    path("schools/help/", views.SchoolsHelpEditView.as_view(), name="schools_help_edit"),
+    path("schools/employer/", views.SchoolsEmployerEditView.as_view(), name="schools_employer_edit"),
+    path("schools/benchmark/", views.SchoolsBenchmarkEditView.as_view(), name="schools_benchmark_edit"),
+    path("schools/subscribe/", views.SchoolsSubscribeEditView.as_view(), name="schools_subscribe_edit"),
+    path("schools/faq/", views.SchoolsFaqEditView.as_view(), name="schools_faq_edit"),
+
+    # Employers Management
+    path("employers/", views.EmployersModuleView.as_view(), name="employers_module"),
+    path("employers/hero/", views.EmployersHeroEditView.as_view(), name="employers_hero_edit"),
+    path("employers/network/", views.EmployersNetworkEditView.as_view(), name="employers_network_edit"),
+    path("employers/mission/", views.EmployersMissionEditView.as_view(), name="employers_mission_edit"),
+    path("employers/offer/", views.EmployersOfferEditView.as_view(), name="employers_offer_edit"),
+    path("employers/events/", views.EmployersEventsEditView.as_view(), name="employers_events_edit"),
 ]

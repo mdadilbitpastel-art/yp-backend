@@ -48,7 +48,13 @@
       "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name community_section)",
       "Bash(.venv/Scripts/python.exe manage.py makemigrations home --name social_media_label_subtitle)",
       "Bash(.venv/Scripts/python.exe manage.py makemigrations about_us --name social_media_section)",
-      "Bash(.venv/Scripts/python.exe manage.py makemigrations --check --dry-run)"
+      "Bash(.venv/Scripts/python.exe manage.py makemigrations --check --dry-run)",
+      "Bash(grep -E '^\\\\.claude/|^\\\\.vscode/|^\\\\.idea/|^staticfiles/|/__pycache__/|\\\\.pyc$|^\\\\.env$|^docker-compose\\\\.override\\\\.|node_modules/')",
+      "Bash(python manage.py check)",
+      "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 -c \"import django; print\\(django.__version__\\)\")",
+      "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 manage.py check)",
+      "Bash(DATABASE_URL=\"sqlite:///dummy.db\" PYTHONPATH=\".venv/Lib/site-packages\" python3 manage.py check)",
+      "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 -c \"from rest_framework.pagination import PageNumberPagination; print\\(PageNumberPagination\\)\")"
     ]
   }
 }
