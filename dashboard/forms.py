@@ -14,7 +14,6 @@ from about_us.models import (
     AboutUsMissionSection,
     AboutUsPledgeSection,
     AboutUsSocialMediaSection,
-    AboutUsTeamMember,
     AboutUsTeamSection,
     AboutUsValueCard,
     AboutUsValuesSection,
@@ -47,7 +46,23 @@ from events.models import (
     EventsUpcomingCategory,
     EventsUpcomingSection,
 )
-from data_management.models import Employer, SectionImage, SocialMediaIcon, Statistic
+from insight.models import (
+    InsightArticleCard,
+    InsightArticleSection,
+    InsightFounderCategory,
+    InsightFounderSection,
+    InsightHeroSection,
+    InsightLane,
+    InsightLaneSection,
+    InsightSubscribeSection,
+)
+from data_management.models import (
+    Employer,
+    SectionImage,
+    SocialMediaIcon,
+    Statistic,
+    TeamMember,
+)
 from schools.models import (
     SchoolsBenchmarkCard,
     SchoolsBenchmarkSection,
@@ -189,13 +204,18 @@ class HeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "primary_button_url",
             "secondary_button_text",
             "secondary_button_url",
+            "rating",
+            "bottom_note",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
+            "rating": forms.NumberInput(attrs={"step": "0.1", "min": "0", "max": "5"}),
         }
         labels = {
             "title": "Title",
             "description": "Description",
+            "rating": "Rating (out of 5)",
+            "bottom_note": "Bottom Note",
         }
 
 
@@ -376,9 +396,10 @@ SectionImageFormSet = generic_inlineformset_factory(
 )
 
 
-class ApplySectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Apply section editor — heading + sub-heading + bottom button. Company
-    cards live on the inline `ApplyCompanyFormSet`."""
+class ApplySectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """Apply section editor — heading + sub-heading + bottom button +
+    employer picker from Data Management. Company cards live on the
+    inline `ApplyCompanyFormSet`."""
 
     class Meta:
         model = ApplySection
@@ -387,6 +408,7 @@ class ApplySectionForm(BootstrapFormMixin, forms.ModelForm):
             "apply_section_subtitle",
             "apply_section_bottom_button_text",
             "apply_section_bottom_button_url",
+            "selected_employers",
         ]
         labels = {
             "apply_section_title": "Title",
@@ -394,6 +416,10 @@ class ApplySectionForm(BootstrapFormMixin, forms.ModelForm):
             "apply_section_bottom_button_text": "Button Text",
             "apply_section_bottom_button_url": "Button URL",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_employers_field()
 
 
 class ApplyCompanyForm(BootstrapFormMixin, forms.ModelForm):
@@ -419,8 +445,8 @@ class ApplyCompanyForm(BootstrapFormMixin, forms.ModelForm):
             "description": "Description",
             "button_text": "Button Text",
             "button_url": "Button URL",
-            "large_image": "Large Image",
-            "small_image": "Small Image",
+            "large_image": "Image",
+            "small_image": "Logo",
         }
 
 
@@ -568,8 +594,8 @@ def _app_button_field_names() -> list[str]:
 
 
 class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """App section editor — title, description, 3 buttons. Images (side +
-    barcode) live on `SectionImage`."""
+    """App section editor — title, description, 3 buttons, bottom note.
+    Images (side + barcode) live on `SectionImage`."""
 
     class Meta:
         model = AppSection
@@ -577,6 +603,7 @@ class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
             "title",
             "description",
             *_app_button_field_names(),
+            "bottom_note",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
@@ -584,6 +611,7 @@ class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
         labels = {
             "title": "Title",
             "description": "Description",
+            "bottom_note": "Note",
             **{f"button_{i}_text": "Text" for i in range(1, APP_BUTTON_COUNT + 1)},
             **{f"button_{i}_url": "URL" for i in range(1, APP_BUTTON_COUNT + 1)},
         }
@@ -671,51 +699,78 @@ AboutUsCommunityCardFormSet = forms.inlineformset_factory(
 )
 
 
-class AboutUsTeamSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """About Us page — team section editor. Members live on the inline
-    `AboutUsTeamMemberFormSet`."""
+class TeamMemberPickerMixin:
+    """Mixin for forms that expose a `selected_team_members` M2M field.
+
+    Renders the picker as a plain checkbox list showing each
+    `TeamMember`'s name only. Mirrors the Statistic / Employer /
+    SocialMedia picker pattern."""
+
+    def _configure_team_members_field(self):
+        field = self.fields.get("selected_team_members")
+        if not field:
+            return
+        field.widget = forms.CheckboxSelectMultiple(
+            attrs={"class": "team-member-picker"}
+        )
+        field.queryset = TeamMember.objects.all()
+        field.required = False
+        field.label = "Team Members"
+        field.help_text = (
+            "Tick the members to show in this section. Add or edit the "
+            "available members from Data Management → Team Members."
+        )
+
+
+class AboutUsTeamSectionForm(TeamMemberPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """About Us page — team section editor. Members are picked from
+    `data_management.TeamMember`."""
 
     class Meta:
         model = AboutUsTeamSection
-        fields = ["label", "title", "subtitle"]
+        fields = ["label", "title", "subtitle", "selected_team_members"]
         labels = {
             "label": "Label",
             "title": "Title",
             "subtitle": "Sub-title",
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_team_members_field()
 
-class AboutUsTeamMemberForm(BootstrapFormMixin, forms.ModelForm):
+
+class TeamMemberForm(BootstrapFormMixin, forms.ModelForm):
+    """Single `TeamMember` row — name, profile image, designation, email
+    URL, view-profile link. Used by Data Management → Team Members'
+    bulk modelformset."""
+
     class Meta:
-        model = AboutUsTeamMember
+        model = TeamMember
         fields = [
-            "profile_image",
             "name",
+            "profile_image",
             "designation",
-            "email_icon",
             "email_url",
             "view_profile_text",
             "view_profile_url",
         ]
         widgets = {
             "profile_image": CleanFileInput(),
-            "email_icon": CleanFileInput(),
         }
         labels = {
-            "profile_image": "Profile Image",
             "name": "Name",
+            "profile_image": "Profile Image",
             "designation": "Designation",
-            "email_icon": "Email Icon",
             "email_url": "Email URL",
             "view_profile_text": "View Profile Link Text",
             "view_profile_url": "View Profile URL",
         }
 
 
-AboutUsTeamMemberFormSet = forms.inlineformset_factory(
-    AboutUsTeamSection,
-    AboutUsTeamMember,
-    form=AboutUsTeamMemberForm,
+TeamMemberFormSet = forms.modelformset_factory(
+    TeamMember,
+    form=TeamMemberForm,
     extra=0,
     can_delete=True,
 )
@@ -1543,6 +1598,176 @@ class EventsSubmitSectionForm(BootstrapFormMixin, forms.ModelForm):
             "description": "Description",
             "button_text": "Button Text",
             "button_url": "Button URL",
+        }
+
+
+class InsightHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Insight page — top hero section editor. Label, title, description,
+    plus a search placeholder."""
+
+    class Meta:
+        model = InsightHeroSection
+        fields = ["label", "title", "description", "search_placeholder"]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "search_placeholder": "Search Placeholder",
+        }
+
+
+class InsightFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Insight page — founder section editor. Two labels, a date label,
+    title, description, a meta-data line, and a single CTA button.
+    Categories live on the inline `InsightFounderCategoryFormSet`; images
+    live on `SectionImage`."""
+
+    class Meta:
+        model = InsightFounderSection
+        fields = [
+            "label_1",
+            "label_2",
+            "date_label",
+            "title",
+            "description",
+            "meta_data",
+            "button_text",
+            "button_url",
+        ]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        labels = {
+            "label_1": "Label 1",
+            "label_2": "Label 2",
+            "date_label": "Date (e.g. 14 APR 2026)",
+            "title": "Title",
+            "description": "Description",
+            "meta_data": "Meta Data (e.g. By metro - 4 min read)",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+        }
+
+
+class InsightFounderCategoryForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = InsightFounderCategory
+        fields = ["name"]
+        labels = {"name": "Category Name"}
+
+
+InsightFounderCategoryFormSet = forms.inlineformset_factory(
+    InsightFounderSection,
+    InsightFounderCategory,
+    form=InsightFounderCategoryForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class InsightArticleSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Insight page — article section editor. Title plus the shared card
+    button label; cards live on the inline `InsightArticleCardFormSet`."""
+
+    class Meta:
+        model = InsightArticleSection
+        fields = ["title", "card_button_text"]
+        labels = {
+            "title": "Title",
+            "card_button_text": "Card Button Text (shared across all cards)",
+        }
+
+
+class InsightArticleCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = InsightArticleCard
+        fields = [
+            "label",
+            "image",
+            "date_label",
+            "title",
+            "description",
+            "tag",
+            "button_url",
+        ]
+        widgets = {
+            "image": CleanFileInput(),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "label": "Label",
+            "image": "Image",
+            "date_label": "Date (e.g. 15 APR 2026)",
+            "title": "Title",
+            "description": "Description",
+            "tag": "Tag",
+            "button_url": "Button URL",
+        }
+
+
+InsightArticleCardFormSet = forms.inlineformset_factory(
+    InsightArticleSection,
+    InsightArticleCard,
+    form=InsightArticleCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class InsightLaneSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Insight page — "Pick your lane" section editor. Label + title;
+    lanes live on the inline `InsightLaneFormSet`."""
+
+    class Meta:
+        model = InsightLaneSection
+        fields = ["label", "title"]
+        labels = {"label": "Label", "title": "Title"}
+
+
+class InsightLaneForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = InsightLane
+        fields = ["name", "article_count", "url"]
+        labels = {
+            "name": "Lane Name",
+            "article_count": "Article Count",
+            "url": "URL",
+        }
+
+
+InsightLaneFormSet = forms.inlineformset_factory(
+    InsightLaneSection,
+    InsightLane,
+    form=InsightLaneForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class InsightSubscribeSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Insight page — subscribe section editor. Label, title, description,
+    email input placeholder, subscribe button (text + URL), bottom note.
+    Images live on `SectionImage`."""
+
+    class Meta:
+        model = InsightSubscribeSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "email_placeholder",
+            "button_text",
+            "button_url",
+            "bottom_note",
+        ]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "email_placeholder": "Email Input Placeholder",
+            "button_text": "Subscribe Button Text",
+            "button_url": "Subscribe Button URL",
+            "bottom_note": "Bottom Note",
         }
 
 

@@ -1,11 +1,11 @@
 {% extends "dashboard/base.html" %}
 
-{% block title %}About Us — Team Section{% endblock %}
-{% block page_title %}Team Section{% endblock %}
+{% block title %}Insight — Hero Section{% endblock %}
+{% block page_title %}Hero Section{% endblock %}
 {% block breadcrumb %}
     <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
-    <li class="breadcrumb-item"><a href="{% url 'dashboard:about_us_module' %}">About Management</a></li>
-    <li class="breadcrumb-item active">Team Section</li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:insight_module' %}">Insight Management</a></li>
+    <li class="breadcrumb-item active">Hero Section</li>
 {% endblock %}
 
 {% block content %}
@@ -19,29 +19,29 @@
     {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user-friends mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-bullhorn mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.label %}
             {% include "dashboard/home/_field.html" with field=form.title %}
-            {% include "dashboard/home/_field.html" with field=form.subtitle %}
+            {% include "dashboard/home/_field.html" with field=form.description %}
         </div>
     </div>
 
-    {# ------------ Member Picker (from Data Management) ------------ #}
+    {# ------------ Search ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-users mr-1"></i> Members</h3>
+            <h3 class="card-title"><i class="fas fa-search mr-1"></i> Search</h3>
         </div>
         <div class="card-body">
-            {% include "dashboard/home/_team_member_picker.html" with field=form.selected_team_members %}
+            {% include "dashboard/home/_field.html" with field=form.search_placeholder %}
         </div>
     </div>
 
     <div class="card">
         <div class="card-body text-right">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save mr-1"></i> Save Team Section
+                <i class="fas fa-save mr-1"></i> Save Hero Section
             </button>
         </div>
     </div>

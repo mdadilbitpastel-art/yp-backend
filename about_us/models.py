@@ -204,12 +204,17 @@ class AboutUsCommunityCard(models.Model):
 
 
 class AboutUsTeamSection(SingletonModel):
-    """About Us — team section. Label, title, subtitle, plus a dynamic
-    list of member cards managed via the related `AboutUsTeamMember` model."""
+    """About Us — team section. Label, title, subtitle, plus the team
+    members chosen for this section from `data_management.TeamMember`."""
 
     label = models.CharField(max_length=120, blank=True)
     title = models.CharField(max_length=255, blank=True)
     subtitle = models.CharField(max_length=255, blank=True)
+    selected_team_members = models.ManyToManyField(
+        "data_management.TeamMember",
+        blank=True,
+        related_name="about_us_team_sections",
+    )
 
     class Meta:
         verbose_name = "About Us Team Section"
@@ -225,51 +230,12 @@ class AboutUsTeamSection(SingletonModel):
                 "profile_image": member.profile_image if member.profile_image else None,
                 "name": member.name,
                 "designation": member.designation,
-                "email_icon": member.email_icon if member.email_icon else None,
                 "email_url": member.email_url,
                 "view_profile_text": member.view_profile_text,
                 "view_profile_url": member.view_profile_url,
             }
-            for index, member in enumerate(self.members.all(), start=1)
+            for index, member in enumerate(self.selected_team_members.all(), start=1)
         ]
-
-
-class AboutUsTeamMember(models.Model):
-    """A single team member card."""
-
-    section = models.ForeignKey(
-        AboutUsTeamSection,
-        on_delete=models.CASCADE,
-        related_name="members",
-    )
-    order = models.PositiveIntegerField(default=0)
-    profile_image = models.ImageField(
-        upload_to="about_us/team/profiles/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    name = models.CharField(max_length=160, blank=True)
-    designation = models.CharField(max_length=160, blank=True)
-    email_icon = models.ImageField(
-        upload_to="about_us/team/icons/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    email_url = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text='Use a mailto: link, e.g. "mailto:name@example.com".',
-    )
-    view_profile_text = models.CharField(max_length=80, blank=True)
-    view_profile_url = models.URLField(blank=True)
-
-    class Meta:
-        ordering = ("order", "id")
-
-    def __str__(self) -> str:
-        return self.name or f"Team Member {self.pk}"
 
 
 class AboutUsPledgeSection(SingletonModel):

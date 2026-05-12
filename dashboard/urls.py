@@ -109,10 +109,39 @@ urlpatterns = [
         name="events_submit_edit",
     ),
 
+    # Insight Management
+    path("insight/", views.InsightModuleView.as_view(), name="insight_module"),
+    path("insight/hero/", views.InsightHeroEditView.as_view(), name="insight_hero_edit"),
+    path(
+        "insight/founder-section/",
+        views.InsightFounderSectionEditView.as_view(),
+        name="insight_founder_section_edit",
+    ),
+    path(
+        "insight/article-section/",
+        views.InsightArticleSectionEditView.as_view(),
+        name="insight_article_section_edit",
+    ),
+    path(
+        "insight/lane-section/",
+        views.InsightLaneSectionEditView.as_view(),
+        name="insight_lane_section_edit",
+    ),
+    path(
+        "insight/subscribe-section/",
+        views.InsightSubscribeSectionEditView.as_view(),
+        name="insight_subscribe_section_edit",
+    ),
+
     # Data Management — shared dynamic data (Statistics, Employers)
     path("data/", views.DataModuleView.as_view(), name="data_module"),
     path("data/statistics/", views.StatisticsEditView.as_view(), name="statistics_edit"),
     path("data/employers/", views.EmployersEditView.as_view(), name="employers_edit"),
+    path(
+        "data/team-members/",
+        views.TeamMembersEditView.as_view(),
+        name="team_members_edit",
+    ),
     path(
         "data/social-media/",
         views.SocialMediaIconsEditView.as_view(),

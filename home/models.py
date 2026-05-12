@@ -185,6 +185,7 @@ class AppSection(SingletonModel):
     button_3_text = models.CharField(max_length=80, blank=True)
     button_3_url = models.URLField(blank=True)
 
+    bottom_note = models.CharField(max_length=255, blank=True)
 
     class Meta:
         verbose_name = "App Section"
@@ -261,6 +262,15 @@ class HeroSection(SingletonModel):
     primary_button_url = models.URLField(blank=True)
     secondary_button_text = models.CharField(max_length=80, blank=True)
     secondary_button_url = models.URLField(blank=True)
+
+    rating = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        help_text="Rating out of 5 (e.g. 4.8).",
+    )
+    bottom_note = models.CharField(max_length=255, blank=True)
 
     class Meta:
         verbose_name = "Hero Section"
@@ -411,6 +421,11 @@ class ApplySection(SingletonModel):
     apply_section_subtitle = models.CharField(max_length=255, blank=True)
     apply_section_bottom_button_text = models.CharField(max_length=80, blank=True)
     apply_section_bottom_button_url = models.URLField(blank=True)
+    selected_employers = models.ManyToManyField(
+        "data_management.Employer",
+        blank=True,
+        related_name="apply_sections",
+    )
 
     class Meta:
         verbose_name = "Apply Section"

@@ -84,6 +84,39 @@ class SocialMediaIcon(models.Model):
         return self.name or f"Social Media Icon {self.pk}"
 
 
+class TeamMember(models.Model):
+    """A reusable team member entry — name, profile image, designation,
+    email URL, view-profile link. Ordered globally.
+
+    Consumer sections (`about_us.AboutUsTeamSection`) pick which members
+    to show via their own M2M `selected_team_members`."""
+
+    name = models.CharField(max_length=160)
+    profile_image = models.ImageField(
+        upload_to="data/team/",
+        validators=[validate_image_size, validate_image_extension],
+        blank=True,
+        null=True,
+    )
+    designation = models.CharField(max_length=160, blank=True)
+    email_url = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='Use a mailto: link, e.g. "mailto:name@example.com".',
+    )
+    view_profile_text = models.CharField(max_length=80, blank=True)
+    view_profile_url = models.URLField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ("order", "id")
+        verbose_name = "Team Member"
+        verbose_name_plural = "Team Members"
+
+    def __str__(self) -> str:
+        return self.name or f"Team Member {self.pk}"
+
+
 class SectionImage(models.Model):
     """An image attached to any singleton section via a generic FK.
 

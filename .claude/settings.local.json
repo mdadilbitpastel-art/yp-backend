@@ -56,7 +56,13 @@
       "Bash(DATABASE_URL=\"sqlite:///dummy.db\" PYTHONPATH=\".venv/Lib/site-packages\" python3 manage.py check)",
       "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 -c \"from rest_framework.pagination import PageNumberPagination; print\\(PageNumberPagination\\)\")",
       "Bash(python manage.py makemigrations partners)",
-      "Bash(grep -n \"class EventsUpcomingEditView\\\\|^# ---------------------------------------------------------------------------\\\\$\" \"/mnt/c/Users/Adil Alam/Desktop/yp/dashboard/views.py\")"
+      "Bash(grep -n \"class EventsUpcomingEditView\\\\|^# ---------------------------------------------------------------------------\\\\$\" \"/mnt/c/Users/Adil Alam/Desktop/yp/dashboard/views.py\")",
+      "Bash(python manage.py makemigrations insight)",
+      "Bash(/mnt/c/Users/Adil Alam/Desktop/yp/.venv/Scripts/python.exe *)",
+      "Bash(\"./.venv/Scripts/python.exe\" manage.py makemigrations insight)",
+      "Bash(\"./.venv/Scripts/python.exe\" manage.py migrate insight)",
+      "Bash(\"./.venv/Scripts/python.exe\" manage.py makemigrations home)",
+      "Bash(\"./.venv/Scripts/python.exe\" manage.py migrate home)"
     ]
   }
 }
