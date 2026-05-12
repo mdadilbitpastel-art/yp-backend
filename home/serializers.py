@@ -2,6 +2,8 @@
 
 from rest_framework import serializers
 
+from data_management.models import section_images
+
 from .models import (
     AboutSection,
     ApplySection,
@@ -18,21 +20,24 @@ def _absolute_url(image, request):
     return request.build_absolute_uri(image.url) if request else image.url
 
 
-class HeroSectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = HeroSection
-        fields = [
-            "id",
-            "title",
-            "description",
-            "highlight_text",
-            "primary_button_text",
-            "primary_button_url",
-            "secondary_button_text",
-            "secondary_button_url",
-            "background_image",
-            "hero_image",
-        ]
+def _images_payload(section, request):
+    return [_absolute_url(row["image"], request) for row in section_images(section)]
+
+
+class HeroSectionSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        request = self.context.get("request")
+        return {
+            "id": instance.pk,
+            "title": instance.title,
+            "description": instance.description,
+            "highlight_text": instance.highlight_text,
+            "primary_button_text": instance.primary_button_text,
+            "primary_button_url": instance.primary_button_url,
+            "secondary_button_text": instance.secondary_button_text,
+            "secondary_button_url": instance.secondary_button_url,
+            "images": _images_payload(instance, request),
+        }
 
 
 class FeatureCardSerializer(serializers.Serializer):
@@ -76,7 +81,7 @@ class AboutSectionSerializer(serializers.Serializer):
             "label": instance.about_section_label,
             "title": instance.about_section_title,
             "description": instance.about_section_description,
-            "image": _absolute_url(instance.about_section_image, request),
+            "images": _images_payload(instance, request),
             "primary_button": {
                 "text": instance.about_section_primary_button_text,
                 "url": instance.about_section_primary_button_url,
@@ -106,7 +111,7 @@ class TalentPoolSectionSerializer(serializers.Serializer):
             "title": instance.talent_pool_section_title,
             "subtitle": instance.talent_pool_section_subtitle,
             "description": instance.talent_pool_section_description,
-            "image": _absolute_url(instance.talent_pool_section_image, request),
+            "images": _images_payload(instance, request),
             "primary_button": {
                 "text": instance.talent_pool_section_primary_button_text,
                 "url": instance.talent_pool_section_primary_button_url,

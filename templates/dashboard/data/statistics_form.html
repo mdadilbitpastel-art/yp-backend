@@ -1,0 +1,129 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Data — Statistics{% endblock %}
+{% block page_title %}Statistics{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:data_module' %}">Data Management</a></li>
+    <li class="breadcrumb-item active">Statistics</li>
+{% endblock %}
+
+{% block content %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle mr-1"></i>
+    Statistics added here are picked up by Home → Network, About Us → Mission,
+    and Partners → Hero. Each of those sections selects which rows to show
+    independently.
+</div>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <div class="alert alert-danger">{{ formset.non_form_errors|join:" " }}</div>
+    {% endif %}
+
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-chart-bar mr-1"></i> Statistics</h3>
+        </div>
+        <div class="card-body">
+            <div id="statistic-rows">
+                {% for stat_form in formset %}
+                <div class="statistic-row border rounded p-3 mb-2">
+                    {% for hidden in stat_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ stat_form.DELETE.html_name }}" value="" class="delete-flag">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% include "dashboard/home/_field.html" with field=stat_form.value %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=stat_form.label %}
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="d-block">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
+                                    <i class="fas fa-trash mr-1"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-statistic" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Statistic
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Statistics
+            </button>
+        </div>
+    </div>
+</form>
+
+{# Empty-form template used by the add-statistic script. #}
+<template id="statistic-empty">
+    <div class="statistic-row border rounded p-3 mb-2">
+        {% with formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="row">
+                <div class="col-md-4">
+                    {% include "dashboard/home/_field.html" with field=empty.value %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.label %}
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
+                            <i class="fas fa-times mr-1"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const prefix = "{{ formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('statistic-rows');
+    const addBtn = document.getElementById('add-statistic');
+    const tpl = document.getElementById('statistic-empty');
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.statistic-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+    });
+})();
+</script>
+{% endblock %}

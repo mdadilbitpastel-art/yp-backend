@@ -1,0 +1,98 @@
+<div class="card card-success card-outline">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
+    </div>
+    <div class="card-body">
+        {{ images_formset.management_form }}
+        {% if images_formset.non_form_errors %}
+            <div class="alert alert-danger">{{ images_formset.non_form_errors|join:" " }}</div>
+        {% endif %}
+
+        <div id="section-image-rows">
+            {% for image_form in images_formset %}
+            <div class="section-image-row border rounded p-3 mb-2">
+                {% for hidden in image_form.hidden_fields %}{{ hidden }}{% endfor %}
+                <input type="hidden" name="{{ image_form.DELETE.html_name }}" value="" class="delete-flag">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 text-muted">
+                        Image <span class="section-image-position">{{ forloop.counter }}</span>
+                    </h6>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Remove">
+                        <i class="fas fa-trash mr-1"></i> Remove
+                    </button>
+                </div>
+                {% include "dashboard/home/_field.html" with field=image_form.image %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" id="add-section-image" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-plus mr-1"></i> Add Image
+        </button>
+    </div>
+</div>
+
+{# Empty-form template used by the add-image script. #}
+<template id="section-image-empty">
+    <div class="section-image-row border rounded p-3 mb-2">
+        {% with images_formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0 text-muted">
+                    Image <span class="section-image-position"></span>
+                </h6>
+                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
+                    <i class="fas fa-times mr-1"></i> Remove
+                </button>
+            </div>
+            {% include "dashboard/home/_field.html" with field=empty.image %}
+        {% endwith %}
+    </div>
+</template>
+
+<script>
+(function () {
+    const prefix = "{{ images_formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('section-image-rows');
+    const addBtn = document.getElementById('add-section-image');
+    const tpl = document.getElementById('section-image-empty');
+    if (!totalInput || !container || !addBtn || !tpl) return;
+
+    function renumber() {
+        const rows = container.querySelectorAll('.section-image-row');
+        let visible = 0;
+        rows.forEach(function (row) {
+            if (row.style.display === 'none') return;
+            visible += 1;
+            const label = row.querySelector('.section-image-position');
+            if (label) label.textContent = visible;
+        });
+    }
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+        renumber();
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.section-image-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+        renumber();
+    });
+
+    renumber();
+})();
+</script>

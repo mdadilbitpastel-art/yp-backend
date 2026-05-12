@@ -5,7 +5,7 @@ replaced with a new upload, the old file is left orphaned in remote
 storage (Cloudinary). The pre_save handler compares the persisted value
 with the incoming value and deletes the obsolete file. The pre_delete
 handler covers the related-row case — when a formset row (e.g. a
-FeatureCard or SocialMediaCard) is removed, its attached files are
+FeatureCard or TestimonialUser) is removed, its attached files are
 purged from storage too.
 """
 

@@ -11,11 +11,9 @@
 {% block content %}
 <div class="alert alert-info">
     <i class="fas fa-info-circle mr-1"></i>
-    This section is shared with the
-    <a href="{% url 'dashboard:network_edit' %}">Home → Network section</a>.
-    Statistics are also shared with the
-    <a href="{% url 'dashboard:about_us_mission_edit' %}">About Us → Mission section</a>.
-    Changes here will appear in all three places.
+    This section shares its singleton (heading, video and selected statistics) with the
+    <a href="{% url 'dashboard:network_edit' %}">Home → Network section</a> — edits in
+    either place affect both.
 </div>
 
 <form method="post" enctype="multipart/form-data" novalidate>
@@ -45,45 +43,12 @@
         </div>
     </div>
 
-    {# ------------ Stats (manual list, add/delete) ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-square mr-1"></i> Statistics</h3>
         </div>
         <div class="card-body">
-            {{ stat_formset.management_form }}
-            {% if stat_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ stat_formset.non_form_errors|join:" " }}</div>
-            {% endif %}
-
-            <div id="network-stats">
-                {% for stat_form in stat_formset %}
-                <div class="network-stat-row border rounded p-3 mb-2">
-                    {% for hidden in stat_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ stat_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="row">
-                        <div class="col-md-4">
-                            {% include "dashboard/home/_field.html" with field=stat_form.value %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=stat_form.label %}
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="d-block">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
-                                    <i class="fas fa-trash mr-1"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <button type="button" id="add-network-stat" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Stat
-            </button>
+            {% include "dashboard/home/_statistic_picker.html" with field=form.selected_statistics %}
         </div>
     </div>
 
@@ -95,62 +60,4 @@
         </div>
     </div>
 </form>
-
-{# Hidden empty-form template used by the add-stat script. #}
-<template id="network-stat-empty">
-    <div class="network-stat-row border rounded p-3 mb-2">
-        {% with stat_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="row">
-                <div class="col-md-4">
-                    {% include "dashboard/home/_field.html" with field=empty.value %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.label %}
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="d-block">&nbsp;</label>
-                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
-                            <i class="fas fa-times mr-1"></i> Remove
-                        </button>
-                    </div>
-                </div>
-            </div>
-        {% endwith %}
-    </div>
-</template>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-(function () {
-    const prefix = "{{ stat_formset.prefix }}";
-    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
-    const container = document.getElementById('network-stats');
-    const addBtn = document.getElementById('add-network-stat');
-    const tpl = document.getElementById('network-stat-empty');
-
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-    });
-
-    container.addEventListener('click', function (e) {
-        const btn = e.target.closest('.remove-row');
-        if (!btn) return;
-        const row = btn.closest('.network-stat-row');
-        if (!row) return;
-        const flag = row.querySelector('.delete-flag');
-        if (flag) flag.value = 'on';
-        row.style.display = 'none';
-    });
-})();
-</script>
 {% endblock %}

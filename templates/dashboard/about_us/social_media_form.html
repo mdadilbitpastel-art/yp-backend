@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data" novalidate>
+<form method="post" novalidate>
     {% csrf_token %}
 
     {% if form.non_field_errors %}
@@ -28,51 +28,12 @@
         </div>
     </div>
 
-    {# ------------ Cards ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-th-large mr-1"></i> Social Cards</h3>
+            <h3 class="card-title"><i class="fas fa-share-alt mr-1"></i> Social Media</h3>
         </div>
         <div class="card-body">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle mr-1"></i>
-                These social cards are shared with the
-                <a href="{% url 'dashboard:social_media_edit' %}">Home → Social Media section</a>.
-                Changes here will also appear there.
-            </div>
-            {{ card_formset.management_form }}
-            {% if card_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
-            {% endif %}
-
-            <div id="social-cards">
-                {% for card_form in card_formset %}
-                <div class="social-card-row border rounded p-3 mb-2">
-                    {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="row">
-                        <div class="col-md-5">
-                            {% include "dashboard/home/_field.html" with field=card_form.name %}
-                        </div>
-                        <div class="col-md-5">
-                            {% include "dashboard/home/_field.html" with field=card_form.icon %}
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="d-block">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
-                                    <i class="fas fa-trash mr-1"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <button type="button" id="add-social-card" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Card
-            </button>
+            {% include "dashboard/home/_social_media_picker.html" with field=form.selected_social_media %}
         </div>
     </div>
 
@@ -84,62 +45,4 @@
         </div>
     </div>
 </form>
-
-{# Hidden empty-form template used by the add-card script. #}
-<template id="social-card-empty">
-    <div class="social-card-row border rounded p-3 mb-2">
-        {% with card_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="row">
-                <div class="col-md-5">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-5">
-                    {% include "dashboard/home/_field.html" with field=empty.icon %}
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="d-block">&nbsp;</label>
-                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
-                            <i class="fas fa-times mr-1"></i> Remove
-                        </button>
-                    </div>
-                </div>
-            </div>
-        {% endwith %}
-    </div>
-</template>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-(function () {
-    const prefix = "{{ card_formset.prefix }}";
-    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
-    const container = document.getElementById('social-cards');
-    const addBtn = document.getElementById('add-social-card');
-    const tpl = document.getElementById('social-card-empty');
-
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-    });
-
-    container.addEventListener('click', function (e) {
-        const btn = e.target.closest('.remove-row');
-        if (!btn) return;
-        const row = btn.closest('.social-card-row');
-        if (!row) return;
-        const flag = row.querySelector('.delete-flag');
-        if (flag) flag.value = 'on';
-        row.style.display = 'none';
-    });
-})();
-</script>
 {% endblock %}

@@ -1,0 +1,141 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Partners — Partner Section{% endblock %}
+{% block page_title %}Partner Section{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:partners_module' %}">Partner Management</a></li>
+    <li class="breadcrumb-item active">Partner Section</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Search ------------ #}
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-search mr-1"></i> Search</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.search_placeholder %}
+        </div>
+    </div>
+
+    {# ------------ Categories ------------ #}
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-th-list mr-1"></i> Categories</h3>
+        </div>
+        <div class="card-body">
+            {{ category_formset.management_form }}
+            {% if category_formset.non_form_errors %}
+                <div class="alert alert-danger">{{ category_formset.non_form_errors|join:" " }}</div>
+            {% endif %}
+
+            <div id="category-rows">
+                {% for category_form in category_formset %}
+                <div class="category-row border rounded p-3 mb-2">
+                    {% for hidden in category_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ category_form.DELETE.html_name }}" value="" class="delete-flag">
+                    <div class="row align-items-end">
+                        <div class="col-md-10">
+                            {% include "dashboard/home/_field.html" with field=category_form.name %}
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="d-block">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
+                                    <i class="fas fa-trash mr-1"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-category" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Category
+            </button>
+        </div>
+    </div>
+
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-briefcase mr-1"></i> Employers</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.explore_button_text %}
+            {% include "dashboard/home/_employer_picker.html" with field=form.selected_employers %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Partner Section
+            </button>
+        </div>
+    </div>
+</form>
+
+{# Empty-form template used by the add-category script. #}
+<template id="category-empty">
+    <div class="category-row border rounded p-3 mb-2">
+        {% with category_formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="row align-items-end">
+                <div class="col-md-10">
+                    {% include "dashboard/home/_field.html" with field=empty.name %}
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
+                            <i class="fas fa-times mr-1"></i> Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const prefix = "{{ category_formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('category-rows');
+    const addBtn = document.getElementById('add-category');
+    const tpl = document.getElementById('category-empty');
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.category-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+    });
+})();
+</script>
+{% endblock %}

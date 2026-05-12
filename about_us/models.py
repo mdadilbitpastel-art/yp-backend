@@ -18,12 +18,6 @@ class AboutUsHeroSection(SingletonModel):
     label = models.CharField(max_length=120, blank=True)
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
-    background_image = models.ImageField(
-        upload_to="about_us/hero/backgrounds/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "About Us Hero Section"
@@ -34,19 +28,18 @@ class AboutUsHeroSection(SingletonModel):
 
 
 class AboutUsMissionSection(SingletonModel):
-    """About Us — mission section. Label, title, description, side image.
-    Statistics are shared with the home Network section — they live on
-    `home.NetworkStat` (FK to `home.NetworkSection`), so edits in either
-    editor reflect in the other."""
+    """About Us — mission section. Label, title, description, side image,
+    plus the statistics chosen for this section from
+    `data_management.Statistic`. The selection is independent of the home
+    Network section's selection."""
 
     label = models.CharField(max_length=120, blank=True)
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
-    side_image = models.ImageField(
-        upload_to="about_us/mission/",
-        validators=[validate_image_size, validate_image_extension],
+    selected_statistics = models.ManyToManyField(
+        "data_management.Statistic",
         blank=True,
-        null=True,
+        related_name="mission_sections",
     )
 
     class Meta:
@@ -57,9 +50,14 @@ class AboutUsMissionSection(SingletonModel):
         return self.title or "About Us Mission Section"
 
     def mission_stats(self) -> list[dict]:
-        from home.models import NetworkSection
-
-        return NetworkSection.load().network_stats()
+        return [
+            {
+                "position": index,
+                "value": stat.value,
+                "label": stat.label,
+            }
+            for index, stat in enumerate(self.selected_statistics.all(), start=1)
+        ]
 
 
 class AboutUsValuesSection(SingletonModel):
@@ -117,13 +115,18 @@ class AboutUsValueCard(models.Model):
 
 class AboutUsSocialMediaSection(SingletonModel):
     """About Us — social media section. Holds the About Us page's own
-    heading/label/sub-title (independent of the home page). Social cards
-    themselves live on `home.SocialMediaCard` and are shared between the
-    two pages — edits in either dashboard reflect in the other."""
+    heading/label/sub-title (independent of the home page), plus the
+    social-media icons chosen for this section from
+    `data_management.SocialMediaIcon`."""
 
     label = models.CharField(max_length=120, blank=True)
     heading = models.CharField(max_length=255, blank=True)
     subtitle = models.CharField(max_length=255, blank=True)
+    selected_social_media = models.ManyToManyField(
+        "data_management.SocialMediaIcon",
+        blank=True,
+        related_name="about_us_social_media_sections",
+    )
 
     class Meta:
         verbose_name = "About Us Social Media Section"
@@ -131,6 +134,16 @@ class AboutUsSocialMediaSection(SingletonModel):
 
     def __str__(self) -> str:
         return self.heading or "About Us Social Media Section"
+
+    def social_cards(self) -> list[dict]:
+        return [
+            {
+                "position": index,
+                "name": entry.name,
+                "icon": entry.icon if entry.icon else None,
+            }
+            for index, entry in enumerate(self.selected_social_media.all(), start=1)
+        ]
 
 
 class AboutUsCommunitySection(SingletonModel):
@@ -265,13 +278,6 @@ class AboutUsPledgeSection(SingletonModel):
     label = models.CharField(max_length=120, blank=True)
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
-    side_image = models.ImageField(
-        upload_to="about_us/pledge/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
     class Meta:
         verbose_name = "About Us Pledge Section"
         verbose_name_plural = "About Us Pledge Section"
@@ -345,13 +351,6 @@ class AboutUsFounderSection(SingletonModel):
 
     button_text = models.CharField(max_length=80, blank=True)
     button_url = models.URLField(blank=True)
-
-    side_image = models.ImageField(
-        upload_to="about_us/founder/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "About Us Founder Section"

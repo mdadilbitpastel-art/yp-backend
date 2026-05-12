@@ -29,14 +29,7 @@
     </div>
 
     {# ------------ Images ------------ #}
-    <div class="card card-success card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
-        </div>
-        <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.side_image %}
-        </div>
-    </div>
+    {% include "dashboard/home/_section_images.html" %}
 
     <div class="card">
         <div class="card-body text-right">

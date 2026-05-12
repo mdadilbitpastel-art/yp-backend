@@ -26,13 +26,6 @@ class SchoolsHeroSection(SingletonModel):
     secondary_button_text = models.CharField(max_length=80, blank=True)
     secondary_button_url = models.URLField(blank=True)
 
-    side_image = models.ImageField(
-        upload_to="schools/hero/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
     class Meta:
         verbose_name = "Schools Hero Section"
         verbose_name_plural = "Schools Hero Section"
@@ -88,14 +81,19 @@ class SchoolsHelpCard(models.Model):
 
 class SchoolsEmployerSection(SingletonModel):
     """Schools — employer section. Label, title, description, single CTA
-    button, plus a dynamic list of employer logos managed via the related
-    `SchoolsEmployer` model."""
+    button, plus the employers chosen for this section from
+    `data_management.Employer`."""
 
     label = models.CharField(max_length=120, blank=True)
     title = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     button_text = models.CharField(max_length=80, blank=True)
     button_url = models.URLField(blank=True)
+    selected_employers = models.ManyToManyField(
+        "data_management.Employer",
+        blank=True,
+        related_name="schools_employer_sections",
+    )
 
     class Meta:
         verbose_name = "Schools Employer Section"
@@ -111,32 +109,8 @@ class SchoolsEmployerSection(SingletonModel):
                 "name": employer.name,
                 "logo": employer.logo if employer.logo else None,
             }
-            for index, employer in enumerate(self.entries.all(), start=1)
+            for index, employer in enumerate(self.selected_employers.all(), start=1)
         ]
-
-
-class SchoolsEmployer(models.Model):
-    """A single employer entry — name + logo image."""
-
-    section = models.ForeignKey(
-        SchoolsEmployerSection,
-        on_delete=models.CASCADE,
-        related_name="entries",
-    )
-    order = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=160, blank=True)
-    logo = models.ImageField(
-        upload_to="schools/employers/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
-    class Meta:
-        ordering = ("order", "id")
-
-    def __str__(self) -> str:
-        return self.name or f"Employer {self.pk}"
 
 
 class SchoolsBenchmarkSection(SingletonModel):
@@ -196,13 +170,6 @@ class SchoolsSubscribeSection(SingletonModel):
 
     button_text = models.CharField(max_length=80, blank=True)
     button_url = models.URLField(blank=True)
-
-    side_image = models.ImageField(
-        upload_to="schools/subscribe/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "Schools Subscribe Section"

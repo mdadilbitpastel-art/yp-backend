@@ -56,6 +56,9 @@ LOCAL_APPS = [
     "about_us.apps.AboutUsConfig",
     "schools.apps.SchoolsConfig",
     "employers.apps.EmployersConfig",
+    "partners.apps.PartnersConfig",
+    "events.apps.EventsConfig",
+    "data_management.apps.DataManagementConfig",
     "dashboard.apps.DashboardConfig",
 ]
 

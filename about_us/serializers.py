@@ -2,6 +2,8 @@
 
 from rest_framework import serializers
 
+from data_management.models import section_images
+
 from .models import (
     AboutUsCommunitySection,
     AboutUsFounderSection,
@@ -20,16 +22,20 @@ def _absolute_url(image, request):
     return request.build_absolute_uri(image.url) if request else image.url
 
 
-class AboutUsHeroSectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AboutUsHeroSection
-        fields = [
-            "id",
-            "label",
-            "title",
-            "description",
-            "background_image",
-        ]
+def _images_payload(section, request):
+    return [_absolute_url(row["image"], request) for row in section_images(section)]
+
+
+class AboutUsHeroSectionSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        request = self.context.get("request")
+        return {
+            "id": instance.pk,
+            "label": instance.label,
+            "title": instance.title,
+            "description": instance.description,
+            "images": _images_payload(instance, request),
+        }
 
 
 class AboutUsMissionSectionSerializer(serializers.Serializer):
@@ -39,7 +45,7 @@ class AboutUsMissionSectionSerializer(serializers.Serializer):
             "label": instance.label,
             "title": instance.title,
             "description": instance.description,
-            "side_image": _absolute_url(instance.side_image, request),
+            "images": _images_payload(instance, request),
             "stats": instance.mission_stats(),
         }
 
@@ -143,7 +149,7 @@ class AboutUsPledgeSectionSerializer(serializers.Serializer):
             "label": instance.label,
             "title": instance.title,
             "description": instance.description,
-            "side_image": _absolute_url(instance.side_image, request),
+            "images": _images_payload(instance, request),
         }
 
 
@@ -182,7 +188,7 @@ class AboutUsFounderSectionSerializer(serializers.Serializer):
             "designation": instance.designation,
             "description": instance.description,
             "founder_message": instance.founder_message,
-            "side_image": _absolute_url(instance.side_image, request),
+            "images": _images_payload(instance, request),
             "button": {
                 "text": instance.button_text,
                 "url": instance.button_url,

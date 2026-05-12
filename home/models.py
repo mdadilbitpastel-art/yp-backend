@@ -90,13 +90,18 @@ class HeaderTab(models.Model):
 
 
 class SocialMediaSection(SingletonModel):
-    """Social Media homepage section — label + heading + subtitle plus a
-    dynamic list of cards. Cards (`SocialMediaCard` rows) are shared across
-    the home page and the About Us page."""
+    """Social Media homepage section — label + heading + subtitle plus
+    the social-media icons chosen for this section from
+    `data_management.SocialMediaIcon`."""
 
     label = models.CharField(max_length=120, blank=True)
     heading = models.CharField(max_length=255, blank=True)
     subtitle = models.CharField(max_length=255, blank=True)
+    selected_social_media = models.ManyToManyField(
+        "data_management.SocialMediaIcon",
+        blank=True,
+        related_name="home_social_media_sections",
+    )
 
     class Meta:
         verbose_name = "Social Media Section"
@@ -105,42 +110,23 @@ class SocialMediaSection(SingletonModel):
     def __str__(self) -> str:
         return self.heading or "Social Media Section"
 
-
-class SocialMediaCard(models.Model):
-    """A single social-media card — icon + name."""
-
-    section = models.ForeignKey(
-        SocialMediaSection,
-        on_delete=models.CASCADE,
-        related_name="cards",
-    )
-    order = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=120)
-    icon = models.ImageField(
-        upload_to="home/social_media/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
-    class Meta:
-        ordering = ("order", "id")
-
-    def __str__(self) -> str:
-        return self.name
+    def social_cards(self) -> list[dict]:
+        return [
+            {
+                "position": index,
+                "name": entry.name,
+                "icon": entry.icon if entry.icon else None,
+            }
+            for index, entry in enumerate(self.selected_social_media.all(), start=1)
+        ]
 
 
 class TestimonialsSection(SingletonModel):
-    """Testimonials homepage section — title, background image + a dynamic
-    list of users managed via the related `TestimonialUser` model."""
+    """Testimonials homepage section — title + a dynamic list of users
+    managed via the related `TestimonialUser` model. Background images
+    live on `data_management.SectionImage`."""
 
     title = models.CharField(max_length=255, blank=True)
-    background_image = models.ImageField(
-        upload_to="home/testimonials/backgrounds/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "Testimonials Section"
@@ -199,18 +185,6 @@ class AppSection(SingletonModel):
     button_3_text = models.CharField(max_length=80, blank=True)
     button_3_url = models.URLField(blank=True)
 
-    side_image = models.ImageField(
-        upload_to="home/app/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    barcode_image = models.ImageField(
-        upload_to="home/app/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "App Section"
@@ -288,19 +262,6 @@ class HeroSection(SingletonModel):
     secondary_button_text = models.CharField(max_length=80, blank=True)
     secondary_button_url = models.URLField(blank=True)
 
-    background_image = models.ImageField(
-        upload_to="home/hero/backgrounds/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-    hero_image = models.ImageField(
-        upload_to="home/hero/foreground/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
     class Meta:
         verbose_name = "Hero Section"
         verbose_name_plural = "Hero Section"
@@ -377,13 +338,6 @@ class AboutSection(SingletonModel):
     about_section_secondary_button_text = models.CharField(max_length=80, blank=True)
     about_section_secondary_button_url = models.URLField(blank=True)
 
-    about_section_image = models.ImageField(
-        upload_to="home/about/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
     class Meta:
         verbose_name = "About Section"
         verbose_name_plural = "About Section"
@@ -393,8 +347,8 @@ class AboutSection(SingletonModel):
 
 
 class NetworkSection(SingletonModel):
-    """Stats / Network section — heading, optional video, plus a manual list
-    of stats managed via the related `NetworkStat` model."""
+    """Stats / Network section — heading, optional video, plus the
+    statistics chosen for this section from `data_management.Statistic`."""
 
     network_section_title = models.CharField(max_length=255, blank=True)
     network_section_video = models.FileField(
@@ -403,6 +357,11 @@ class NetworkSection(SingletonModel):
         validators=[validate_video_size, validate_video_extension],
         blank=True,
         null=True,
+    )
+    selected_statistics = models.ManyToManyField(
+        "data_management.Statistic",
+        blank=True,
+        related_name="network_sections",
     )
 
     class Meta:
@@ -419,27 +378,8 @@ class NetworkSection(SingletonModel):
                 "value": stat.value,
                 "label": stat.label,
             }
-            for index, stat in enumerate(self.stats.all(), start=1)
+            for index, stat in enumerate(self.selected_statistics.all(), start=1)
         ]
-
-
-class NetworkStat(models.Model):
-    """A single stat shown in the Network section — value + label."""
-
-    section = models.ForeignKey(
-        NetworkSection,
-        on_delete=models.CASCADE,
-        related_name="stats",
-    )
-    order = models.PositiveIntegerField(default=0)
-    value = models.CharField(max_length=80, blank=True)
-    label = models.CharField(max_length=160, blank=True)
-
-    class Meta:
-        ordering = ("order", "id")
-
-    def __str__(self) -> str:
-        return f"{self.value} {self.label}".strip() or f"Network Stat {self.pk}"
 
 
 class TalentPoolSection(SingletonModel):
@@ -454,13 +394,6 @@ class TalentPoolSection(SingletonModel):
     talent_pool_section_primary_button_url = models.URLField(blank=True)
     talent_pool_section_secondary_button_text = models.CharField(max_length=80, blank=True)
     talent_pool_section_secondary_button_url = models.URLField(blank=True)
-
-    talent_pool_section_image = models.ImageField(
-        upload_to="home/talent_pool/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "Talent Pool Section"

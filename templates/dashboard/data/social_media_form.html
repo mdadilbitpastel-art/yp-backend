@@ -1,0 +1,149 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Data — Social Media{% endblock %}
+{% block page_title %}Social Media{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:data_module' %}">Data Management</a></li>
+    <li class="breadcrumb-item active">Social Media</li>
+{% endblock %}
+
+{% block content %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle mr-1"></i>
+    Social media icons added here are picked up by the Home → Social Media
+    and About Us → Social Media sections, which select which ones to show
+    independently.
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <div class="alert alert-danger">{{ formset.non_form_errors|join:" " }}</div>
+    {% endif %}
+
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-share-alt mr-1"></i> Social Media Icons</h3>
+        </div>
+        <div class="card-body">
+            <div id="icon-rows">
+                {% for icon_form in formset %}
+                <div class="icon-row border rounded p-3 mb-3">
+                    {% for hidden in icon_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <input type="hidden" name="{{ icon_form.DELETE.html_name }}" value="" class="delete-flag">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">
+                            <i class="fas fa-share-alt mr-1 text-info"></i>
+                            Icon <span class="icon-position">{{ forloop.counter }}</span>
+                            {% if icon_form.instance.name %}
+                                <small class="text-muted ml-2">— {{ icon_form.instance.name }}</small>
+                            {% endif %}
+                        </h5>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
+                            <i class="fas fa-trash mr-1"></i> Delete
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=icon_form.name %}
+                        </div>
+                        <div class="col-md-6">
+                            {% include "dashboard/home/_field.html" with field=icon_form.icon %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-icon" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-plus mr-1"></i> Add Icon
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Social Media Icons
+            </button>
+        </div>
+    </div>
+</form>
+
+{# Empty-form template used by the add-icon script. #}
+<template id="icon-empty">
+    <div class="icon-row border rounded p-3 mb-3">
+        {% with formset.empty_form as empty %}
+            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">
+                    <i class="fas fa-share-alt mr-1 text-info"></i>
+                    Icon <span class="icon-position"></span>
+                </h5>
+                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
+                    <i class="fas fa-times mr-1"></i> Remove
+                </button>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.name %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=empty.icon %}
+                </div>
+            </div>
+        {% endwith %}
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+    const prefix = "{{ formset.prefix }}";
+    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
+    const container = document.getElementById('icon-rows');
+    const addBtn = document.getElementById('add-icon');
+    const tpl = document.getElementById('icon-empty');
+
+    function renumberPositions() {
+        const rows = container.querySelectorAll('.icon-row');
+        let visibleIndex = 0;
+        rows.forEach(function (row) {
+            if (row.style.display === 'none') return;
+            visibleIndex += 1;
+            const label = row.querySelector('.icon-position');
+            if (label) label.textContent = visibleIndex;
+        });
+    }
+
+    addBtn.addEventListener('click', function () {
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const row = wrapper.firstElementChild;
+        container.appendChild(row);
+        totalInput.value = index + 1;
+        renumberPositions();
+    });
+
+    container.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        const row = btn.closest('.icon-row');
+        if (!row) return;
+        const flag = row.querySelector('.delete-flag');
+        if (flag) flag.value = 'on';
+        row.style.display = 'none';
+        renumberPositions();
+    });
+
+    renumberPositions();
+})();
+</script>
+{% endblock %}

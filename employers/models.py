@@ -26,13 +26,6 @@ class EmployersHeroSection(SingletonModel):
     secondary_button_text = models.CharField(max_length=80, blank=True)
     secondary_button_url = models.URLField(blank=True)
 
-    side_image = models.ImageField(
-        upload_to="employers/hero/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
-
     class Meta:
         verbose_name = "Employers Hero Section"
         verbose_name_plural = "Employers Hero Section"
@@ -52,13 +45,6 @@ class EmployersMissionSection(SingletonModel):
 
     button_text = models.CharField(max_length=80, blank=True)
     button_url = models.URLField(blank=True)
-
-    side_image = models.ImageField(
-        upload_to="employers/mission/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
-        null=True,
-    )
 
     class Meta:
         verbose_name = "Employers Mission Section"

@@ -60,4 +60,62 @@ urlpatterns = [
     path("employers/mission/", views.EmployersMissionEditView.as_view(), name="employers_mission_edit"),
     path("employers/offer/", views.EmployersOfferEditView.as_view(), name="employers_offer_edit"),
     path("employers/events/", views.EmployersEventsEditView.as_view(), name="employers_events_edit"),
+
+    # Partner Management
+    path("partners/", views.PartnersModuleView.as_view(), name="partners_module"),
+    path("partners/hero/", views.PartnersHeroEditView.as_view(), name="partners_hero_edit"),
+    path(
+        "partners/partner-section/",
+        views.PartnersPartnerSectionEditView.as_view(),
+        name="partners_partner_section_edit",
+    ),
+    path(
+        "partners/family-section/",
+        views.PartnersFamilySectionEditView.as_view(),
+        name="partners_family_section_edit",
+    ),
+    path(
+        "partners/review-section/",
+        views.PartnersReviewSectionEditView.as_view(),
+        name="partners_review_section_edit",
+    ),
+    path(
+        "partners/founder-section/",
+        views.PartnersFounderSectionEditView.as_view(),
+        name="partners_founder_section_edit",
+    ),
+
+    # Events Management
+    path("events/", views.EventsModuleView.as_view(), name="events_module"),
+    path("events/hero/", views.EventsHeroEditView.as_view(), name="events_hero_edit"),
+    path(
+        "events/featured/",
+        views.EventsFeaturedEditView.as_view(),
+        name="events_featured_edit",
+    ),
+    path(
+        "events/upcoming/",
+        views.EventsUpcomingEditView.as_view(),
+        name="events_upcoming_edit",
+    ),
+    path(
+        "events/missed/",
+        views.EventsMissedEditView.as_view(),
+        name="events_missed_edit",
+    ),
+    path(
+        "events/submit/",
+        views.EventsSubmitEditView.as_view(),
+        name="events_submit_edit",
+    ),
+
+    # Data Management — shared dynamic data (Statistics, Employers)
+    path("data/", views.DataModuleView.as_view(), name="data_module"),
+    path("data/statistics/", views.StatisticsEditView.as_view(), name="statistics_edit"),
+    path("data/employers/", views.EmployersEditView.as_view(), name="employers_edit"),
+    path(
+        "data/social-media/",
+        views.SocialMediaIconsEditView.as_view(),
+        name="social_media_icons_edit",
+    ),
 ]

@@ -54,7 +54,9 @@
       "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 -c \"import django; print\\(django.__version__\\)\")",
       "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 manage.py check)",
       "Bash(DATABASE_URL=\"sqlite:///dummy.db\" PYTHONPATH=\".venv/Lib/site-packages\" python3 manage.py check)",
-      "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 -c \"from rest_framework.pagination import PageNumberPagination; print\\(PageNumberPagination\\)\")"
+      "Bash(PYTHONPATH=\".venv/Lib/site-packages\" python3 -c \"from rest_framework.pagination import PageNumberPagination; print\\(PageNumberPagination\\)\")",
+      "Bash(python manage.py makemigrations partners)",
+      "Bash(grep -n \"class EventsUpcomingEditView\\\\|^# ---------------------------------------------------------------------------\\\\$\" \"/mnt/c/Users/Adil Alam/Desktop/yp/dashboard/views.py\")"
     ]
   }
 }

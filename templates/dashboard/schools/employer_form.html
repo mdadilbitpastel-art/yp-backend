@@ -45,49 +45,12 @@
         </div>
     </div>
 
-    {# ------------ Employer Logos (manual list, add/remove) ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-building mr-1"></i> Employers</h3>
         </div>
         <div class="card-body">
-            {{ employer_formset.management_form }}
-            {% if employer_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ employer_formset.non_form_errors|join:" " }}</div>
-            {% endif %}
-
-            <div id="employer-rows">
-                {% for employer_form in employer_formset %}
-                <div class="employer-row border rounded p-3 mb-3">
-                    {% for hidden in employer_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ employer_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-building mr-1 text-info"></i>
-                            Employer <span class="employer-position">{{ forloop.counter }}</span>
-                            {% if employer_form.instance.name %}
-                                <small class="text-muted ml-2">— {{ employer_form.instance.name }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=employer_form.name %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=employer_form.logo %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            <button type="button" id="add-employer" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Employer
-            </button>
+            {% include "dashboard/home/_employer_picker.html" with field=form.selected_employers %}
         </div>
     </div>
 
@@ -99,78 +62,4 @@
         </div>
     </div>
 </form>
-
-{# Hidden empty-form template used by the add-employer script. #}
-<template id="employer-empty">
-    <div class="employer-row border rounded p-3 mb-3">
-        {% with employer_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-building mr-1 text-info"></i>
-                    Employer <span class="employer-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.logo %}
-                </div>
-            </div>
-        {% endwith %}
-    </div>
-</template>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-(function () {
-    const prefix = "{{ employer_formset.prefix }}";
-    const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
-    const container = document.getElementById('employer-rows');
-    const addBtn = document.getElementById('add-employer');
-    const tpl = document.getElementById('employer-empty');
-
-    function renumberPositions() {
-        const rows = container.querySelectorAll('.employer-row');
-        let visibleIndex = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visibleIndex += 1;
-            const label = row.querySelector('.employer-position');
-            if (label) label.textContent = visibleIndex;
-        });
-    }
-
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumberPositions();
-    });
-
-    container.addEventListener('click', function (e) {
-        const btn = e.target.closest('.remove-row');
-        if (!btn) return;
-        const row = btn.closest('.employer-row');
-        if (!row) return;
-        const flag = row.querySelector('.delete-flag');
-        if (flag) flag.value = 'on';
-        row.style.display = 'none';
-        renumberPositions();
-    });
-
-    renumberPositions();
-})();
-</script>
 {% endblock %}

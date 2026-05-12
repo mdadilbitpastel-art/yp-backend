@@ -26,15 +26,8 @@
         </div>
     </div>
 
-    {# ------------ Background image ------------ #}
-    <div class="card card-success card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
-        </div>
-        <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.background_image %}
-        </div>
-    </div>
+    {# ------------ Images ------------ #}
+    {% include "dashboard/home/_section_images.html" %}
 
     {# ------------ Dynamic users ------------ #}
     <div class="card card-info card-outline">

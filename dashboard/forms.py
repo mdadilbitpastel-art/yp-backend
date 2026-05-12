@@ -2,6 +2,7 @@
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.contenttypes.forms import generic_inlineformset_factory
 
 from about_us.models import (
     AboutUsCommunityCard,
@@ -27,10 +28,29 @@ from employers.models import (
     EmployersOfferCard,
     EmployersOfferSection,
 )
+from partners.models import (
+    PartnersCategory,
+    PartnersFamilySection,
+    PartnersFounderSection,
+    PartnersHeroSection,
+    PartnersPartnerSection,
+    PartnersReviewCard,
+    PartnersReviewSection,
+)
+from events.models import (
+    EventsFeaturedSection,
+    EventsHeroSection,
+    EventsMissedCard,
+    EventsMissedSection,
+    EventsSubmitSection,
+    EventsUpcomingCard,
+    EventsUpcomingCategory,
+    EventsUpcomingSection,
+)
+from data_management.models import Employer, SectionImage, SocialMediaIcon, Statistic
 from schools.models import (
     SchoolsBenchmarkCard,
     SchoolsBenchmarkSection,
-    SchoolsEmployer,
     SchoolsEmployerSection,
     SchoolsFaqItem,
     SchoolsFaqSection,
@@ -54,8 +74,6 @@ from home.models import (
     HeaderTab,
     HeroSection,
     NetworkSection,
-    NetworkStat,
-    SocialMediaCard,
     SocialMediaSection,
     TalentPoolSection,
     TestimonialsSection,
@@ -171,13 +189,9 @@ class HeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "primary_button_url",
             "secondary_button_text",
             "secondary_button_url",
-            "background_image",
-            "hero_image",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
-            "background_image": CleanFileInput(),
-            "hero_image": CleanFileInput(),
         }
         labels = {
             "title": "Title",
@@ -223,15 +237,42 @@ FeatureCardFormSet = forms.inlineformset_factory(
 )
 
 
-class NetworkSectionForm(BootstrapFormMixin, forms.ModelForm):
+class StatisticPickerMixin:
+    """Mixin for forms that expose a `selected_statistics` M2M field.
+
+    Renders the picker as a Select2-enhanced multi-select dropdown
+    listing every `Statistic` row from Data Management. Centralised here
+    so Home Network, About Us Mission and Partners Hero forms all share
+    the same widget."""
+
+    def _configure_statistics_field(self):
+        field = self.fields.get("selected_statistics")
+        if not field:
+            return
+        # Swap the widget first — setting `queryset` afterwards populates
+        # the new widget's `.choices`, so order matters.
+        field.widget = forms.CheckboxSelectMultiple(
+            attrs={"class": "statistic-picker"}
+        )
+        field.queryset = Statistic.objects.all()
+        field.required = False
+        field.label = "Statistics"
+        field.help_text = (
+            "Tick the statistics to show in this section. Add or edit the "
+            "available statistics from Data Management → Statistics."
+        )
+
+
+class NetworkSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelForm):
     """Stats / Network section editor — section heading + optional video
-    upload. Stats live on the inline `NetworkStatFormSet`."""
+    upload + a picker that selects which `Statistic` rows to display."""
 
     class Meta:
         model = NetworkSection
         fields = [
             "network_section_title",
             "network_section_video",
+            "selected_statistics",
         ]
         widgets = {
             "network_section_video": CleanFileInput(attrs={"accept": "video/*"}),
@@ -241,18 +282,95 @@ class NetworkSectionForm(BootstrapFormMixin, forms.ModelForm):
             "network_section_video": "Video",
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_statistics_field()
 
-class NetworkStatForm(BootstrapFormMixin, forms.ModelForm):
+
+class StatisticForm(BootstrapFormMixin, forms.ModelForm):
+    """Single `Statistic` row — value + label. Used by the Data Management
+    page's modelformset for bulk add/edit/delete."""
+
     class Meta:
-        model = NetworkStat
+        model = Statistic
         fields = ["value", "label"]
         labels = {"value": "Value", "label": "Label"}
 
 
-NetworkStatFormSet = forms.inlineformset_factory(
-    NetworkSection,
-    NetworkStat,
-    form=NetworkStatForm,
+StatisticFormSet = forms.modelformset_factory(
+    Statistic,
+    form=StatisticForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class EmployerPickerMixin:
+    """Mixin for forms that expose a `selected_employers` M2M field.
+
+    Renders the picker as a plain checkbox list of every `Employer` row
+    from Data Management. Mirrors the Statistic picker pattern."""
+
+    def _configure_employers_field(self):
+        field = self.fields.get("selected_employers")
+        if not field:
+            return
+        # Swap the widget first — the queryset setter populates choices on
+        # whatever widget is current.
+        field.widget = forms.CheckboxSelectMultiple(
+            attrs={"class": "employer-picker"}
+        )
+        field.queryset = Employer.objects.all()
+        field.required = False
+        field.label = "Employers"
+        field.help_text = (
+            "Tick the employers to show in this section. Add or edit the "
+            "available employers from Data Management → Employers."
+        )
+
+
+class EmployerForm(BootstrapFormMixin, forms.ModelForm):
+    """Single `Employer` row — name, logo, description, URL. Used by the
+    Data Management page's modelformset for bulk add/edit/delete."""
+
+    class Meta:
+        model = Employer
+        fields = ["name", "logo", "description", "url"]
+        widgets = {
+            "logo": CleanFileInput(),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "name": "Name",
+            "logo": "Logo",
+            "description": "Description",
+            "url": "URL",
+        }
+
+
+EmployerFormSet = forms.modelformset_factory(
+    Employer,
+    form=EmployerForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class SectionImageForm(BootstrapFormMixin, forms.ModelForm):
+    """Single image row in the section "Images" card."""
+
+    class Meta:
+        model = SectionImage
+        fields = ["image"]
+        widgets = {"image": CleanFileInput()}
+        labels = {"image": ""}
+
+
+SectionImageFormSet = generic_inlineformset_factory(
+    SectionImage,
+    form=SectionImageForm,
+    ct_field="content_type",
+    fk_field="object_id",
     extra=0,
     can_delete=True,
 )
@@ -329,11 +447,9 @@ class TalentPoolSectionForm(BootstrapFormMixin, forms.ModelForm):
             "talent_pool_section_primary_button_url",
             "talent_pool_section_secondary_button_text",
             "talent_pool_section_secondary_button_url",
-            "talent_pool_section_image",
         ]
         widgets = {
             "talent_pool_section_description": forms.Textarea(attrs={"rows": 5}),
-            "talent_pool_section_image": CleanFileInput(),
         }
         labels = {
             "talent_pool_section_label": "Label",
@@ -344,50 +460,79 @@ class TalentPoolSectionForm(BootstrapFormMixin, forms.ModelForm):
             "talent_pool_section_primary_button_url": "Primary Button URL",
             "talent_pool_section_secondary_button_text": "Secondary Button Text",
             "talent_pool_section_secondary_button_url": "Secondary Button URL",
-            "talent_pool_section_image": "Side Image",
         }
 
 
-class SocialMediaSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Social Media section — label, heading/title, sub-title. Cards live on
-    the inline formset and are shared with the About Us page."""
+class SocialMediaPickerMixin:
+    """Mixin for forms that expose a `selected_social_media` M2M field.
+
+    Renders the picker as a plain checkbox list of every
+    `SocialMediaIcon` row from Data Management. Mirrors the Statistic /
+    Employer picker pattern."""
+
+    def _configure_social_media_field(self):
+        field = self.fields.get("selected_social_media")
+        if not field:
+            return
+        # Swap the widget first — the queryset setter populates choices
+        # on whatever widget is current.
+        field.widget = forms.CheckboxSelectMultiple(
+            attrs={"class": "social-media-picker"}
+        )
+        field.queryset = SocialMediaIcon.objects.all()
+        field.required = False
+        field.label = "Social Media Icons"
+        field.help_text = (
+            "Tick the social media icons to show in this section. Add or "
+            "edit the available icons from Data Management → Social Media."
+        )
+
+
+class SocialMediaSectionForm(SocialMediaPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """Social Media homepage section — label, heading/title, sub-title.
+    Icons are picked from Data Management → Social Media."""
 
     class Meta:
         model = SocialMediaSection
-        fields = ["label", "heading", "subtitle"]
+        fields = ["label", "heading", "subtitle", "selected_social_media"]
         labels = {
             "label": "Label",
             "heading": "Title",
             "subtitle": "Sub-title",
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_social_media_field()
 
-class SocialMediaCardForm(BootstrapFormMixin, forms.ModelForm):
+
+class SocialMediaIconForm(BootstrapFormMixin, forms.ModelForm):
+    """Single `SocialMediaIcon` row — name + icon. Used by the Data
+    Management page's modelformset for bulk add/edit/delete."""
+
     class Meta:
-        model = SocialMediaCard
+        model = SocialMediaIcon
         fields = ["name", "icon"]
         widgets = {"icon": CleanFileInput()}
         labels = {"name": "Name", "icon": "Icon"}
 
 
-SocialMediaCardFormSet = forms.inlineformset_factory(
-    SocialMediaSection,
-    SocialMediaCard,
-    form=SocialMediaCardForm,
+SocialMediaIconFormSet = forms.modelformset_factory(
+    SocialMediaIcon,
+    form=SocialMediaIconForm,
     extra=0,
     can_delete=True,
 )
 
 
 class TestimonialsSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Testimonials section editor — title + background image. Users live on
-    the inline `TestimonialUserFormSet`."""
+    """Testimonials section editor — title only. Background images live on
+    `SectionImage`; users live on the inline `TestimonialUserFormSet`."""
 
     class Meta:
         model = TestimonialsSection
-        fields = ["title", "background_image"]
-        widgets = {"background_image": CleanFileInput()}
-        labels = {"title": "Title", "background_image": "Background Image"}
+        fields = ["title"]
+        labels = {"title": "Title"}
 
 
 class TestimonialUserForm(BootstrapFormMixin, forms.ModelForm):
@@ -423,7 +568,8 @@ def _app_button_field_names() -> list[str]:
 
 
 class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """App section editor — title, description, 3 buttons, side image, barcode."""
+    """App section editor — title, description, 3 buttons. Images (side +
+    barcode) live on `SectionImage`."""
 
     class Meta:
         model = AppSection
@@ -431,19 +577,13 @@ class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
             "title",
             "description",
             *_app_button_field_names(),
-            "side_image",
-            "barcode_image",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
-            "barcode_image": CleanFileInput(),
         }
         labels = {
             "title": "Title",
             "description": "Description",
-            "side_image": "Side Image",
-            "barcode_image": "Barcode Image",
             **{f"button_{i}_text": "Text" for i in range(1, APP_BUTTON_COUNT + 1)},
             **{f"button_{i}_url": "URL" for i in range(1, APP_BUTTON_COUNT + 1)},
         }
@@ -457,36 +597,38 @@ class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
 
 
 class AboutUsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """About Us page — top hero section editor."""
+    """About Us page — top hero section editor. Images live on `SectionImage`."""
 
     class Meta:
         model = AboutUsHeroSection
-        fields = ["label", "title", "description", "background_image"]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "background_image": CleanFileInput(),
-        }
+        fields = ["label", "title", "description"]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
         labels = {
             "label": "Label",
             "title": "Title",
             "description": "Description",
-            "background_image": "Background Image",
         }
 
 
-class AboutUsSocialMediaSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """About Us — social media section parent fields (label/heading/sub-title).
-    The About Us page has its own copy of these fields, independent of the
-    home page. Cards are shared via the home `SocialMediaCardFormSet`."""
+class AboutUsSocialMediaSectionForm(
+    SocialMediaPickerMixin, BootstrapFormMixin, forms.ModelForm
+):
+    """About Us — social media section. Has its own copy of
+    label/heading/sub-title (independent of the home page) and its own
+    selection of icons from Data Management → Social Media."""
 
     class Meta:
         model = AboutUsSocialMediaSection
-        fields = ["label", "heading", "subtitle"]
+        fields = ["label", "heading", "subtitle", "selected_social_media"]
         labels = {
             "label": "Label",
             "heading": "Title",
             "subtitle": "Sub-title",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_social_media_field()
 
 
 class AboutUsCommunitySectionForm(BootstrapFormMixin, forms.ModelForm):
@@ -580,20 +722,16 @@ AboutUsTeamMemberFormSet = forms.inlineformset_factory(
 
 
 class AboutUsPledgeSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """About Us page — pledge section editor."""
+    """About Us page — pledge section editor. Images live on `SectionImage`."""
 
     class Meta:
         model = AboutUsPledgeSection
-        fields = ["label", "title", "description", "side_image"]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
-        }
+        fields = ["label", "title", "description"]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
         labels = {
             "label": "Label",
             "title": "Title",
             "description": "Description",
-            "side_image": "Side Image",
         }
 
 
@@ -670,7 +808,7 @@ AboutUsValueCardFormSet = forms.inlineformset_factory(
 
 
 class AboutUsFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """About Us page — founder section editor."""
+    """About Us page — founder section editor. Images live on `SectionImage`."""
 
     class Meta:
         model = AboutUsFounderSection
@@ -682,12 +820,10 @@ class AboutUsFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
             "founder_message",
             "button_text",
             "button_url",
-            "side_image",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
             "founder_message": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
         }
         labels = {
             "label": "Label",
@@ -697,33 +833,31 @@ class AboutUsFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
             "founder_message": "Founder Message",
             "button_text": "Button Text",
             "button_url": "Button URL",
-            "side_image": "Side Image",
         }
 
 
-class AboutUsMissionSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """About Us page — mission section editor. Stats are shared with the home
-    Network section, so the dashboard view binds `NetworkStatFormSet` to
-    `NetworkSection.load()` (not to AboutUsMissionSection)."""
+class AboutUsMissionSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """About Us page — mission section editor. Stats are picked from the
+    central `Statistic` table; images live on `SectionImage`."""
 
     class Meta:
         model = AboutUsMissionSection
-        fields = ["label", "title", "description", "side_image"]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
-        }
+        fields = ["label", "title", "description", "selected_statistics"]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
         labels = {
             "label": "Label",
             "title": "Title",
             "description": "Description",
-            "side_image": "Side Image",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_statistics_field()
 
 
 class SchoolsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
     """Schools page — top hero section editor. Label, title, description,
-    two CTA buttons, side image."""
+    two CTA buttons. Images live on `SectionImage`."""
 
     class Meta:
         model = SchoolsHeroSection
@@ -735,12 +869,8 @@ class SchoolsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "primary_button_url",
             "secondary_button_text",
             "secondary_button_url",
-            "side_image",
         ]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
-        }
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
         labels = {
             "label": "Label",
             "title": "Title",
@@ -749,7 +879,6 @@ class SchoolsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "primary_button_url": "Primary Button URL",
             "secondary_button_text": "Secondary Button Text",
             "secondary_button_url": "Secondary Button URL",
-            "side_image": "Side Image",
         }
 
 
@@ -788,9 +917,10 @@ SchoolsHelpCardFormSet = forms.inlineformset_factory(
 )
 
 
-class SchoolsEmployerSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Schools page — employer section editor. Logos live on the inline
-    `SchoolsEmployerFormSet`."""
+class SchoolsEmployerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """Schools page — employer section editor. The list of available
+    employers lives in Data Management; the form just picks which ones
+    to display on this page."""
 
     class Meta:
         model = SchoolsEmployerSection
@@ -800,6 +930,7 @@ class SchoolsEmployerSectionForm(BootstrapFormMixin, forms.ModelForm):
             "description",
             "button_text",
             "button_url",
+            "selected_employers",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
@@ -812,22 +943,9 @@ class SchoolsEmployerSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_url": "Button URL",
         }
 
-
-class SchoolsEmployerForm(BootstrapFormMixin, forms.ModelForm):
-    class Meta:
-        model = SchoolsEmployer
-        fields = ["name", "logo"]
-        widgets = {"logo": CleanFileInput()}
-        labels = {"name": "Name", "logo": "Logo"}
-
-
-SchoolsEmployerFormSet = forms.inlineformset_factory(
-    SchoolsEmployerSection,
-    SchoolsEmployer,
-    form=SchoolsEmployerForm,
-    extra=0,
-    can_delete=True,
-)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_employers_field()
 
 
 class SchoolsBenchmarkSectionForm(BootstrapFormMixin, forms.ModelForm):
@@ -871,7 +989,7 @@ SchoolsBenchmarkCardFormSet = forms.inlineformset_factory(
 
 class SchoolsSubscribeSectionForm(BootstrapFormMixin, forms.ModelForm):
     """Schools page — subscribe section editor. Form fields live on the
-    inline `SchoolsSubscribeFieldFormSet`."""
+    inline `SchoolsSubscribeFieldFormSet`; images on `SectionImage`."""
 
     class Meta:
         model = SchoolsSubscribeSection
@@ -881,19 +999,14 @@ class SchoolsSubscribeSectionForm(BootstrapFormMixin, forms.ModelForm):
             "description",
             "button_text",
             "button_url",
-            "side_image",
         ]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
-        }
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
         labels = {
             "label": "Label",
             "title": "Title",
             "description": "Description",
             "button_text": "Subscribe Button Text",
             "button_url": "Subscribe Button URL",
-            "side_image": "Side Image",
         }
 
 
@@ -957,7 +1070,7 @@ SchoolsFaqItemFormSet = forms.inlineformset_factory(
 
 class EmployersHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
     """Employers page — top hero section editor. Label, title, description,
-    two CTA buttons, side image."""
+    two CTA buttons. Images live on `SectionImage`."""
 
     class Meta:
         model = EmployersHeroSection
@@ -969,12 +1082,8 @@ class EmployersHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "primary_button_url",
             "secondary_button_text",
             "secondary_button_url",
-            "side_image",
         ]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
-        }
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
         labels = {
             "label": "Label",
             "title": "Title",
@@ -983,13 +1092,12 @@ class EmployersHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "primary_button_url": "Primary Button URL",
             "secondary_button_text": "Secondary Button Text",
             "secondary_button_url": "Secondary Button URL",
-            "side_image": "Side Image",
         }
 
 
 class EmployersMissionSectionForm(BootstrapFormMixin, forms.ModelForm):
     """Employers page — mission section editor. Points live on the inline
-    `EmployersMissionPointFormSet`."""
+    `EmployersMissionPointFormSet`; images on `SectionImage`."""
 
     class Meta:
         model = EmployersMissionSection
@@ -999,19 +1107,14 @@ class EmployersMissionSectionForm(BootstrapFormMixin, forms.ModelForm):
             "description",
             "button_text",
             "button_url",
-            "side_image",
         ]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "side_image": CleanFileInput(),
-        }
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
         labels = {
             "label": "Label",
             "title": "Title",
             "description": "Description",
             "button_text": "Button Text",
             "button_url": "Button URL",
-            "side_image": "Side Image",
         }
 
 
@@ -1114,8 +1217,337 @@ EmployersEventImageFormSet = forms.inlineformset_factory(
 )
 
 
+class PartnersHeroSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """Partners page — top hero section editor. Label, title, description,
+    plus a picker that selects which `Statistic` rows to display."""
+
+    class Meta:
+        model = PartnersHeroSection
+        fields = ["label", "title", "description", "selected_statistics"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_statistics_field()
+
+
+class PartnersPartnerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """Partners page — partner section editor. Search placeholder + an
+    inline list of categories managed via `PartnersCategoryFormSet` + a
+    picker that selects which `Employer` rows to display."""
+
+    class Meta:
+        model = PartnersPartnerSection
+        fields = ["search_placeholder", "explore_button_text", "selected_employers"]
+        labels = {
+            "search_placeholder": "Search Placeholder",
+            "explore_button_text": "Explore Button Text",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_employers_field()
+
+
+class PartnersCategoryForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = PartnersCategory
+        fields = ["name"]
+        labels = {"name": "Category Name"}
+
+
+PartnersCategoryFormSet = forms.inlineformset_factory(
+    PartnersPartnerSection,
+    PartnersCategory,
+    form=PartnersCategoryForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class PartnersFamilySectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm):
+    """Partners page — family section editor. Label/title/description,
+    selectable employers, and a Load More CTA (button text + URL)."""
+
+    class Meta:
+        model = PartnersFamilySection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "selected_employers",
+            "load_more_button_text",
+            "load_more_button_url",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "load_more_button_text": "Load More Button Text",
+            "load_more_button_url": "Load More Button URL",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._configure_employers_field()
+
+
+class PartnersReviewSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Partners page — review section editor. Label + title; review cards
+    live on the inline `PartnersReviewCardFormSet`."""
+
+    class Meta:
+        model = PartnersReviewSection
+        fields = ["label", "title"]
+        labels = {"label": "Label", "title": "Title"}
+
+
+class PartnersReviewCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = PartnersReviewCard
+        fields = ["name", "designation", "message"]
+        widgets = {"message": forms.Textarea(attrs={"rows": 3})}
+        labels = {
+            "name": "Name",
+            "designation": "Designation",
+            "message": "Message",
+        }
+
+
+PartnersReviewCardFormSet = forms.inlineformset_factory(
+    PartnersReviewSection,
+    PartnersReviewCard,
+    form=PartnersReviewCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class PartnersFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Partners page — founder section editor. Label, title, description,
+    two CTA buttons (text + URL). Images live on `SectionImage`."""
+
+    class Meta:
+        model = PartnersFounderSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "primary_button_text",
+            "primary_button_url",
+            "secondary_button_text",
+            "secondary_button_url",
+        ]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "primary_button_text": "Primary Button Text",
+            "primary_button_url": "Primary Button URL",
+            "secondary_button_text": "Secondary Button Text",
+            "secondary_button_url": "Secondary Button URL",
+        }
+
+
+class EventsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Events page — top hero section editor. Label, title, description,
+    plus two CTA buttons (text + URL)."""
+
+    class Meta:
+        model = EventsHeroSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "primary_button_text",
+            "primary_button_url",
+            "secondary_button_text",
+            "secondary_button_url",
+        ]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "primary_button_text": "Primary Button Text",
+            "primary_button_url": "Primary Button URL",
+            "secondary_button_text": "Secondary Button Text",
+            "secondary_button_url": "Secondary Button URL",
+        }
+
+
+class EventsFeaturedSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Events page — featured section editor. Label, date/time label,
+    title, description, category label, and a single CTA button. Images
+    live on `SectionImage`."""
+
+    class Meta:
+        model = EventsFeaturedSection
+        fields = [
+            "label",
+            "datetime_label",
+            "title",
+            "description",
+            "category_label",
+            "button_text",
+            "button_url",
+        ]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        labels = {
+            "label": "Label",
+            "datetime_label": "Date / Time (e.g. Fri 15 May - 10:00 - 16:00 BST)",
+            "title": "Title",
+            "description": "Description",
+            "category_label": "Category Label",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+        }
+
+
+class EventsUpcomingSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Events page — upcoming section editor. Label + title + the shared
+    card button label; categories and cards live on inline formsets."""
+
+    class Meta:
+        model = EventsUpcomingSection
+        fields = ["label", "title", "card_button_text"]
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "card_button_text": "Card Button Text (shared across all cards)",
+        }
+
+
+class EventsUpcomingCategoryForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = EventsUpcomingCategory
+        fields = ["name"]
+        labels = {"name": "Category Name"}
+
+
+EventsUpcomingCategoryFormSet = forms.inlineformset_factory(
+    EventsUpcomingSection,
+    EventsUpcomingCategory,
+    form=EventsUpcomingCategoryForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class EventsUpcomingCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = EventsUpcomingCard
+        fields = [
+            "image",
+            "label",
+            "title",
+            "description",
+            "years_label",
+            "price_label",
+            "button_url",
+        ]
+        widgets = {
+            "image": CleanFileInput(),
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+        labels = {
+            "image": "Image",
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "years_label": "Years (e.g. Years 12+)",
+            "price_label": "Price (e.g. Free)",
+            "button_url": "Button URL",
+        }
+
+
+EventsUpcomingCardFormSet = forms.inlineformset_factory(
+    EventsUpcomingSection,
+    EventsUpcomingCard,
+    form=EventsUpcomingCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class EventsMissedSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Events page — missed section editor. Label, title, description,
+    plus the shared card button label."""
+
+    class Meta:
+        model = EventsMissedSection
+        fields = ["label", "title", "description", "card_button_text"]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "card_button_text": "Card Button Text (shared across all cards)",
+        }
+
+
+class EventsMissedCardForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = EventsMissedCard
+        fields = ["video", "title", "date_label", "button_url"]
+        widgets = {
+            "video": CleanFileInput(attrs={"accept": "video/*"}),
+        }
+        labels = {
+            "video": "Video",
+            "title": "Title",
+            "date_label": "Date (e.g. AUG 2025)",
+            "button_url": "Button URL",
+        }
+
+
+EventsMissedCardFormSet = forms.inlineformset_factory(
+    EventsMissedSection,
+    EventsMissedCard,
+    form=EventsMissedCardForm,
+    extra=0,
+    can_delete=True,
+)
+
+
+class EventsSubmitSectionForm(BootstrapFormMixin, forms.ModelForm):
+    """Events page — submit events section editor. Label, title,
+    description, and a single CTA button. Images live on `SectionImage`."""
+
+    class Meta:
+        model = EventsSubmitSection
+        fields = [
+            "label",
+            "title",
+            "description",
+            "button_text",
+            "button_url",
+        ]
+        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        labels = {
+            "label": "Label",
+            "title": "Title",
+            "description": "Description",
+            "button_text": "Button Text",
+            "button_url": "Button URL",
+        }
+
+
 class AboutSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """About / Mission section editor."""
+    """About / Mission section editor. Images live on `SectionImage`."""
 
     class Meta:
         model = AboutSection
@@ -1127,11 +1559,9 @@ class AboutSectionForm(BootstrapFormMixin, forms.ModelForm):
             "about_section_primary_button_url",
             "about_section_secondary_button_text",
             "about_section_secondary_button_url",
-            "about_section_image",
         ]
         widgets = {
             "about_section_description": forms.Textarea(attrs={"rows": 5}),
-            "about_section_image": CleanFileInput(),
         }
         labels = {
             "about_section_label": "Label",
@@ -1141,5 +1571,4 @@ class AboutSectionForm(BootstrapFormMixin, forms.ModelForm):
             "about_section_primary_button_url": "Primary Button URL",
             "about_section_secondary_button_text": "Secondary Button Text",
             "about_section_secondary_button_url": "Secondary Button URL",
-            "about_section_image": "Side Image",
         }

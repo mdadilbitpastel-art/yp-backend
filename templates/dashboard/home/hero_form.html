@@ -52,21 +52,7 @@
     </div>
 
     {# ------------ Images ------------ #}
-    <div class="card card-success card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-images mr-1"></i> Images</h3>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=form.background_image %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=form.hero_image %}
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include "dashboard/home/_section_images.html" %}
 
     <div class="card">
         <div class="card-body text-right">

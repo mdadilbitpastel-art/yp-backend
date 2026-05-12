@@ -1,0 +1,65 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Partners — Family Section{% endblock %}
+{% block page_title %}Family Section{% endblock %}
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:partners_module' %}">Partner Management</a></li>
+    <li class="breadcrumb-item active">Family Section</li>
+{% endblock %}
+
+{% block content %}
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
+    {% endif %}
+
+    {# ------------ Content ------------ #}
+    <div class="card card-primary card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-users mr-1"></i> Content</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_field.html" with field=form.label %}
+            {% include "dashboard/home/_field.html" with field=form.title %}
+            {% include "dashboard/home/_field.html" with field=form.description %}
+        </div>
+    </div>
+
+    <div class="card card-info card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-briefcase mr-1"></i> Employers</h3>
+        </div>
+        <div class="card-body">
+            {% include "dashboard/home/_employer_picker.html" with field=form.selected_employers %}
+        </div>
+    </div>
+
+    {# ------------ Load More CTA ------------ #}
+    <div class="card card-warning card-outline">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i>  Call to Action Buttons</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.load_more_button_text %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.load_more_button_url %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-right">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-save mr-1"></i> Save Family Section
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}
