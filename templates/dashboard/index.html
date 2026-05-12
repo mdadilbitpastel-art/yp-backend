@@ -38,21 +38,214 @@
     </div>
     {% endfor %}
 
-    <div class="col-lg-6 col-12">
-        <div class="card card-outline card-info h-100">
+    <div class="col-12">
+        <div class="card card-outline card-info">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-plug mr-2"></i>Frontend API</h3>
             </div>
             <div class="card-body">
                 <p class="text-muted">
-                    JSON endpoints consumed by the Next.js frontend. Use these
-                    to verify the data your editors save here is reaching the
-                    site correctly.
+                    JSON endpoints consumed by the Next.js frontend. The combined
+                    payload for each page is the headline link; expand a row to see
+                    every per-section endpoint.
                 </p>
-                <a href="/api/home/" target="_blank" class="btn btn-info btn-sm">
-                    Preview <code class="text-white">/api/home/</code>
-                    <i class="fas fa-external-link-alt ml-1"></i>
-                </a>
+                <div class="accordion" id="frontend-api-accordion">
+                    {% with api_pages='home,about-us,schools,employers,partners,events,insight'|cut:' ' %}{% endwith %}
+
+                    {# Home #}
+                    <div class="card mb-2">
+                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-home mr-2 text-primary"></i>
+                                <strong>Home</strong>
+                                <a href="/api/home/" target="_blank" class="btn btn-info btn-sm ml-2">
+                                    <code class="text-white">/api/home/</code>
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-home">
+                                Sections <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        <div id="api-home" class="collapse" data-parent="#frontend-api-accordion">
+                            <div class="card-body py-2">
+                                <a href="/api/home/header/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">header</a>
+                                <a href="/api/home/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
+                                <a href="/api/home/features/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">features</a>
+                                <a href="/api/home/about/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">about</a>
+                                <a href="/api/home/network/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">network</a>
+                                <a href="/api/home/talent-pool/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">talent-pool</a>
+                                <a href="/api/home/apply/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">apply</a>
+                                <a href="/api/home/social-media/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">social-media</a>
+                                <a href="/api/home/testimonials/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">testimonials</a>
+                                <a href="/api/home/app/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">app</a>
+                                <a href="/api/home/footer/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">footer</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# About Us #}
+                    <div class="card mb-2">
+                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-id-card mr-2 text-primary"></i>
+                                <strong>About Us</strong>
+                                <a href="/api/about-us/" target="_blank" class="btn btn-info btn-sm ml-2">
+                                    <code class="text-white">/api/about-us/</code>
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-about-us">
+                                Sections <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        <div id="api-about-us" class="collapse" data-parent="#frontend-api-accordion">
+                            <div class="card-body py-2">
+                                <a href="/api/about-us/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
+                                <a href="/api/about-us/mission/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">mission</a>
+                                <a href="/api/about-us/founder/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">founder</a>
+                                <a href="/api/about-us/values/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">values</a>
+                                <a href="/api/about-us/journey/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">journey</a>
+                                <a href="/api/about-us/pledge/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">pledge</a>
+                                <a href="/api/about-us/team/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">team</a>
+                                <a href="/api/about-us/community/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">community</a>
+                                <a href="/api/about-us/social-media/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">social-media</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Schools #}
+                    <div class="card mb-2">
+                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-school mr-2 text-primary"></i>
+                                <strong>Schools</strong>
+                                <a href="/api/schools/" target="_blank" class="btn btn-info btn-sm ml-2">
+                                    <code class="text-white">/api/schools/</code>
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-schools">
+                                Sections <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        <div id="api-schools" class="collapse" data-parent="#frontend-api-accordion">
+                            <div class="card-body py-2">
+                                <a href="/api/schools/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
+                                <a href="/api/schools/help/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">help</a>
+                                <a href="/api/schools/employer/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">employer</a>
+                                <a href="/api/schools/benchmark/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">benchmark</a>
+                                <a href="/api/schools/subscribe/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">subscribe</a>
+                                <a href="/api/schools/faq/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">faq</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Employers #}
+                    <div class="card mb-2">
+                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-briefcase mr-2 text-primary"></i>
+                                <strong>Employers</strong>
+                                <a href="/api/employers/" target="_blank" class="btn btn-info btn-sm ml-2">
+                                    <code class="text-white">/api/employers/</code>
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-employers">
+                                Sections <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        <div id="api-employers" class="collapse" data-parent="#frontend-api-accordion">
+                            <div class="card-body py-2">
+                                <a href="/api/employers/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
+                                <a href="/api/employers/network/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">network</a>
+                                <a href="/api/employers/mission/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">mission</a>
+                                <a href="/api/employers/offer/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">offer</a>
+                                <a href="/api/employers/events/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">events</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Partners #}
+                    <div class="card mb-2">
+                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-handshake mr-2 text-primary"></i>
+                                <strong>Partners</strong>
+                                <a href="/api/partners/" target="_blank" class="btn btn-info btn-sm ml-2">
+                                    <code class="text-white">/api/partners/</code>
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-partners">
+                                Sections <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        <div id="api-partners" class="collapse" data-parent="#frontend-api-accordion">
+                            <div class="card-body py-2">
+                                <a href="/api/partners/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
+                                <a href="/api/partners/partner/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">partner</a>
+                                <a href="/api/partners/family/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">family</a>
+                                <a href="/api/partners/review/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">review</a>
+                                <a href="/api/partners/founder/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">founder</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Events #}
+                    <div class="card mb-2">
+                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-calendar-alt mr-2 text-primary"></i>
+                                <strong>Events</strong>
+                                <a href="/api/events/" target="_blank" class="btn btn-info btn-sm ml-2">
+                                    <code class="text-white">/api/events/</code>
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-events">
+                                Sections <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        <div id="api-events" class="collapse" data-parent="#frontend-api-accordion">
+                            <div class="card-body py-2">
+                                <a href="/api/events/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
+                                <a href="/api/events/featured/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">featured</a>
+                                <a href="/api/events/upcoming/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">upcoming</a>
+                                <a href="/api/events/missed/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">missed</a>
+                                <a href="/api/events/submit/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">submit</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Insight #}
+                    <div class="card mb-0">
+                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-lightbulb mr-2 text-primary"></i>
+                                <strong>Insight</strong>
+                                <a href="/api/insight/" target="_blank" class="btn btn-info btn-sm ml-2">
+                                    <code class="text-white">/api/insight/</code>
+                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            </div>
+                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-insight">
+                                Sections <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+                        <div id="api-insight" class="collapse" data-parent="#frontend-api-accordion">
+                            <div class="card-body py-2">
+                                <a href="/api/insight/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
+                                <a href="/api/insight/founder/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">founder</a>
+                                <a href="/api/insight/article/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">article</a>
+                                <a href="/api/insight/lane/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">lane</a>
+                                <a href="/api/insight/subscribe/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">subscribe</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>

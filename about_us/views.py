@@ -9,6 +9,7 @@ from .models import (
     AboutUsJourneySection,
     AboutUsMissionSection,
     AboutUsPledgeSection,
+    AboutUsSocialMediaSection,
     AboutUsTeamSection,
     AboutUsValuesSection,
 )
@@ -18,7 +19,9 @@ from .serializers import (
     AboutUsHeroSectionSerializer,
     AboutUsJourneySectionSerializer,
     AboutUsMissionSectionSerializer,
+    AboutUsPageSerializer,
     AboutUsPledgeSectionSerializer,
+    AboutUsSocialMediaSectionSerializer,
     AboutUsTeamSectionSerializer,
     AboutUsValuesSectionSerializer,
 )
@@ -71,3 +74,15 @@ class AboutUsTeamSectionView(_SingletonMixin, RetrieveAPIView):
 class AboutUsCommunitySectionView(_SingletonMixin, RetrieveAPIView):
     singleton_model = AboutUsCommunitySection
     serializer_class = AboutUsCommunitySectionSerializer
+
+
+class AboutUsSocialMediaSectionView(_SingletonMixin, RetrieveAPIView):
+    singleton_model = AboutUsSocialMediaSection
+    serializer_class = AboutUsSocialMediaSectionSerializer
+
+
+class AboutUsPageView(_SingletonMixin, RetrieveAPIView):
+    """Combined About Us payload — every section in one response."""
+
+    singleton_model = AboutUsHeroSection  # any singleton — serializer reloads each.
+    serializer_class = AboutUsPageSerializer

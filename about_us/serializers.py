@@ -4,13 +4,14 @@ from rest_framework import serializers
 
 from data_management.models import section_images
 
-from .models import (
+from about_us.models import (
     AboutUsCommunitySection,
     AboutUsFounderSection,
     AboutUsHeroSection,
     AboutUsJourneySection,
     AboutUsMissionSection,
     AboutUsPledgeSection,
+    AboutUsSocialMediaSection,
     AboutUsTeamSection,
     AboutUsValuesSection,
 )
@@ -116,16 +117,12 @@ class AboutUsTeamMemberSerializer(serializers.Serializer):
     profile_image = serializers.SerializerMethodField()
     name = serializers.CharField(allow_blank=True)
     designation = serializers.CharField(allow_blank=True)
-    email_icon = serializers.SerializerMethodField()
     email_url = serializers.CharField(allow_blank=True)
     view_profile_text = serializers.CharField(allow_blank=True)
     view_profile_url = serializers.URLField(allow_blank=True)
 
     def get_profile_image(self, obj):
         return _absolute_url(obj.get("profile_image"), self.context.get("request"))
-
-    def get_email_icon(self, obj):
-        return _absolute_url(obj.get("email_icon"), self.context.get("request"))
 
 
 class AboutUsTeamSectionSerializer(serializers.Serializer):
@@ -193,4 +190,51 @@ class AboutUsFounderSectionSerializer(serializers.Serializer):
                 "text": instance.button_text,
                 "url": instance.button_url,
             },
+        }
+
+
+class AboutUsSocialMediaCardSerializer(serializers.Serializer):
+    position = serializers.IntegerField()
+    name = serializers.CharField(allow_blank=True)
+    icon = serializers.SerializerMethodField()
+
+    def get_icon(self, obj):
+        return _absolute_url(obj.get("icon"), self.context.get("request"))
+
+
+class AboutUsSocialMediaSectionSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        cards = [
+            {
+                "position": index,
+                "name": entry.name,
+                "icon": entry.icon if entry.icon else None,
+            }
+            for index, entry in enumerate(instance.selected_social_media.all(), start=1)
+        ]
+        return {
+            "label": instance.label,
+            "heading": instance.heading,
+            "subtitle": instance.subtitle,
+            "cards": AboutUsSocialMediaCardSerializer(
+                cards, many=True, context=self.context
+            ).data,
+        }
+
+
+class AboutUsPageSerializer(serializers.Serializer):
+    """Combined About Us page payload — every section in one response."""
+
+    def to_representation(self, _instance):
+        ctx = self.context
+        return {
+            "hero": AboutUsHeroSectionSerializer(AboutUsHeroSection.load(), context=ctx).data,
+            "mission": AboutUsMissionSectionSerializer(AboutUsMissionSection.load(), context=ctx).data,
+            "founder": AboutUsFounderSectionSerializer(AboutUsFounderSection.load(), context=ctx).data,
+            "values": AboutUsValuesSectionSerializer(AboutUsValuesSection.load(), context=ctx).data,
+            "journey": AboutUsJourneySectionSerializer(AboutUsJourneySection.load(), context=ctx).data,
+            "pledge": AboutUsPledgeSectionSerializer(AboutUsPledgeSection.load(), context=ctx).data,
+            "team": AboutUsTeamSectionSerializer(AboutUsTeamSection.load(), context=ctx).data,
+            "community": AboutUsCommunitySectionSerializer(AboutUsCommunitySection.load(), context=ctx).data,
+            "social_media": AboutUsSocialMediaSectionSerializer(AboutUsSocialMediaSection.load(), context=ctx).data,
         }

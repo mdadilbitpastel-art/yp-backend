@@ -1,6 +1,6 @@
 """URL configuration for young_professionals.
 
-Custom CMS dashboard at /dashboard/ + headless API at /api/home/.
+Custom CMS dashboard at /dashboard/ + headless API at /api/<page>/.
 Django Admin is intentionally not mounted.
 """
 
@@ -14,6 +14,11 @@ urlpatterns = [
     path("dashboard/", include("dashboard.urls", namespace="dashboard")),
     path("api/home/", include("home.urls")),
     path("api/about-us/", include("about_us.urls")),
+    path("api/schools/", include("schools.urls")),
+    path("api/employers/", include("employers.urls")),
+    path("api/partners/", include("partners.urls")),
+    path("api/events/", include("events.urls")),
+    path("api/insight/", include("insight.urls")),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
