@@ -1,9 +1,6 @@
 <div class="card card-success card-outline">
-    <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="card-header">
         <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
-        <button type="button" id="section-image-trigger" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus mr-1"></i> Add Images
-        </button>
     </div>
     <div class="card-body">
         {{ images_formset.management_form }}
@@ -13,7 +10,19 @@
 
         <input type="file" id="section-image-picker" accept="image/*" multiple class="d-none">
 
-        <div id="section-image-rows" class="yp-image-grid">
+        <div class="yp-dropzone" id="section-image-dropzone" role="button" tabindex="0">
+            <div class="yp-dropzone-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <p class="yp-dropzone-title">
+                Drop images here or <strong>click to browse</strong>
+            </p>
+            <p class="yp-dropzone-hint">
+                PNG, JPG, GIF · multiple selection supported
+            </p>
+        </div>
+
+        <div id="section-image-rows" class="yp-image-grid mt-3">
             {% for image_form in images_formset %}
             <div class="yp-image-tile">
                 {% for hidden in image_form.hidden_fields %}{{ hidden }}{% endfor %}
@@ -37,12 +46,6 @@
             </div>
             {% endfor %}
         </div>
-
-        <p id="section-image-empty-msg" class="text-muted small mb-0 mt-2"
-           {% if images_formset.forms %}style="display:none;"{% endif %}>
-            <i class="fas fa-info-circle mr-1"></i>
-            No images yet — click "Add Images" to upload one or several.
-        </p>
     </div>
 </div>
 
@@ -71,28 +74,17 @@
     const prefix = "{{ images_formset.prefix }}";
     const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
     const container = document.getElementById('section-image-rows');
-    const triggerBtn = document.getElementById('section-image-trigger');
+    const dropzone = document.getElementById('section-image-dropzone');
     const picker = document.getElementById('section-image-picker');
     const tpl = document.getElementById('section-image-empty');
-    const emptyMsg = document.getElementById('section-image-empty-msg');
-    if (!totalInput || !container || !triggerBtn || !picker || !tpl) return;
-
-    function updateEmptyMsg() {
-        if (!emptyMsg) return;
-        const visibleTiles = Array.from(
-            container.querySelectorAll('.yp-image-tile')
-        ).filter(function (t) { return t.style.display !== 'none'; }).length;
-        emptyMsg.style.display = visibleTiles ? 'none' : '';
-    }
+    if (!totalInput || !container || !dropzone || !picker || !tpl) return;
 
     function setFileOn(input, file) {
         try {
             const dt = new DataTransfer();
             dt.items.add(file);
             input.files = dt.files;
-        } catch (e) {
-            // DataTransfer unsupported — fall back to leaving the input empty.
-        }
+        } catch (e) { /* DataTransfer unsupported */ }
     }
 
     function showThumb(tile, file) {
@@ -106,27 +98,63 @@
         reader.readAsDataURL(file);
     }
 
-    triggerBtn.addEventListener('click', function () { picker.click(); });
+    function addFile(file) {
+        if (!file.type || !file.type.startsWith('image/')) return;
+        const index = parseInt(totalInput.value, 10);
+        const html = tpl.innerHTML.replace(/__prefix__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const tile = wrapper.firstElementChild;
+        container.appendChild(tile);
+        const input = tile.querySelector('.yp-image-tile-input');
+        if (input) setFileOn(input, file);
+        showThumb(tile, file);
+        totalInput.value = index + 1;
+    }
 
-    picker.addEventListener('change', function () {
-        if (!picker.files || !picker.files.length) return;
-        Array.from(picker.files).forEach(function (file) {
-            if (!file.type || !file.type.startsWith('image/')) return;
-            const index = parseInt(totalInput.value, 10);
-            const html = tpl.innerHTML.replace(/__prefix__/g, index);
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = html.trim();
-            const tile = wrapper.firstElementChild;
-            container.appendChild(tile);
-            const input = tile.querySelector('.yp-image-tile-input');
-            if (input) setFileOn(input, file);
-            showThumb(tile, file);
-            totalInput.value = index + 1;
-        });
-        picker.value = '';
-        updateEmptyMsg();
+    function handleFiles(files) {
+        if (!files || !files.length) return;
+        Array.from(files).forEach(addFile);
+    }
+
+    /* Click → open picker. */
+    dropzone.addEventListener('click', function () { picker.click(); });
+    dropzone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            picker.click();
+        }
     });
 
+    /* File picker → process files. */
+    picker.addEventListener('change', function () {
+        handleFiles(picker.files);
+        picker.value = '';
+    });
+
+    /* Drag-and-drop on dropzone. */
+    ['dragenter', 'dragover'].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('is-dragging');
+        });
+    });
+    ['dragleave', 'dragend'].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target === dropzone) dropzone.classList.remove('is-dragging');
+        });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('is-dragging');
+        handleFiles(e.dataTransfer && e.dataTransfer.files);
+    });
+
+    /* Remove tile (also handles existing saved images). */
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
         if (!btn) return;
@@ -137,9 +165,6 @@
         const clearCheckbox = tile.querySelector('[data-clear-checkbox]');
         if (clearCheckbox) clearCheckbox.checked = true;
         tile.style.display = 'none';
-        updateEmptyMsg();
     });
-
-    updateEmptyMsg();
 })();
 </script>

@@ -3,17 +3,12 @@
 {% block title %}Employers — Events Section{% endblock %}
 {% block page_title %}Events Section{% endblock %}
 {% block breadcrumb %}
-    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
+    <li class="breadcrumb-item">Content Management</li>
     <li class="breadcrumb-item"><a href="{% url 'dashboard:employers_module' %}">Employers Management</a></li>
     <li class="breadcrumb-item active">Events Section</li>
 {% endblock %}
 
 {% block content %}
-<style>
-    /* Each event-image row already has its own "Image #N" header above
-       the file picker, so the field's own "Image" label is redundant. */
-    .event-image-row .form-group > label { display: none; }
-</style>
 <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -58,32 +53,45 @@
                 <div class="alert alert-danger">{{ image_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="event-images">
+            <input type="file" id="event-image-picker" accept="image/*" multiple class="d-none">
+
+            <div class="yp-dropzone" id="event-image-dropzone" role="button" tabindex="0">
+                <div class="yp-dropzone-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <p class="yp-dropzone-title">
+                    Drop images here or <strong>click to browse</strong>
+                </p>
+                <p class="yp-dropzone-hint">
+                    PNG, JPG, GIF · multiple selection supported
+                </p>
+            </div>
+
+            <div id="event-images" class="yp-image-grid mt-3">
                 {% for image_form in image_formset %}
-                <div class="event-image-row border rounded p-3 mb-3">
+                <div class="yp-image-tile">
                     {% for hidden in image_form.hidden_fields %}{{ hidden }}{% endfor %}
                     <input type="hidden" name="{{ image_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-image mr-1 text-info"></i>
-                            Image <span class="image-position">{{ forloop.counter }}</span>
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            {% include "dashboard/home/_field.html" with field=image_form.image %}
-                        </div>
-                    </div>
+
+                    {% if image_form.image.value and image_form.image.value.url %}
+                        <img class="yp-image-tile-img" src="{{ image_form.image.value.url }}" alt="">
+                        <input type="checkbox" name="{{ image_form.image.html_name }}-clear" data-clear-checkbox class="d-none">
+                    {% else %}
+                        <img class="yp-image-tile-img" src="" alt="" style="display:none;">
+                    {% endif %}
+
+                    <input type="file" name="{{ image_form.image.html_name }}"
+                           id="{{ image_form.image.id_for_label }}"
+                           accept="image/*"
+                           class="d-none yp-image-tile-input">
+
+                    <button type="button" class="yp-image-tile-remove remove-row" title="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-event-image" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Event Image
-            </button>
         </div>
     </div>
 
@@ -97,26 +105,23 @@
 </form>
 
 <template id="event-image-empty">
-    <div class="event-image-row border rounded p-3 mb-3">
-        {% with image_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-image mr-1 text-info"></i>
-                    Image <span class="image-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=empty.image %}
-                </div>
-            </div>
-        {% endwith %}
+    {% with image_formset.empty_form as empty %}
+    <div class="yp-image-tile">
+        {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+        <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+
+        <img class="yp-image-tile-img" src="" alt="" style="display:none;">
+
+        <input type="file" name="{{ empty.image.html_name }}"
+               id="{{ empty.image.id_for_label }}"
+               accept="image/*"
+               class="d-none yp-image-tile-input">
+
+        <button type="button" class="yp-image-tile-remove remove-row" title="Remove">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -126,43 +131,94 @@
     const prefix = "{{ image_formset.prefix }}";
     const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
     const container = document.getElementById('event-images');
-    const addBtn = document.getElementById('add-event-image');
+    const dropzone = document.getElementById('event-image-dropzone');
+    const picker = document.getElementById('event-image-picker');
     const tpl = document.getElementById('event-image-empty');
+    if (!totalInput || !container || !dropzone || !picker || !tpl) return;
 
-    function renumberPositions() {
-        const rows = container.querySelectorAll('.event-image-row');
-        let visibleIndex = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visibleIndex += 1;
-            const label = row.querySelector('.image-position');
-            if (label) label.textContent = visibleIndex;
-        });
+    function setFileOn(input, file) {
+        try {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+        } catch (e) { /* DataTransfer unsupported */ }
     }
 
-    addBtn.addEventListener('click', function () {
+    function showThumb(tile, file) {
+        const img = tile.querySelector('.yp-image-tile-img');
+        if (!img) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            img.src = e.target.result;
+            img.style.display = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function addFile(file) {
+        if (!file.type || !file.type.startsWith('image/')) return;
         const index = parseInt(totalInput.value, 10);
         const html = tpl.innerHTML.replace(/__prefix__/g, index);
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
+        const tile = wrapper.firstElementChild;
+        container.appendChild(tile);
+        const input = tile.querySelector('.yp-image-tile-input');
+        if (input) setFileOn(input, file);
+        showThumb(tile, file);
         totalInput.value = index + 1;
-        renumberPositions();
+    }
+
+    function handleFiles(files) {
+        if (!files || !files.length) return;
+        Array.from(files).forEach(addFile);
+    }
+
+    dropzone.addEventListener('click', function () { picker.click(); });
+    dropzone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            picker.click();
+        }
+    });
+
+    picker.addEventListener('change', function () {
+        handleFiles(picker.files);
+        picker.value = '';
+    });
+
+    ['dragenter', 'dragover'].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.add('is-dragging');
+        });
+    });
+    ['dragleave', 'dragend'].forEach(function (evt) {
+        dropzone.addEventListener(evt, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.target === dropzone) dropzone.classList.remove('is-dragging');
+        });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('is-dragging');
+        handleFiles(e.dataTransfer && e.dataTransfer.files);
     });
 
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
         if (!btn) return;
-        const row = btn.closest('.event-image-row');
-        if (!row) return;
-        const flag = row.querySelector('.delete-flag');
+        const tile = btn.closest('.yp-image-tile');
+        if (!tile) return;
+        const flag = tile.querySelector('.delete-flag');
         if (flag) flag.value = 'on';
-        row.style.display = 'none';
-        renumberPositions();
+        const clearCheckbox = tile.querySelector('[data-clear-checkbox]');
+        if (clearCheckbox) clearCheckbox.checked = true;
+        tile.style.display = 'none';
     });
-
-    renumberPositions();
 })();
 </script>
 {% endblock %}

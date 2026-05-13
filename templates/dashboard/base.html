@@ -577,6 +577,9 @@
             margin: .3rem 0 0;
             font-size: .85rem;
         }
+        /* Hide the entire breadcrumb when a page has no parent context
+           (e.g. Dashboard, Header Mgmt, Footer Mgmt). */
+        .breadcrumb:empty { display: none; }
         .breadcrumb-item a { color: var(--yp-muted); text-decoration: none; }
         .breadcrumb-item a:hover { color: var(--yp-primary); text-decoration: underline; }
         .breadcrumb-item.active { color: var(--yp-ink-2); font-weight: 500; }
@@ -611,7 +614,12 @@
             margin: 0;
             display: inline-flex;
             align-items: center; gap: .5rem;
+            float: none !important;
         }
+        /* When a card-header uses d-flex, ensure no AdminLTE float
+           interferes with right-alignment of the action button. */
+        .card-header.d-flex { display: flex !important; }
+        .card-header.d-flex > * { float: none !important; }
         .card-body { padding: 1.25rem; }
         .card.card-outline {
             border-top: 3px solid var(--yp-primary);
@@ -1229,29 +1237,82 @@
         }
 
         /* =====================================================
-           Section-image thumbnail grid (multi-upload UX)
+           Section-image dropzone + thumbnail grid
            ===================================================== */
+        .yp-dropzone {
+            position: relative;
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+            padding: 1.75rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            transition: border-color .15s ease, background .15s ease,
+                        transform .12s ease, box-shadow .15s ease;
+        }
+        .yp-dropzone:hover {
+            border-color: var(--yp-primary);
+            background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+        }
+        .yp-dropzone.is-dragging {
+            border-color: var(--yp-primary);
+            background: linear-gradient(180deg, #e0e7ff 0%, #c7d2fe 100%);
+            transform: scale(1.005);
+            box-shadow: 0 12px 24px -12px rgba(79, 70, 229, .35);
+        }
+        .yp-dropzone-icon {
+            width: 56px; height: 56px;
+            margin: 0 auto .7rem;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            color: #fff;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1.45rem;
+            box-shadow: 0 10px 20px -8px rgba(79, 70, 229, .55),
+                        inset 0 1px 0 rgba(255, 255, 255, .25);
+        }
+        .yp-dropzone-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--yp-ink);
+            margin: 0 0 .2rem;
+        }
+        .yp-dropzone-title strong {
+            color: var(--yp-primary);
+            font-weight: 600;
+        }
+        .yp-dropzone-hint {
+            font-size: .8rem;
+            color: var(--yp-muted);
+            margin: 0;
+        }
+
         .yp-image-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: .75rem;
+            gap: .85rem;
         }
+        .yp-image-grid:empty { display: none; }
         .yp-image-tile {
             position: relative;
-            width: 130px;
-            height: 130px;
+            width: 140px;
+            height: 140px;
             border: 1px solid var(--yp-line);
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
-            background: #f9fafb;
-            box-shadow: 0 1px 2px rgba(17, 24, 39, .05);
+            background: #f3f4f6;
+            box-shadow: 0 4px 10px -4px rgba(17, 24, 39, .15),
+                        0 1px 2px rgba(17, 24, 39, .05);
             transition: transform .15s ease, box-shadow .15s ease,
                         border-color .15s ease;
         }
         .yp-image-tile:hover {
-            transform: translateY(-2px);
-            border-color: #9ca3af;
-            box-shadow: 0 6px 14px -6px rgba(17, 24, 39, .18);
+            transform: translateY(-3px);
+            border-color: var(--yp-primary);
+            box-shadow: 0 12px 24px -10px rgba(17, 24, 39, .25),
+                        0 4px 8px -4px rgba(79, 70, 229, .25);
         }
         .yp-image-tile-img {
             width: 100%;
@@ -1259,28 +1320,49 @@
             object-fit: cover;
             display: block;
         }
+        /* Dim overlay on hover so the cross is easier to see. */
+        .yp-image-tile::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,.3) 0%, transparent 35%);
+            opacity: 0;
+            transition: opacity .15s ease;
+            pointer-events: none;
+        }
+        .yp-image-tile:hover::after { opacity: 1; }
         .yp-image-tile-remove {
             position: absolute;
-            top: 6px;
-            right: 6px;
-            width: 26px;
-            height: 26px;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
             padding: 0;
             border: 0;
             border-radius: 50%;
-            background: rgba(0, 0, 0, .72);
-            color: #fff;
-            font-size: 12px;
+            background: rgba(255, 255, 255, .92);
+            color: #b91c1c;
+            font-size: 13px;
             line-height: 1;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
-            transition: background .15s ease, transform .12s ease;
+            box-shadow: 0 4px 10px -2px rgba(0, 0, 0, .3);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            transform: scale(.85);
+            transition: opacity .15s ease, transform .15s ease,
+                        background .15s ease, color .15s ease;
+            z-index: 2;
+        }
+        .yp-image-tile:hover .yp-image-tile-remove {
+            opacity: 1;
+            transform: scale(1);
         }
         .yp-image-tile-remove:hover {
             background: var(--yp-danger);
+            color: #fff;
             transform: scale(1.08);
         }
         .yp-image-tile-remove:focus { outline: none; }
@@ -1526,11 +1608,7 @@
                             </span>
                             <span>{% block page_title %}Dashboard{% endblock %}</span>
                         </h1>
-                        <ol class="breadcrumb">
-                            {% block breadcrumb %}
-                                <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
-                            {% endblock %}
-                        </ol>
+                        <ol class="breadcrumb">{% block breadcrumb %}{% endblock %}</ol>
                     </div>
                     <div class="col-md-4 text-md-right mt-3 mt-md-0">
                         {% block page_actions %}{% endblock %}
