@@ -15,7 +15,6 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Logo ------------ #}
     <div class="card card-success card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-image mr-1"></i> Logo</h3>
@@ -25,7 +24,6 @@
         </div>
     </div>
 
-    {# ------------ CTA button ------------ #}
     <div class="card card-warning card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Header Button</h3>
@@ -42,7 +40,6 @@
         </div>
     </div>
 
-    {# ------------ Tabs (manual list, add/delete) ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-bars mr-1"></i> Header Tabs</h3>
@@ -93,7 +90,6 @@
     </div>
 </form>
 
-{# Hidden empty-form template used by the add-tab script. #}
 <template id="header-tab-empty">
     <div class="header-tab-row border rounded p-3 mb-2">
         {% with tab_formset.empty_form as empty %}

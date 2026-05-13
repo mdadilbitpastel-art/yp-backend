@@ -1,6 +1,9 @@
 <div class="card card-success card-outline">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title"><i class="fas fa-image mr-1"></i> Images</h3>
+        <button type="button" id="section-image-trigger" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-1"></i> Add Images
+        </button>
     </div>
     <div class="card-body">
         {{ images_formset.management_form }}
@@ -8,47 +11,59 @@
             <div class="alert alert-danger">{{ images_formset.non_form_errors|join:" " }}</div>
         {% endif %}
 
-        <div id="section-image-rows">
+        <input type="file" id="section-image-picker" accept="image/*" multiple class="d-none">
+
+        <div id="section-image-rows" class="yp-image-grid">
             {% for image_form in images_formset %}
-            <div class="section-image-row border rounded p-3 mb-2">
+            <div class="yp-image-tile">
                 {% for hidden in image_form.hidden_fields %}{{ hidden }}{% endfor %}
                 <input type="hidden" name="{{ image_form.DELETE.html_name }}" value="" class="delete-flag">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0 text-muted">
-                        Image <span class="section-image-position">{{ forloop.counter }}</span>
-                    </h6>
-                    <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Remove">
-                        <i class="fas fa-trash mr-1"></i> Remove
-                    </button>
-                </div>
-                {% include "dashboard/home/_field.html" with field=image_form.image %}
+
+                {% if image_form.image.value and image_form.image.value.url %}
+                    <img class="yp-image-tile-img" src="{{ image_form.image.value.url }}" alt="">
+                    <input type="checkbox" name="{{ image_form.image.html_name }}-clear" data-clear-checkbox class="d-none">
+                {% else %}
+                    <img class="yp-image-tile-img" src="" alt="" style="display:none;">
+                {% endif %}
+
+                <input type="file" name="{{ image_form.image.html_name }}"
+                       id="{{ image_form.image.id_for_label }}"
+                       accept="image/*"
+                       class="d-none yp-image-tile-input">
+
+                <button type="button" class="yp-image-tile-remove remove-row" title="Remove">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             {% endfor %}
         </div>
 
-        <button type="button" id="add-section-image" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-plus mr-1"></i> Add Image
-        </button>
+        <p id="section-image-empty-msg" class="text-muted small mb-0 mt-2"
+           {% if images_formset.forms %}style="display:none;"{% endif %}>
+            <i class="fas fa-info-circle mr-1"></i>
+            No images yet — click "Add Images" to upload one or several.
+        </p>
     </div>
 </div>
 
-{# Empty-form template used by the add-image script. #}
 <template id="section-image-empty">
-    <div class="section-image-row border rounded p-3 mb-2">
-        {% with images_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0 text-muted">
-                    Image <span class="section-image-position"></span>
-                </h6>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
-            </div>
-            {% include "dashboard/home/_field.html" with field=empty.image %}
-        {% endwith %}
+    {% with images_formset.empty_form as empty %}
+    <div class="yp-image-tile">
+        {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+        <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+
+        <img class="yp-image-tile-img" src="" alt="" style="display:none;">
+
+        <input type="file" name="{{ empty.image.html_name }}"
+               id="{{ empty.image.id_for_label }}"
+               accept="image/*"
+               class="d-none yp-image-tile-input">
+
+        <button type="button" class="yp-image-tile-remove remove-row" title="Remove">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
+    {% endwith %}
 </template>
 
 <script>
@@ -56,43 +71,75 @@
     const prefix = "{{ images_formset.prefix }}";
     const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
     const container = document.getElementById('section-image-rows');
-    const addBtn = document.getElementById('add-section-image');
+    const triggerBtn = document.getElementById('section-image-trigger');
+    const picker = document.getElementById('section-image-picker');
     const tpl = document.getElementById('section-image-empty');
-    if (!totalInput || !container || !addBtn || !tpl) return;
+    const emptyMsg = document.getElementById('section-image-empty-msg');
+    if (!totalInput || !container || !triggerBtn || !picker || !tpl) return;
 
-    function renumber() {
-        const rows = container.querySelectorAll('.section-image-row');
-        let visible = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visible += 1;
-            const label = row.querySelector('.section-image-position');
-            if (label) label.textContent = visible;
-        });
+    function updateEmptyMsg() {
+        if (!emptyMsg) return;
+        const visibleTiles = Array.from(
+            container.querySelectorAll('.yp-image-tile')
+        ).filter(function (t) { return t.style.display !== 'none'; }).length;
+        emptyMsg.style.display = visibleTiles ? 'none' : '';
     }
 
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumber();
+    function setFileOn(input, file) {
+        try {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+        } catch (e) {
+            // DataTransfer unsupported — fall back to leaving the input empty.
+        }
+    }
+
+    function showThumb(tile, file) {
+        const img = tile.querySelector('.yp-image-tile-img');
+        if (!img) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            img.src = e.target.result;
+            img.style.display = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    triggerBtn.addEventListener('click', function () { picker.click(); });
+
+    picker.addEventListener('change', function () {
+        if (!picker.files || !picker.files.length) return;
+        Array.from(picker.files).forEach(function (file) {
+            if (!file.type || !file.type.startsWith('image/')) return;
+            const index = parseInt(totalInput.value, 10);
+            const html = tpl.innerHTML.replace(/__prefix__/g, index);
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html.trim();
+            const tile = wrapper.firstElementChild;
+            container.appendChild(tile);
+            const input = tile.querySelector('.yp-image-tile-input');
+            if (input) setFileOn(input, file);
+            showThumb(tile, file);
+            totalInput.value = index + 1;
+        });
+        picker.value = '';
+        updateEmptyMsg();
     });
 
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
         if (!btn) return;
-        const row = btn.closest('.section-image-row');
-        if (!row) return;
-        const flag = row.querySelector('.delete-flag');
+        const tile = btn.closest('.yp-image-tile');
+        if (!tile) return;
+        const flag = tile.querySelector('.delete-flag');
         if (flag) flag.value = 'on';
-        row.style.display = 'none';
-        renumber();
+        const clearCheckbox = tile.querySelector('[data-clear-checkbox]');
+        if (clearCheckbox) clearCheckbox.checked = true;
+        tile.style.display = 'none';
+        updateEmptyMsg();
     });
 
-    renumber();
+    updateEmptyMsg();
 })();
 </script>

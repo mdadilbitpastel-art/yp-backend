@@ -1,64 +1,24 @@
 {% extends "dashboard/base.html" %}
 
 {% block title %}{{ module.title }}{% endblock %}
+{% block content_header %}{% endblock %}
 {% block page_title %}{{ module.title }}{% endblock %}
+{% block page_icon %}{{ module.icon }}{% endblock %}
 {% block breadcrumb %}
     <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
     <li class="breadcrumb-item active">{{ module.title }}</li>
 {% endblock %}
 
 {% block content %}
-<div class="card mb-3">
-    <div class="card-body d-flex align-items-center justify-content-between flex-wrap">
-        <div>
-            <h5 class="mb-1"><i class="{{ module.icon }} mr-2 text-primary"></i>{{ module.title }}</h5>
-            <p class="text-muted mb-0">{{ module.description }}</p>
-        </div>
-        <div class="text-right">
-            <span class="badge badge-pill badge-primary p-2">
-                {{ stats.configured }} / {{ stats.total }} configured
-            </span>
-        </div>
-    </div>
-</div>
+    {% include "dashboard/_partials/page_intro.html" with title=module.title icon=module.icon description=module.description configured=stats.configured total=stats.total %}
 
-{% if sections %}
-<div class="row">
-    {% for section in sections %}
-    <div class="col-lg-4 col-md-6 col-12">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-start mb-3">
-                    <div class="bg-light rounded p-3 mr-3">
-                        <i class="{{ section.icon }} fa-lg text-primary"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-1">{{ section.title }}</h5>
-                        {% if section.is_configured %}
-                            <span class="badge badge-success">Configured</span>
-                        {% else %}
-                            <span class="badge badge-secondary">Not configured</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <p class="text-muted small mb-3">{{ section.description }}</p>
-                <a href="{% url section.url_name %}" class="btn btn-primary btn-sm btn-block">
-                    <i class="fas fa-edit mr-1"></i>Edit section
-                </a>
-            </div>
-        </div>
+    {% if sections %}
+    <div class="row">
+        {% for section in sections %}
+            {% include "dashboard/_partials/section_card.html" with section=section show_status=True %}
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
-{% else %}
-<div class="card">
-    <div class="card-body text-center py-5">
-        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
-        <h5 class="mb-2">No sections yet</h5>
-        <p class="text-muted mb-0">
-            Sections for the Events page will appear here as they are added.
-        </p>
-    </div>
-</div>
-{% endif %}
+    {% else %}
+        {% include "dashboard/_partials/empty_state.html" with icon="fas fa-layer-group" title="No sections yet" message="Sections for the Events page will appear here as they are added." %}
+    {% endif %}
 {% endblock %}

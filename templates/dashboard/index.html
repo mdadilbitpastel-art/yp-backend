@@ -2,265 +2,341 @@
 
 {% block title %}Dashboard{% endblock %}
 {% block page_title %}Dashboard Overview{% endblock %}
+{% block page_icon %}fas fa-tachometer-alt{% endblock %}
 {% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
     <li class="breadcrumb-item active">Dashboard</li>
 {% endblock %}
 
 {% block content %}
+
+<div class="yp-page-intro">
+    <span class="yp-intro-icon">
+        <i class="fas fa-hand-sparkles"></i>
+    </span>
+    <div>
+        <h2>Welcome back, {{ request.user.username }}</h2>
+        <p>
+            Manage every public-facing section of the Young Professionals
+            site from one place. Pick a module below to get started.
+        </p>
+    </div>
+    <div class="yp-intro-meta">
+        <span class="badge badge-soft-primary p-2">
+            <i class="fas fa-th-large mr-1"></i>{{ module_summaries|length }} modules
+        </span>
+    </div>
+</div>
+
 <div class="row">
+    <div class="col-xl-3 col-md-6 col-12 mb-3">
+        <div class="yp-stat yp-stat-primary">
+            <div>
+                <div class="yp-stat-label">Modules</div>
+                <div class="yp-stat-value">{{ module_summaries|length }}</div>
+            </div>
+            <div class="yp-stat-meta">Total content modules</div>
+            <i class="fas fa-th-large yp-stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-12 mb-3">
+        <div class="yp-stat yp-stat-success">
+            <div>
+                <div class="yp-stat-label">Sections configured</div>
+                <div class="yp-stat-value"><span data-stat="configured">0</span></div>
+            </div>
+            <div class="yp-stat-meta">Across all modules</div>
+            <i class="fas fa-check-circle yp-stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-12 mb-3">
+        <div class="yp-stat yp-stat-warning">
+            <div>
+                <div class="yp-stat-label">Sections pending</div>
+                <div class="yp-stat-value"><span data-stat="pending">0</span></div>
+            </div>
+            <div class="yp-stat-meta">Awaiting content</div>
+            <i class="fas fa-hourglass-half yp-stat-icon"></i>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 col-12 mb-3">
+        <div class="yp-stat yp-stat-info">
+            <div>
+                <div class="yp-stat-label">Overall progress</div>
+                <div class="yp-stat-value"><span data-stat="percent">0</span>%</div>
+            </div>
+            <div class="yp-stat-meta">Configured vs total</div>
+            <i class="fas fa-chart-line yp-stat-icon"></i>
+        </div>
+    </div>
+</div>
+
+{{ module_summaries|json_script:"yp-module-summaries" }}
+<script>
+    (function () {
+        try {
+            var data = JSON.parse(document.getElementById('yp-module-summaries').textContent);
+            var done = 0, total = 0;
+            data.forEach(function (m) { done += (m.configured || 0); total += (m.total || 0); });
+            var pct = total ? Math.round((done / total) * 100) : 0;
+            var setVal = function (key, v) {
+                var el = document.querySelector('[data-stat="' + key + '"]');
+                if (el) el.textContent = v;
+            };
+            setVal('configured', done);
+            setVal('pending', Math.max(total - done, 0));
+            setVal('percent', pct);
+        } catch (e) { /* no-op */ }
+    })();
+</script>
+
+<div class="row mt-4">
     {% for module in module_summaries %}
-    <div class="col-lg-6 col-12">
-        <div class="card card-outline card-primary h-100">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="{{ module.icon }} mr-2"></i>{{ module.title }}
-                </h3>
-                <div class="card-tools">
-                    <span class="badge badge-primary">
+    <div class="col-xl-4 col-lg-6 col-md-6 col-12 mb-3">
+        <div class="card yp-module-card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-start mb-3">
+                    <span class="yp-section-icon mr-3">
+                        <i class="{{ module.icon }}"></i>
+                    </span>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">{{ module.title }}</h5>
+                        <p class="text-muted small mb-0">{{ module.description }}</p>
+                    </div>
+                    <span class="badge badge-soft-primary p-2 ml-2 flex-shrink-0">
                         {{ module.configured }} / {{ module.total }}
                     </span>
                 </div>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">{{ module.description }}</p>
-                <div class="progress mb-3" style="height: 6px;">
+
+                <div class="d-flex justify-content-between align-items-center mb-1 small text-muted">
+                    <span>Progress</span>
                     {% if module.total %}
-                    <div class="progress-bar bg-primary"
-                         role="progressbar"
-                         style="width: {% widthratio module.configured module.total 100 %}%"></div>
+                        <span>{% widthratio module.configured module.total 100 %}%</span>
+                    {% else %}
+                        <span>—</span>
                     {% endif %}
                 </div>
-                <a href="{% url module.index_url %}" class="btn btn-primary btn-sm">
-                    Manage <i class="fas fa-arrow-circle-right ml-1"></i>
+                <div class="progress mb-3">
+                    {% if module.total %}
+                    <div class="progress-bar"
+                         role="progressbar"
+                         style="width: {% widthratio module.configured module.total 100 %}%"
+                         aria-valuenow="{{ module.configured }}"
+                         aria-valuemin="0"
+                         aria-valuemax="{{ module.total }}"></div>
+                    {% endif %}
+                </div>
+
+                <a href="{% url module.index_url %}" class="btn btn-sm yp-btn-manage">
+                    Manage <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
         </div>
     </div>
     {% endfor %}
+</div>
 
-    <div class="col-12">
-        <div class="card card-outline card-info">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-plug mr-2"></i>Frontend API</h3>
-            </div>
-            <div class="card-body">
-                <p class="text-muted">
-                    JSON endpoints consumed by the Next.js frontend. The combined
-                    payload for each page is the headline link; expand a row to see
-                    every per-section endpoint.
-                </p>
-                <div class="accordion" id="frontend-api-accordion">
-                    {% with api_pages='home,about-us,schools,employers,partners,events,insight'|cut:' ' %}{% endwith %}
+<div class="card card-outline card-info">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-plug mr-2 text-info"></i>Frontend API</h3>
+        <div class="card-tools">
+            <span class="badge badge-soft-info">7 pages</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">
+            JSON endpoints consumed by the Next.js frontend. The combined
+            payload for each page is the headline link; expand a row to see
+            every per-section endpoint.
+        </p>
+        <div class="accordion" id="frontend-api-accordion">
 
-                    {# Home #}
-                    <div class="card mb-2">
-                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-home mr-2 text-primary"></i>
-                                <strong>Home</strong>
-                                <a href="/api/home/" target="_blank" class="btn btn-info btn-sm ml-2">
-                                    <code class="text-white">/api/home/</code>
-                                    <i class="fas fa-external-link-alt ml-1"></i>
-                                </a>
-                            </div>
-                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-home">
-                                Sections <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                        </div>
-                        <div id="api-home" class="collapse" data-parent="#frontend-api-accordion">
-                            <div class="card-body py-2">
-                                <a href="/api/home/header/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">header</a>
-                                <a href="/api/home/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
-                                <a href="/api/home/features/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">features</a>
-                                <a href="/api/home/about/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">about</a>
-                                <a href="/api/home/network/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">network</a>
-                                <a href="/api/home/talent-pool/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">talent-pool</a>
-                                <a href="/api/home/apply/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">apply</a>
-                                <a href="/api/home/social-media/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">social-media</a>
-                                <a href="/api/home/testimonials/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">testimonials</a>
-                                <a href="/api/home/app/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">app</a>
-                                <a href="/api/home/footer/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">footer</a>
-                            </div>
-                        </div>
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-home text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Home</strong>
+                        <a href="/api/home/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/home/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <button class="btn btn-link btn-sm text-decoration-none yp-api-toggle" type="button" data-toggle="collapse" data-target="#api-home">
+                            Sections <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
                     </div>
-
-                    {# About Us #}
-                    <div class="card mb-2">
-                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-id-card mr-2 text-primary"></i>
-                                <strong>About Us</strong>
-                                <a href="/api/about-us/" target="_blank" class="btn btn-info btn-sm ml-2">
-                                    <code class="text-white">/api/about-us/</code>
-                                    <i class="fas fa-external-link-alt ml-1"></i>
-                                </a>
-                            </div>
-                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-about-us">
-                                Sections <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                        </div>
-                        <div id="api-about-us" class="collapse" data-parent="#frontend-api-accordion">
-                            <div class="card-body py-2">
-                                <a href="/api/about-us/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
-                                <a href="/api/about-us/mission/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">mission</a>
-                                <a href="/api/about-us/founder/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">founder</a>
-                                <a href="/api/about-us/values/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">values</a>
-                                <a href="/api/about-us/journey/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">journey</a>
-                                <a href="/api/about-us/pledge/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">pledge</a>
-                                <a href="/api/about-us/team/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">team</a>
-                                <a href="/api/about-us/community/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">community</a>
-                                <a href="/api/about-us/social-media/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">social-media</a>
-                            </div>
-                        </div>
+                <div id="api-home" class="collapse" data-parent="#frontend-api-accordion">
+                    <div class="card-body py-2">
+                        <a href="/api/home/header/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">header</a>
+                        <a href="/api/home/hero/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">hero</a>
+                        <a href="/api/home/features/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">features</a>
+                        <a href="/api/home/about/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">about</a>
+                        <a href="/api/home/network/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">network</a>
+                        <a href="/api/home/talent-pool/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">talent-pool</a>
+                        <a href="/api/home/apply/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">apply</a>
+                        <a href="/api/home/social-media/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">social-media</a>
+                        <a href="/api/home/testimonials/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">testimonials</a>
+                        <a href="/api/home/app/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">app</a>
+                        <a href="/api/home/footer/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">footer</a>
                     </div>
-
-                    {# Schools #}
-                    <div class="card mb-2">
-                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-school mr-2 text-primary"></i>
-                                <strong>Schools</strong>
-                                <a href="/api/schools/" target="_blank" class="btn btn-info btn-sm ml-2">
-                                    <code class="text-white">/api/schools/</code>
-                                    <i class="fas fa-external-link-alt ml-1"></i>
-                                </a>
-                            </div>
-                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-schools">
-                                Sections <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                        </div>
-                        <div id="api-schools" class="collapse" data-parent="#frontend-api-accordion">
-                            <div class="card-body py-2">
-                                <a href="/api/schools/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
-                                <a href="/api/schools/help/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">help</a>
-                                <a href="/api/schools/employer/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">employer</a>
-                                <a href="/api/schools/benchmark/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">benchmark</a>
-                                <a href="/api/schools/subscribe/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">subscribe</a>
-                                <a href="/api/schools/faq/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">faq</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {# Employers #}
-                    <div class="card mb-2">
-                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-briefcase mr-2 text-primary"></i>
-                                <strong>Employers</strong>
-                                <a href="/api/employers/" target="_blank" class="btn btn-info btn-sm ml-2">
-                                    <code class="text-white">/api/employers/</code>
-                                    <i class="fas fa-external-link-alt ml-1"></i>
-                                </a>
-                            </div>
-                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-employers">
-                                Sections <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                        </div>
-                        <div id="api-employers" class="collapse" data-parent="#frontend-api-accordion">
-                            <div class="card-body py-2">
-                                <a href="/api/employers/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
-                                <a href="/api/employers/network/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">network</a>
-                                <a href="/api/employers/mission/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">mission</a>
-                                <a href="/api/employers/offer/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">offer</a>
-                                <a href="/api/employers/events/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">events</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {# Partners #}
-                    <div class="card mb-2">
-                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-handshake mr-2 text-primary"></i>
-                                <strong>Partners</strong>
-                                <a href="/api/partners/" target="_blank" class="btn btn-info btn-sm ml-2">
-                                    <code class="text-white">/api/partners/</code>
-                                    <i class="fas fa-external-link-alt ml-1"></i>
-                                </a>
-                            </div>
-                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-partners">
-                                Sections <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                        </div>
-                        <div id="api-partners" class="collapse" data-parent="#frontend-api-accordion">
-                            <div class="card-body py-2">
-                                <a href="/api/partners/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
-                                <a href="/api/partners/partner/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">partner</a>
-                                <a href="/api/partners/family/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">family</a>
-                                <a href="/api/partners/review/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">review</a>
-                                <a href="/api/partners/founder/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">founder</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {# Events #}
-                    <div class="card mb-2">
-                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-calendar-alt mr-2 text-primary"></i>
-                                <strong>Events</strong>
-                                <a href="/api/events/" target="_blank" class="btn btn-info btn-sm ml-2">
-                                    <code class="text-white">/api/events/</code>
-                                    <i class="fas fa-external-link-alt ml-1"></i>
-                                </a>
-                            </div>
-                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-events">
-                                Sections <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                        </div>
-                        <div id="api-events" class="collapse" data-parent="#frontend-api-accordion">
-                            <div class="card-body py-2">
-                                <a href="/api/events/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
-                                <a href="/api/events/featured/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">featured</a>
-                                <a href="/api/events/upcoming/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">upcoming</a>
-                                <a href="/api/events/missed/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">missed</a>
-                                <a href="/api/events/submit/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">submit</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {# Insight #}
-                    <div class="card mb-0">
-                        <div class="card-header p-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-lightbulb mr-2 text-primary"></i>
-                                <strong>Insight</strong>
-                                <a href="/api/insight/" target="_blank" class="btn btn-info btn-sm ml-2">
-                                    <code class="text-white">/api/insight/</code>
-                                    <i class="fas fa-external-link-alt ml-1"></i>
-                                </a>
-                            </div>
-                            <button class="btn btn-link btn-sm" type="button" data-toggle="collapse" data-target="#api-insight">
-                                Sections <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                        </div>
-                        <div id="api-insight" class="collapse" data-parent="#frontend-api-accordion">
-                            <div class="card-body py-2">
-                                <a href="/api/insight/hero/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">hero</a>
-                                <a href="/api/insight/founder/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">founder</a>
-                                <a href="/api/insight/article/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">article</a>
-                                <a href="/api/insight/lane/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">lane</a>
-                                <a href="/api/insight/subscribe/" target="_blank" class="badge badge-light p-2 mr-1 mb-1">subscribe</a>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-id-card text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">About Us</strong>
+                        <a href="/api/about-us/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/about-us/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <button class="btn btn-link btn-sm text-decoration-none yp-api-toggle" type="button" data-toggle="collapse" data-target="#api-about-us">
+                            Sections <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                <div id="api-about-us" class="collapse" data-parent="#frontend-api-accordion">
+                    <div class="card-body py-2">
+                        <a href="/api/about-us/hero/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">hero</a>
+                        <a href="/api/about-us/mission/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">mission</a>
+                        <a href="/api/about-us/founder/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">founder</a>
+                        <a href="/api/about-us/values/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">values</a>
+                        <a href="/api/about-us/journey/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">journey</a>
+                        <a href="/api/about-us/pledge/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">pledge</a>
+                        <a href="/api/about-us/team/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">team</a>
+                        <a href="/api/about-us/community/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">community</a>
+                        <a href="/api/about-us/social-media/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">social-media</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-school text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Schools</strong>
+                        <a href="/api/schools/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/schools/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <button class="btn btn-link btn-sm text-decoration-none yp-api-toggle" type="button" data-toggle="collapse" data-target="#api-schools">
+                            Sections <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                <div id="api-schools" class="collapse" data-parent="#frontend-api-accordion">
+                    <div class="card-body py-2">
+                        <a href="/api/schools/hero/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">hero</a>
+                        <a href="/api/schools/help/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">help</a>
+                        <a href="/api/schools/employer/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">employer</a>
+                        <a href="/api/schools/benchmark/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">benchmark</a>
+                        <a href="/api/schools/subscribe/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">subscribe</a>
+                        <a href="/api/schools/faq/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">faq</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-briefcase text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Employers</strong>
+                        <a href="/api/employers/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/employers/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <button class="btn btn-link btn-sm text-decoration-none yp-api-toggle" type="button" data-toggle="collapse" data-target="#api-employers">
+                            Sections <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                <div id="api-employers" class="collapse" data-parent="#frontend-api-accordion">
+                    <div class="card-body py-2">
+                        <a href="/api/employers/hero/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">hero</a>
+                        <a href="/api/employers/network/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">network</a>
+                        <a href="/api/employers/mission/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">mission</a>
+                        <a href="/api/employers/offer/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">offer</a>
+                        <a href="/api/employers/events/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">events</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-handshake text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Partners</strong>
+                        <a href="/api/partners/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/partners/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <button class="btn btn-link btn-sm text-decoration-none yp-api-toggle" type="button" data-toggle="collapse" data-target="#api-partners">
+                            Sections <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                <div id="api-partners" class="collapse" data-parent="#frontend-api-accordion">
+                    <div class="card-body py-2">
+                        <a href="/api/partners/hero/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">hero</a>
+                        <a href="/api/partners/partner/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">partner</a>
+                        <a href="/api/partners/family/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">family</a>
+                        <a href="/api/partners/review/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">review</a>
+                        <a href="/api/partners/founder/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">founder</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-calendar-alt text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Events</strong>
+                        <a href="/api/events/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/events/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <button class="btn btn-link btn-sm text-decoration-none yp-api-toggle" type="button" data-toggle="collapse" data-target="#api-events">
+                            Sections <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                <div id="api-events" class="collapse" data-parent="#frontend-api-accordion">
+                    <div class="card-body py-2">
+                        <a href="/api/events/hero/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">hero</a>
+                        <a href="/api/events/featured/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">featured</a>
+                        <a href="/api/events/upcoming/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">upcoming</a>
+                        <a href="/api/events/missed/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">missed</a>
+                        <a href="/api/events/submit/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">submit</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-0">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-lightbulb text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Insight</strong>
+                        <a href="/api/insight/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/insight/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <button class="btn btn-link btn-sm text-decoration-none yp-api-toggle" type="button" data-toggle="collapse" data-target="#api-insight">
+                            Sections <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                    </div>
+                <div id="api-insight" class="collapse" data-parent="#frontend-api-accordion">
+                    <div class="card-body py-2">
+                        <a href="/api/insight/hero/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">hero</a>
+                        <a href="/api/insight/founder/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">founder</a>
+                        <a href="/api/insight/article/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">article</a>
+                        <a href="/api/insight/lane/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">lane</a>
+                        <a href="/api/insight/subscribe/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">subscribe</a>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-info-circle mr-1"></i>About this dashboard</h3>
+        <h3 class="card-title"><i class="fas fa-info-circle mr-2 text-info"></i>About this dashboard</h3>
     </div>
     <div class="card-body">
         <p class="mb-0">
             Custom CMS for Young Professionals. Content is grouped into
-            <strong>modules</strong> (Home Management today; more coming) — each
-            module's sections live on its own management page so this overview
-            stays clean as more sections are added.
+            <strong>modules</strong>; each module's sections live on its own
+            management page so this overview stays clean as more sections
+            are added.
         </p>
     </div>
 </div>

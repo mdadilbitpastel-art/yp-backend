@@ -3,66 +3,215 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login | Young Professionals CMS</title>
+    <title>Sign in | Young Professionals CMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <style>
+        :root {
+            --yp-primary:        #4f46e5;
+            --yp-primary-700:    #3730a3;
+            --yp-accent:         #06b6d4;
+            --yp-ink:            #0f172a;
+            --yp-muted:          #64748b;
+            --yp-line:           #e2e8f0;
+            --yp-danger:         #ef4444;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--yp-ink);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, rgba(6, 182, 212, .25), transparent 60%),
+                radial-gradient(900px 600px at 90% 110%, rgba(79, 70, 229, .35), transparent 55%),
+                linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .login-shell {
+            width: 100%;
+            max-width: 440px;
+        }
+        .brand-mark {
+            display: flex; align-items: center; justify-content: center;
+            gap: .65rem;
+            color: #fff;
+            margin-bottom: 1.4rem;
+        }
+        .brand-badge {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--yp-primary) 0%, var(--yp-accent) 100%);
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1.15rem;
+            box-shadow: 0 12px 28px -10px rgba(6, 182, 212, .55);
+        }
+        .brand-text {
+            font-weight: 700;
+            font-size: 1.15rem;
+            letter-spacing: -.01em;
+        }
+        .brand-text small {
+            display: block;
+            font-size: .68rem;
+            font-weight: 500;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            opacity: .65;
+        }
+        .login-card {
+            background: rgba(255, 255, 255, .98);
+            border-radius: 18px;
+            padding: 2rem 1.85rem;
+            box-shadow:
+                0 30px 60px -20px rgba(2, 6, 23, .55),
+                0 8px 16px -8px rgba(2, 6, 23, .35);
+            border: 1px solid rgba(255, 255, 255, .15);
+        }
+        .login-card h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 0 .25rem;
+            text-align: center;
+        }
+        .login-sub {
+            text-align: center;
+            color: var(--yp-muted);
+            margin: 0 0 1.6rem;
+            font-size: .92rem;
+        }
+        .form-group { margin-bottom: 1rem; }
+        label {
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--yp-ink);
+            margin-bottom: .35rem;
+            display: block;
+        }
+        .input-wrap { position: relative; }
+        .input-wrap .input-icon {
+            position: absolute;
+            top: 50%; left: 14px;
+            transform: translateY(-50%);
+            color: var(--yp-muted);
+            pointer-events: none;
+            font-size: .9rem;
+        }
+        .form-control {
+            width: 100%;
+            border: 1px solid var(--yp-line);
+            border-radius: 10px;
+            padding: .65rem 1rem .65rem 2.4rem;
+            font-size: .95rem;
+            color: var(--yp-ink);
+            background: #fff;
+            transition: border-color .15s ease, box-shadow .15s ease;
+            font-family: inherit;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--yp-primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15);
+        }
+        .field-error { color: var(--yp-danger); font-size: .8rem; margin-top: .35rem; }
+        .alert-danger {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 4px solid var(--yp-danger);
+            color: #991b1b;
+            border-radius: 10px;
+            padding: .8rem 1rem;
+            font-size: .88rem;
+            margin-bottom: 1rem;
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--yp-primary) 0%, var(--yp-primary-700) 100%);
+            color: #fff;
+            border: 0;
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            font-weight: 600;
+            font-size: .95rem;
+            cursor: pointer;
+            transition: transform .08s ease, box-shadow .15s ease, filter .15s ease;
+            box-shadow: 0 12px 24px -10px rgba(79, 70, 229, .65);
+        }
+        .btn-submit:hover { filter: brightness(1.05); }
+        .btn-submit:active { transform: translateY(1px); }
+        .login-footer {
+            text-align: center;
+            margin-top: 1.4rem;
+            color: rgba(255, 255, 255, .6);
+            font-size: .8rem;
+        }
+    </style>
 </head>
-<body class="hold-transition login-page">
-<div class="login-box">
-    <div class="login-logo">
-        <b>YP Login</b>
-    </div>
+<body>
+    <div class="login-shell">
+        <div class="brand-mark">
+            <span class="brand-badge"><i class="fas fa-graduation-cap"></i></span>
+            <div class="brand-text">
+                Young Professionals
+                <small>Content Studio</small>
+            </div>
+        </div>
 
-    <div class="card">
-        <div class="card-body login-card-body">
-            <p class="login-box-msg">Sign in to manage contents</p>
+        <div class="login-card">
+            <h1>Welcome back</h1>
+            <p class="login-sub">Sign in to manage your site content</p>
 
             {% if form.non_field_errors %}
-                <div class="alert alert-danger">
+                <div class="alert-danger">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
                     {{ form.non_field_errors|join:" " }}
                 </div>
             {% endif %}
 
-            <form method="post" action="">
+            <form method="post" action="" novalidate>
                 {% csrf_token %}
-                <div class="input-group mb-3">
-                    {{ form.username }}
-                    <div class="input-group-append">
-                        <div class="input-group-text"><span class="fas fa-user"></span></div>
-                    </div>
-                </div>
-                {% if form.username.errors %}
-                    <small class="text-danger">{{ form.username.errors|join:" " }}</small>
-                {% endif %}
 
-                <div class="input-group mb-3">
-                    {{ form.password }}
-                    <div class="input-group-append">
-                        <div class="input-group-text"><span class="fas fa-lock"></span></div>
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    <div class="input-wrap">
+                        <span class="input-icon"><i class="fas fa-user"></i></span>
+                        {{ form.username }}
                     </div>
+                    {% if form.username.errors %}
+                        <div class="field-error">{{ form.username.errors|join:" " }}</div>
+                    {% endif %}
                 </div>
-                {% if form.password.errors %}
-                    <small class="text-danger">{{ form.password.errors|join:" " }}</small>
-                {% endif %}
 
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-block">
-                            <i class="fas fa-sign-in-alt mr-1"></i> Sign In
-                        </button>
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        {{ form.password }}
                     </div>
+                    {% if form.password.errors %}
+                        <div class="field-error">{{ form.password.errors|join:" " }}</div>
+                    {% endif %}
                 </div>
 
                 {% if next %}
                     <input type="hidden" name="next" value="{{ next }}">
                 {% endif %}
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-sign-in-alt mr-1"></i> Sign in
+                </button>
             </form>
         </div>
-    </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+        <div class="login-footer">
+            &copy; Young Professionals &middot; Content Studio
+        </div>
+    </div>
 </body>
 </html>

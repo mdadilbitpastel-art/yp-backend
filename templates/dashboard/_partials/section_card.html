@@ -1,0 +1,28 @@
+
+<div class="col-xl-4 col-lg-6 col-md-6 col-12 mb-3">
+    <div class="yp-section-card {% if section.is_configured %}is-configured{% endif %}">
+        <div class="yp-section-head">
+            <span class="yp-section-icon">
+                <i class="{{ section.icon|default:'fas fa-cube' }}"></i>
+            </span>
+            <div class="flex-grow-1">
+                <h5>{{ section.title }}</h5>
+                {% if show_status %}
+                    {% if section.is_configured %}
+                        <span class="badge badge-soft-success">
+                            <i class="fas fa-check-circle mr-1"></i>Configured
+                        </span>
+                    {% else %}
+                        <span class="badge badge-soft-secondary">
+                            <i class="fas fa-circle mr-1" style="font-size:.55rem;"></i>Not configured
+                        </span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <p class="yp-section-desc">{{ section.description }}</p>
+        <a href="{% url section.url_name %}" class="btn btn-sm yp-btn-section">
+            <i class="fas fa-edit mr-1"></i>{{ cta_label|default:"Edit section" }}
+        </a>
+    </div>
+</div>

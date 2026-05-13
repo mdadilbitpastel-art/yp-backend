@@ -16,10 +16,9 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Section heading ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-paper-plane mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.apply_section_title %}
@@ -27,7 +26,6 @@
         </div>
     </div>
 
-    {# ------------ Employer Picker (from Data Management) ------------ #}
     <div class="card card-secondary card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list-check mr-1"></i> Add Employers Logo</h3>
@@ -37,7 +35,6 @@
         </div>
     </div>
 
-    {# ------------ Employers (manual list, add/delete) ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-briefcase mr-1"></i> Employers</h3>
@@ -98,7 +95,6 @@
         </div>
     </div>
 
-    {# ------------ Bottom button ------------ #}
     <div class="card card-warning card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Bottom Button</h3>
@@ -124,7 +120,6 @@
     </div>
 </form>
 
-{# Hidden empty-form template used by the add-company script. #}
 <template id="apply-company-empty">
     <div class="apply-company-row border rounded p-3 mb-3">
         {% with company_formset.empty_form as empty %}

@@ -1,0 +1,26 @@
+
+<div class="yp-page-intro">
+    <span class="yp-intro-icon">
+        <i class="{{ icon|default:'fas fa-bookmark' }}"></i>
+    </span>
+    <div>
+        <h2>{{ title }}</h2>
+        {% if description %}<p>{{ description }}</p>{% endif %}
+    </div>
+    {% if badge_text or total is not None %}
+    <div class="yp-intro-meta">
+        {% if badge_text %}
+            <span class="badge badge-soft-primary p-2">{{ badge_text }}</span>
+        {% else %}
+            {% widthratio configured total 100 as pct %}
+            <div class="d-flex align-items-center justify-content-end mb-1">
+                <span class="badge badge-soft-primary p-2">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    {{ configured }} / {{ total }} configured
+                </span>
+            </div>
+            <small class="text-muted">{{ pct }}% complete</small>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>

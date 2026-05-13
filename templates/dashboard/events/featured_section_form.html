@@ -16,10 +16,9 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-star mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.label %}
@@ -30,7 +29,6 @@
         </div>
     </div>
 
-    {# ------------ Button ------------ #}
     <div class="card card-warning card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Call to Action Button</h3>
@@ -47,7 +45,6 @@
         </div>
     </div>
 
-    {# ------------ Images ------------ #}
     {% include "dashboard/home/_section_images.html" %}
 
     <div class="card">

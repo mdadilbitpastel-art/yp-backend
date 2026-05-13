@@ -16,7 +16,6 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Categories ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-th-list mr-1"></i> Categories</h3>
@@ -55,7 +54,6 @@
         </div>
     </div>
 
-    {# ------------ Labels ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-tag mr-1"></i> Labels</h3>
@@ -72,10 +70,9 @@
         </div>
     </div>
 
-    {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user-tie mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.date_label %}
@@ -85,7 +82,6 @@
         </div>
     </div>
 
-    {# ------------ Call-to-action button ------------ #}
     <div class="card card-warning card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Call to Action Button</h3>
@@ -102,7 +98,6 @@
         </div>
     </div>
 
-    {# ------------ Images ------------ #}
     {% include "dashboard/home/_section_images.html" %}
 
     <div class="card">
@@ -114,7 +109,6 @@
     </div>
 </form>
 
-{# Empty-form template used by the add-category script. #}
 <template id="category-empty">
     <div class="category-row border rounded p-3 mb-2">
         {% with category_formset.empty_form as empty %}

@@ -16,10 +16,9 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-calendar-plus mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.label %}
@@ -28,7 +27,6 @@
         </div>
     </div>
 
-    {# ------------ Categories ------------ #}
     <div class="card card-secondary card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-tags mr-1"></i> Category Labels</h3>
@@ -67,7 +65,6 @@
         </div>
     </div>
 
-    {# ------------ Event Cards ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-th-large mr-1"></i> Event Cards</h3>
@@ -135,7 +132,6 @@
     </div>
 </form>
 
-{# Empty-form templates for the add-row scripts. #}
 <template id="category-empty">
     <div class="category-row border rounded p-3 mb-2">
         {% with category_formset.empty_form as empty %}

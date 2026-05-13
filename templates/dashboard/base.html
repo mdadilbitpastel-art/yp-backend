@@ -6,162 +6,1398 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{% block title %}Dashboard{% endblock %} | Young Professionals</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/plugins/fontawesome-free/css/all.min.css">
 
     <style>
-        /* Wider sidebar so long top-level titles (e.g. "Employers
-           Management") fit before the right-arrow caret without wrapping
-           or sliding under it. AdminLTE's default is 250px; we bump to
-           260px and shift the content panes to match. The collapsed-state
-           width (4.6rem) is left to AdminLTE's own rules. */
-        .main-sidebar,
-        .main-sidebar::before {
-            width: 260px;
+        /* =====================================================
+           Design tokens
+           ===================================================== */
+        :root {
+            --yp-primary:        #4f46e5;
+            --yp-primary-600:    #4338ca;
+            --yp-primary-700:    #3730a3;
+            --yp-primary-soft:   #eef2ff;
+            --yp-accent:         #06b6d4;
+            --yp-success:        #10b981;
+            --yp-warning:        #f59e0b;
+            --yp-danger:         #ef4444;
+            --yp-info:           #0ea5e9;
+
+            --yp-ink:            #111827;
+            --yp-ink-2:          #1f2937;
+            --yp-muted:          #6b7280;
+            --yp-muted-2:        #9ca3af;
+            --yp-line:           #d1d5db;
+            --yp-line-soft:      #e5e7eb;
+            --yp-bg:             #f5f7fb;
+            --yp-card:           #ffffff;
+
+            --yp-radius:         14px;
+            --yp-radius-sm:      10px;
+            --yp-shadow-sm:      0 1px 2px rgba(15, 23, 42, .05);
+            --yp-shadow:         0 6px 18px -8px rgba(15, 23, 42, .15),
+                                 0 2px 6px -2px rgba(15, 23, 42, .08);
+            --yp-shadow-lg:      0 24px 48px -24px rgba(15, 23, 42, .25);
+
+            --yp-sidebar-bg:     linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            --yp-sidebar-w:      252px;
         }
+
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--yp-ink);
+            background: var(--yp-bg);
+            -webkit-font-smoothing: antialiased;
+        }
+        code, kbd, samp, pre { font-family: 'JetBrains Mono', SFMono-Regular, Menlo, monospace; }
+
+        h1, h2, h3, h4, h5, h6 { font-weight: 600; letter-spacing: -.01em; color: var(--yp-ink); }
+        a { color: var(--yp-primary); }
+        a:hover { color: var(--yp-primary-700); }
+
+        /* =====================================================
+           Sidebar
+           ===================================================== */
+        .main-sidebar,
+        .main-sidebar::before { width: var(--yp-sidebar-w); }
         body:not(.sidebar-collapse) .content-wrapper,
         body:not(.sidebar-collapse) .main-header,
-        body:not(.sidebar-collapse) .main-footer {
-            margin-left: 260px;
-        }
+        body:not(.sidebar-collapse) .main-footer { margin-left: var(--yp-sidebar-w); }
         @media (max-width: 991.98px) {
             body:not(.sidebar-collapse) .content-wrapper,
             body:not(.sidebar-collapse) .main-header,
-            body:not(.sidebar-collapse) .main-footer {
-                margin-left: 0;
-            }
-        }
-        /* Trim the link's horizontal padding and the icon's footprint so
-           the text starts further left and finishes well before the
-           right-arrow caret — no more overlap with long titles. */
-        .main-sidebar .nav-sidebar > .nav-item > .nav-link {
-            padding-left: 0.6rem;
-            padding-right: 0.6rem;
-        }
-        .main-sidebar .nav-sidebar > .nav-item > .nav-link > .nav-icon {
-            width: 1.4rem;
-            margin-right: 0.15rem;
-            font-size: 1.1rem;
-        }
-        /* Pull the right-arrow caret in slightly so a touch more of the
-           label is visible in the freed-up space. */
-        .main-sidebar .nav-sidebar > .nav-item > .nav-link > p > .right {
-            right: 0.5rem;
+            body:not(.sidebar-collapse) .main-footer { margin-left: 0; }
         }
 
-        /* Visually nest the treeview submenu under its parent. */
+        .main-sidebar.sidebar-dark-primary {
+            background: var(--yp-sidebar-bg) !important;
+            box-shadow: 1px 0 0 rgba(255, 255, 255, .04),
+                        4px 0 24px -12px rgba(2, 6, 23, .65);
+        }
+
+        /* Brand — locked to the same 60px height as .main-header.navbar so
+           the logo section's bottom edge lines up with the navbar's.
+           Uses the same shared dark gradient as the sidebar + navbar. */
+        .main-sidebar .brand-link {
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            padding: 0 1rem !important;
+            background: var(--yp-sidebar-bg);
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            height: 58px !important;
+            min-height: 58px !important;
+            box-sizing: border-box;
+        }
+        /* Lock the same height in collapsed mode too, defeating any
+           padding/margin AdminLTE adds in mini-sidebar mode. */
+        body.sidebar-collapse .main-sidebar .brand-link {
+            height: 58px !important;
+            min-height: 58px !important;
+            padding: 0 1rem !important;
+        }
+        .main-sidebar .brand-link .brand-image {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            background: #000;
+            color: #fff;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 16px -6px rgba(0, 0, 0, .6),
+                        inset 0 1px 0 rgba(255, 255, 255, .12),
+                        inset 0 0 0 1px rgba(255, 255, 255, .06);
+            margin: 0 !important;
+            float: none !important;
+            flex-shrink: 0;
+        }
+        .main-sidebar .brand-link > span.d-flex { min-width: 0; flex: 1 1 auto; }
+        .main-sidebar .brand-link .brand-text {
+            font-weight: 700 !important;
+            font-size: 1.02rem;
+            letter-spacing: -.01em;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0 !important;
+        }
+        .main-sidebar .brand-link .brand-subtext {
+            display: block;
+            font-size: .66rem;
+            font-weight: 600;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .42);
+            margin-top: 1px;
+        }
+        /* In collapsed mode, hide the brand text but KEEP its layout space
+           (visibility:hidden, not display:none) so the badge position and
+           the brand-link box don't shift. Re-appears on hover-expand. */
+        body.sidebar-collapse .main-sidebar:not(:hover) .brand-link > span.d-flex,
+        body.sidebar-collapse .main-sidebar:not(:hover) .brand-link .brand-subtext,
+        body.sidebar-collapse .main-sidebar:not(:hover) .brand-link .brand-text {
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+        /* Section headers (Overview / Content / Account): hide the TEXT in
+           collapsed mode but keep the <li> box occupying its vertical
+           space — otherwise items below shift up when collapsing. */
+        body.sidebar-collapse .main-sidebar:not(:hover) .nav-sidebar .nav-header {
+            display: block !important;
+            visibility: hidden;
+        }
+
+        /* Sidebar scroll area */
+        .main-sidebar .sidebar { padding: 0 0 1rem; }
+        .main-sidebar .sidebar::-webkit-scrollbar { width: 6px; }
+        .main-sidebar .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .main-sidebar .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .08);
+            border-radius: 999px;
+        }
+        .main-sidebar .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .16); }
+
+        /* Top-level menu items */
+        .main-sidebar .nav-sidebar { padding: 0 8px; }
+        .main-sidebar .nav-sidebar > .nav-item { margin: 1px 0; }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link {
+            position: relative;
+            border-radius: 10px;
+            padding: .58rem .7rem;
+            color: rgba(255, 255, 255, .78);
+            display: flex;
+            align-items: center;
+            min-height: 40px;
+            transition: background .15s ease, color .15s ease, transform .12s ease;
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link > .nav-icon {
+            width: 1.5rem;
+            margin-right: .65rem;
+            font-size: 1rem;
+            text-align: center;
+            opacity: .85;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link > p {
+            margin: 0;
+            font-size: .89rem;
+            font-weight: 500;
+            line-height: 1.25;
+            min-width: 0;
+            flex: 1 1 auto;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link:hover {
+            background: rgba(255, 255, 255, .07);
+            color: #fff;
+            transform: translateX(2px);
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link:hover > .nav-icon { opacity: 1; }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link.active {
+            background: linear-gradient(135deg, var(--yp-primary) 0%, var(--yp-primary-700) 100%) !important;
+            color: #fff !important;
+            box-shadow: 0 10px 20px -10px rgba(79, 70, 229, .85),
+                        inset 0 1px 0 rgba(255, 255, 255, .18);
+            transform: none;
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link.active::before {
+            content: "";
+            position: absolute;
+            left: -8px; top: 50%;
+            transform: translateY(-50%);
+            width: 3px; height: 22px;
+            border-radius: 0 3px 3px 0;
+            background: var(--yp-accent);
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link.active .nav-icon { opacity: 1; }
+
+        /* Caret on the right of items with submenus.
+           The caret is a sibling of <p> (not inside it) so the label can
+           ellipsis-clip cleanly while the caret stays right-aligned. */
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link > .nav-arrow {
+            position: static;
+            margin-left: .4rem;
+            font-size: .7rem;
+            opacity: .55;
+            transition: transform .2s ease;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link:hover > .nav-arrow { opacity: .85; }
+        .main-sidebar .nav-sidebar > .nav-item.menu-open > .nav-link > .nav-arrow {
+            transform: rotate(-90deg);
+            opacity: .9;
+        }
+        .main-sidebar .nav-sidebar > .nav-item > .nav-link.active > .nav-arrow { opacity: 1; }
+
+        /* Open-treeview parent: subtle background tint */
+        .main-sidebar .nav-sidebar > .nav-item.menu-open > .nav-link:not(.active) {
+            background: rgba(255, 255, 255, .04);
+            color: #fff;
+        }
+
+        /* Section header chip */
+        .nav-sidebar .nav-header {
+            color: rgba(255, 255, 255, .38);
+            font-size: .66rem;
+            font-weight: 700;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            padding: 1.25rem .9rem .45rem;
+            background: transparent !important;
+            margin-top: .25rem;
+        }
+        .nav-sidebar > .nav-header:first-child { margin-top: 0; padding-top: .9rem; }
+
+        /* Treeview submenu */
         .main-sidebar .nav-sidebar .nav-treeview {
-            margin-left: 1.25rem;
-            padding-left: 0.5rem;
+            margin: .55rem 0 .35rem 1.55rem;
+            padding: .15rem 0 0 .65rem;
             border-left: 1px solid rgba(255, 255, 255, .12);
         }
+        .main-sidebar .nav-sidebar .nav-treeview > .nav-item { margin: 1px 0; }
         .main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link {
-            padding-left: 1rem;
-            font-size: 0.92rem;
-            color: rgba(255, 255, 255, .75);
+            padding: .4rem .7rem;
+            font-size: .87rem;
+            color: rgba(255, 255, 255, .68);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            min-height: 32px;
+            transition: background .15s ease, color .15s ease;
         }
         .main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link .nav-icon {
-            font-size: 0.85rem;
-            opacity: 0.85;
-            width: 1.4rem;
-            text-align: center;
+            font-size: .8rem;
+            opacity: .75;
+            width: 1.1rem;
+            margin-right: .55rem;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
-            color: #fff;
-            background-color: rgba(255, 255, 255, .08);
-            font-weight: 500;
+        .main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link > p {
+            margin: 0;
+            min-width: 0;
+            flex: 1 1 auto;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link:hover {
             color: #fff;
-            background-color: rgba(255, 255, 255, .04);
+            background: rgba(255, 255, 255, .05);
+        }
+        .main-sidebar .nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
+            color: #fff;
+            background: rgba(99, 102, 241, .18);
+            font-weight: 600;
+            box-shadow: inset 2px 0 0 var(--yp-accent);
         }
 
-        /* Image preview thumbnail with removable cross icon. */
-        .image-preview-wrapper {
-            position: relative;
-            display: inline-block;
+        /* =====================================================
+           "Content Management" parent — distinct violet accent
+           ===================================================== */
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-link {
+            background: rgba(139, 92, 246, .08);
         }
-        .image-preview-thumb {
-            max-height: 80px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-link > .nav-icon {
+            color: #c4b5fd;
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-link:hover {
+            background: rgba(139, 92, 246, .16);
+            color: #fff;
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-link:hover > .nav-icon { color: #ddd6fe; }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt.menu-open > .nav-link {
+            background: rgba(139, 92, 246, .14);
+            color: #fff;
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-link.active {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
+            color: #fff !important;
+            box-shadow: 0 10px 20px -10px rgba(139, 92, 246, .9),
+                        inset 0 1px 0 rgba(255, 255, 255, .18);
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-link.active > .nav-icon { color: #fff; }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-link.active::before {
+            background: #ddd6fe;
+        }
+
+        /* Children: smaller font, slight indent, violet active gradient. */
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-treeview {
+            border-left-color: rgba(196, 181, 253, .22);
+            margin-left: .85rem;
+            padding-left: .5rem;
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-treeview > .nav-item { margin: 3px 0; }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-treeview > .nav-item > .nav-link {
+            font-size: .85rem;
+            padding-left: .65rem;
+            border-radius: 8px;
+            transition: background .15s ease, color .15s ease,
+                        transform .12s ease, box-shadow .15s ease;
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-treeview > .nav-item > .nav-link:hover {
+            background: rgba(139, 92, 246, .14);
+            color: #fff;
+            transform: translateX(2px);
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-treeview > .nav-item > .nav-link:hover .nav-icon {
+            color: #ddd6fe;
+        }
+        /* Active child gets a subtle violet tint + left accent bar — clearly
+           a sub-state of the parent's full violet gradient, not a duplicate. */
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-treeview > .nav-item > .nav-link.active {
+            background: rgba(139, 92, 246, .18);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: inset 3px 0 0 #c4b5fd;
+            transform: none;
+        }
+        .main-sidebar .nav-sidebar > .nav-item.yp-content-mgmt > .nav-treeview > .nav-item > .nav-link.active .nav-icon {
+            color: #ddd6fe;
+            opacity: 1;
+        }
+
+        /* =====================================================
+           Frontend API accordion — column-aligned rows
+           (icon | name | api link | sections toggle)
+           ===================================================== */
+        .yp-api-row {
+            display: grid;
+            grid-template-columns: 28px 130px 1fr auto;
+            align-items: center;
+            gap: .5rem .75rem;
+        }
+        .yp-api-row .yp-api-icon {
+            font-size: 1rem;
+            text-align: center;
+        }
+        .yp-api-row .yp-api-name {
+            font-weight: 600;
+            color: var(--yp-ink);
+            font-size: .92rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .yp-api-row .yp-api-link {
+            justify-self: start;
+            white-space: nowrap;
+        }
+        .yp-api-row .yp-api-link code {
+            font-size: .82rem;
+            background: transparent;
+            padding: 0;
+        }
+        .yp-api-row .yp-api-toggle {
+            justify-self: end;
+            white-space: nowrap;
+            color: var(--yp-muted);
+        }
+        .yp-api-row .yp-api-toggle:hover { color: var(--yp-primary); }
+
+        /* On narrow viewports, drop the fixed name column and let the
+           layout breathe. */
+        @media (max-width: 575.98px) {
+            .yp-api-row {
+                grid-template-columns: 24px 1fr auto;
+                row-gap: .35rem;
+            }
+            .yp-api-row .yp-api-link {
+                grid-column: 1 / -1;
+                justify-self: stretch;
+            }
+        }
+
+        /* =====================================================
+           Section tabs (auto-rendered on every section form page)
+           ===================================================== */
+        .yp-section-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            padding: .65rem .75rem;
+            margin-bottom: 1.25rem;
+            background: #fff;
+            border: 1px solid var(--yp-line);
+            border-radius: var(--yp-radius);
+            box-shadow: var(--yp-shadow-sm);
+        }
+        .yp-section-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .42rem .85rem;
+            border-radius: 999px;
+            background: var(--yp-bg);
+            color: var(--yp-muted);
+            font-size: .85rem;
+            font-weight: 500;
+            line-height: 1.2;
+            text-decoration: none;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            transition: background .15s ease, color .15s ease,
+                        border-color .15s ease, transform .08s ease,
+                        box-shadow .15s ease;
+        }
+        .yp-section-tab > i {
+            font-size: .82rem;
+            opacity: .8;
+        }
+        .yp-section-tab:hover {
+            background: #d1fae5;
+            color: #065f46;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+        .yp-section-tab:hover > i { opacity: 1; }
+        .yp-section-tab.is-active {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            color: #fff;
+            border-color: #10b981;
+            box-shadow: 0 6px 14px -6px rgba(16, 185, 129, .55),
+                        inset 0 1px 0 rgba(255, 255, 255, .22);
+        }
+        .yp-section-tab.is-active > i { color: #fff; opacity: 1; }
+        .yp-section-tab.is-active:hover {
+            background: linear-gradient(135deg, #059669 0%, #065f46 100%);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        /* =====================================================
+           Top navbar
+           ===================================================== */
+        .main-header.navbar {
+            background: var(--yp-sidebar-bg) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, .08);
+            box-shadow: none;
+            min-height: 60px;
+        }
+        /* Align content-wrapper top offset with our 60px navbar (AdminLTE's
+           default for layout-navbar-fixed assumes 56px). */
+        .layout-navbar-fixed .wrapper .content-wrapper { margin-top: 61px; }
+        .layout-navbar-fixed .main-header.navbar {
+            box-shadow: 0 1px 0 rgba(255, 255, 255, .04);
+        }
+        .main-header .nav-link {
+            color: rgba(255, 255, 255, .85) !important;
+            transition: color .15s ease;
+        }
+        .main-header .nav-link:hover {
+            color: #cbd5ff !important;
+        }
+        .main-header .navbar-nav .nav-item .nav-link i { color: rgba(255, 255, 255, .85); }
+        .main-header .navbar-nav .nav-item .nav-link:hover i { color: #cbd5ff; }
+        .navbar-search {
+            position: relative;
+            min-width: 240px;
+        }
+        .navbar-search input.form-control {
+            border-radius: 999px;
+            background: var(--yp-bg);
+            border: 1px solid transparent;
+            padding-left: 2.4rem;
+            height: 38px;
+        }
+        .navbar-search input.form-control:focus {
+            background: #fff;
+            border-color: var(--yp-primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        }
+        .navbar-search .navbar-search-icon {
+            position: absolute;
+            left: .9rem; top: 50%;
+            transform: translateY(-50%);
+            color: var(--yp-muted-2);
+            pointer-events: none;
+        }
+        .user-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--yp-primary) 0%, var(--yp-accent) 100%);
+            color: #fff;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-weight: 600; font-size: .8rem;
+            text-transform: uppercase;
+        }
+        .navbar .dropdown-menu { border-radius: var(--yp-radius-sm); border-color: var(--yp-line); box-shadow: var(--yp-shadow); }
+        .navbar .dropdown-item { padding: .55rem 1rem; font-size: .9rem; }
+        .navbar .dropdown-item:hover { background: var(--yp-primary-soft); color: var(--yp-primary-700); }
+
+        /* =====================================================
+           Content header (page title + breadcrumb)
+           ===================================================== */
+        .content-header { padding: 1.6rem 1rem .25rem; }
+        .content-header h1.page-heading {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .content-header .page-heading-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
+            color: #fff;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            box-shadow: 0 6px 12px -6px rgba(15, 23, 42, .5),
+                        inset 0 1px 0 rgba(255, 255, 255, .12),
+                        inset 0 0 0 1px rgba(255, 255, 255, .06);
+        }
+        /* When the auto-resolved section icon renders, hide the fallback. */
+        .content-header .page-heading-icon i[data-page-icon="auto"] ~ i[data-page-icon="fallback"] {
+            display: none;
+        }
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin: .3rem 0 0;
+            font-size: .85rem;
+        }
+        .breadcrumb-item a { color: var(--yp-muted); text-decoration: none; }
+        .breadcrumb-item a:hover { color: var(--yp-primary); text-decoration: underline; }
+        .breadcrumb-item.active { color: var(--yp-ink-2); font-weight: 500; }
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            color: var(--yp-muted-2);
+        }
+
+        /* =====================================================
+           Cards
+           ===================================================== */
+        .content-wrapper { background: var(--yp-bg); }
+        .card {
+            border: 1px solid var(--yp-line);
+            border-radius: var(--yp-radius);
+            background: #fff;
+            box-shadow: 0 4px 12px -4px rgba(17, 24, 39, .1),
+                        0 2px 4px -2px rgba(17, 24, 39, .05);
+            margin-bottom: 1.25rem;
+        }
+        .card-header {
+            background: #fff;
+            border-bottom: 1px solid var(--yp-line-soft);
+            padding: 1rem 1.25rem;
+            border-top-left-radius: var(--yp-radius);
+            border-top-right-radius: var(--yp-radius);
+        }
+        .card-header .card-title {
+            font-size: .98rem;
+            font-weight: 600;
+            color: var(--yp-ink);
+            margin: 0;
+            display: inline-flex;
+            align-items: center; gap: .5rem;
+        }
+        .card-body { padding: 1.25rem; }
+        .card.card-outline {
+            border-top: 3px solid var(--yp-primary);
+        }
+        .card.card-outline.card-success  { border-top-color: var(--yp-success); }
+        .card.card-outline.card-info     { border-top-color: var(--yp-info); }
+        .card.card-outline.card-warning  { border-top-color: var(--yp-warning); }
+        .card.card-outline.card-danger   { border-top-color: var(--yp-danger); }
+        .card.card-outline.card-primary  { border-top-color: var(--yp-primary); }
+
+        /* =====================================================
+           Buttons
+           ===================================================== */
+        .btn {
+            border-radius: 9px;
+            font-weight: 500;
+            padding: .42rem .95rem;
+            transition: transform .08s ease, box-shadow .15s ease, background .15s ease;
+        }
+        .btn:active { transform: translateY(1px); }
+        .btn-lg { padding: .65rem 1.4rem; font-size: 1rem; }
+        .btn-sm { padding: .3rem .7rem; font-size: .82rem; border-radius: 7px; }
+        .btn-primary {
+            background: var(--yp-primary);
+            border-color: var(--yp-primary);
+            box-shadow: 0 6px 14px -8px rgba(79, 70, 229, .65);
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background: var(--yp-primary-600);
+            border-color: var(--yp-primary-600);
+        }
+        .btn-success { background: var(--yp-success); border-color: var(--yp-success); }
+        .btn-success:hover, .btn-success:focus { background: #059669; border-color: #059669; }
+        /* Light-black (slate-gray) gradient — dashboard "Manage" buttons. */
+        .yp-btn-manage {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+            border: 1px solid #475569;
+            color: #fff;
+            box-shadow: 0 6px 14px -8px rgba(51, 65, 85, .5),
+                        inset 0 1px 0 rgba(255, 255, 255, .18);
+            transition: background .15s ease, border-color .15s ease,
+                        box-shadow .2s ease, transform .15s ease, color .15s ease;
+        }
+        .yp-btn-manage:hover, .yp-btn-manage:focus {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            border-color: #334155;
+            color: #fff;
+            box-shadow: 0 10px 22px -10px rgba(51, 65, 85, .65),
+                        inset 0 1px 0 rgba(255, 255, 255, .22);
+            transform: translateY(-1px);
+        }
+        .yp-module-card:hover .yp-btn-manage {
+            box-shadow: 0 10px 22px -10px rgba(51, 65, 85, .65),
+                        inset 0 1px 0 rgba(255, 255, 255, .22);
+            transform: translateY(-1px);
+        }
+
+        /* Blue gradient — used by every section card's "Edit section"
+           button. Pairs with the bluish card background. */
+        .yp-btn-section {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: 1px solid #3b82f6;
+            color: #fff;
+            box-shadow: 0 6px 14px -8px rgba(59, 130, 246, .55),
+                        inset 0 1px 0 rgba(255, 255, 255, .22);
+            transition: background .15s ease, border-color .15s ease,
+                        box-shadow .2s ease, transform .15s ease;
+        }
+        .yp-btn-section:hover, .yp-btn-section:focus {
+            background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
+            border-color: #2563eb;
+            color: #fff;
+        }
+        .btn-danger { background: var(--yp-danger); border-color: var(--yp-danger); }
+        .btn-danger:hover, .btn-danger:focus { background: #dc2626; border-color: #dc2626; }
+        .btn-info { background: var(--yp-info); border-color: var(--yp-info); }
+        .btn-info:hover, .btn-info:focus { background: #0284c7; border-color: #0284c7; }
+        .btn-warning { background: var(--yp-warning); border-color: var(--yp-warning); color: #fff; }
+        .btn-warning:hover, .btn-warning:focus { background: #d97706; border-color: #d97706; color: #fff; }
+        .btn-outline-primary { color: var(--yp-primary); border-color: var(--yp-primary); }
+        .btn-outline-primary:hover { background: var(--yp-primary); border-color: var(--yp-primary); }
+        .btn-outline-danger { color: var(--yp-danger); border-color: var(--yp-danger); }
+        .btn-outline-danger:hover { background: var(--yp-danger); border-color: var(--yp-danger); color: #fff; }
+
+        /* =====================================================
+           Forms
+           ===================================================== */
+        label {
+            font-weight: 600;
+            color: var(--yp-ink);
+            margin-bottom: .45rem;
+            font-size: .87rem;
+            letter-spacing: .005em;
+        }
+        .form-control,
+        .custom-select {
+            border-radius: 10px;
+            border: 1.5px solid #9ca3af;
+            background: #fff;
+            color: var(--yp-ink);
+            padding: .6rem .9rem;
+            min-height: calc(1.5em + 1rem + 2px);
+            font-size: .92rem;
+            box-shadow: 0 2px 4px rgba(17, 24, 39, .08),
+                        inset 0 1px 2px rgba(17, 24, 39, .04);
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .form-control:hover,
+        .custom-select:hover {
+            border-color: #6b7280;
+            box-shadow: 0 2px 6px rgba(17, 24, 39, .12),
+                        inset 0 1px 2px rgba(17, 24, 39, .04);
+        }
+        .form-control:focus,
+        .custom-select:focus {
+            border-color: var(--yp-primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, .15),
+                        0 2px 4px rgba(17, 24, 39, .06);
+            outline: none;
+        }
+        .form-control::placeholder { color: var(--yp-muted-2); }
+        textarea.form-control {
+            min-height: 100px;
+            line-height: 1.55;
+            resize: vertical;
+        }
+        .form-control-file {
+            padding: .55rem .75rem;
+            background: #fff;
+            border: 1.5px dashed #9ca3af;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(17, 24, 39, .06);
+            transition: border-color .15s ease, background .15s ease,
+                        box-shadow .15s ease;
+        }
+        .form-control-file:hover {
+            border-color: var(--yp-primary);
+            background: var(--yp-primary-soft);
+        }
+        .form-text {
+            color: var(--yp-muted);
+            font-size: .8rem;
+            margin-top: .35rem;
+        }
+        .invalid-feedback {
+            color: var(--yp-danger);
+            font-size: .82rem;
+            font-weight: 500;
+            margin-top: .35rem;
+        }
+        .form-control.is-invalid,
+        .custom-select.is-invalid {
+            border-color: var(--yp-danger);
+            background: #fef2f2;
+        }
+        .form-control.is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, .15);
+        }
+
+        /* Checkbox styling */
+        .form-check-input {
+            width: 1.05rem;
+            height: 1.05rem;
+            margin-top: .15rem;
+            cursor: pointer;
+            accent-color: var(--yp-primary);
+        }
+        .form-check-label { cursor: pointer; }
+
+        /* Form group spacing for breathing room between fields */
+        .form-group { margin-bottom: 1.1rem; }
+
+        .input-group-text {
+            background: #f9fafb;
+            border: 1.5px solid #9ca3af;
+            color: var(--yp-muted);
+            font-weight: 500;
+        }
+
+        /* =====================================================
+           Edit-form polish — tinted card-header backgrounds, color-
+           matched title icons, stronger card separation, polished
+           save bar.  Scoped to <form> so it doesn't affect cards on
+           the dashboard or module-index pages.
+           ===================================================== */
+        form .card {
+            box-shadow: 0 4px 14px -6px rgba(15, 23, 42, .12),
+                        0 2px 4px -2px rgba(15, 23, 42, .05);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        form .card-header {
+            padding: 1rem 1.4rem;
+            border-bottom: 1px solid var(--yp-line-soft);
+        }
+        form .card-header .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -.005em;
+        }
+        form .card-header .card-title .fas,
+        form .card-header .card-title .far,
+        form .card-header .card-title .fab {
+            margin-right: .15rem;
+            font-size: 1.05rem;
+        }
+        form .card-body { padding: 1.4rem; }
+
+        /* Stylish ribbon header — soft tint fading to white horizontally,
+           with a strong colored left edge that gives each section a
+           clean, modern accent.  Body stays white. */
+        form .card.card-outline > .card-header {
+            border-left-width: 4px;
+            border-left-style: solid;
+            border-bottom-color: var(--yp-line-soft);
+            border-top-left-radius: 0;
+        }
+        form .card.card-outline > .card-header .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -.005em;
+        }
+        form .card.card-outline > .card-header .card-title .fas,
+        form .card.card-outline > .card-header .card-title .far {
+            font-size: 1.1rem;
+            margin-right: .35rem;
+        }
+
+        /* Primary — indigo ribbon. */
+        form .card.card-outline.card-primary > .card-header {
+            background: linear-gradient(90deg, #eef2ff 0%, #ffffff 100%);
+            border-left-color: var(--yp-primary);
+        }
+        form .card.card-outline.card-primary > .card-header .card-title { color: #1e1b4b; }
+        form .card.card-outline.card-primary > .card-header .card-title .fas,
+        form .card.card-outline.card-primary > .card-header .card-title .far { color: var(--yp-primary); }
+
+        /* Success — emerald ribbon. */
+        form .card.card-outline.card-success > .card-header {
+            background: linear-gradient(90deg, #ecfdf5 0%, #ffffff 100%);
+            border-left-color: #10b981;
+        }
+        form .card.card-outline.card-success > .card-header .card-title { color: #064e3b; }
+        form .card.card-outline.card-success > .card-header .card-title .fas,
+        form .card.card-outline.card-success > .card-header .card-title .far { color: #059669; }
+
+        /* Warning — amber ribbon. */
+        form .card.card-outline.card-warning > .card-header {
+            background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
+            border-left-color: #f59e0b;
+        }
+        form .card.card-outline.card-warning > .card-header .card-title { color: #78350f; }
+        form .card.card-outline.card-warning > .card-header .card-title .fas,
+        form .card.card-outline.card-warning > .card-header .card-title .far { color: #d97706; }
+
+        /* Info — sky ribbon. */
+        form .card.card-outline.card-info > .card-header {
+            background: linear-gradient(90deg, #f0f9ff 0%, #ffffff 100%);
+            border-left-color: #0ea5e9;
+        }
+        form .card.card-outline.card-info > .card-header .card-title { color: #0c4a6e; }
+        form .card.card-outline.card-info > .card-header .card-title .fas,
+        form .card.card-outline.card-info > .card-header .card-title .far { color: #0284c7; }
+
+        /* Danger — rose ribbon. */
+        form .card.card-outline.card-danger > .card-header {
+            background: linear-gradient(90deg, #fef2f2 0%, #ffffff 100%);
+            border-left-color: #ef4444;
+        }
+        form .card.card-outline.card-danger > .card-header .card-title { color: #7f1d1d; }
+        form .card.card-outline.card-danger > .card-header .card-title .fas,
+        form .card.card-outline.card-danger > .card-header .card-title .far { color: #dc2626; }
+
+        /* All form cards default to white. */
+        form .card { background: #fff; }
+
+        /* Save-button card (the trailing card with no card-outline). */
+        form > .card:last-child:not(.card-outline) {
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+            border: 1px solid rgba(79, 70, 229, .18);
+            box-shadow: 0 6px 18px -8px rgba(79, 70, 229, .25),
+                        0 2px 4px -2px rgba(15, 23, 42, .06);
+        }
+        form > .card:last-child:not(.card-outline) .btn-primary.btn-lg {
+            padding: .7rem 1.6rem;
+            font-size: 1rem;
+            box-shadow: 0 10px 22px -10px rgba(79, 70, 229, .7),
+                        inset 0 1px 0 rgba(255, 255, 255, .25);
+        }
+
+        /* Inline-formset rows (image rows, member rows, footer-link rows). */
+        .border.rounded {
+            background: #fafbfd;
+            border-color: var(--yp-line) !important;
+            border-radius: var(--yp-radius-sm) !important;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .border.rounded:hover { border-color: var(--yp-primary) !important; background: #f6f7fc; }
+
+        /* =====================================================
+           Tables
+           ===================================================== */
+        .table {
+            background: #fff;
+            border-radius: var(--yp-radius);
+            overflow: hidden;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--yp-line);
+            box-shadow: 0 1px 2px rgba(17, 24, 39, .04);
+        }
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background: #f9fafb;
+            color: #4b5563;
+            font-size: .76rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            border-bottom: 1px solid var(--yp-line);
+            padding: .85rem 1rem;
+            z-index: 1;
+        }
+        .table tbody td {
+            padding: .85rem 1rem;
+            border-top: 1px solid var(--yp-line-soft);
+            vertical-align: middle;
+            color: var(--yp-ink);
+        }
+        .table tbody tr:first-child td { border-top: 0; }
+        .table-hover tbody tr { transition: background .12s ease; }
+        .table-hover tbody tr:hover { background: #f9fafb; }
+        .table-striped tbody tr:nth-of-type(odd) { background: rgba(249, 250, 251, .6); }
+        .table-actions { white-space: nowrap; text-align: right; }
+        .table-actions .btn { margin-left: .25rem; }
+
+        /* =====================================================
+           Badges
+           ===================================================== */
+        .badge {
+            font-weight: 600;
+            padding: .35em .6em;
+            border-radius: 999px;
+            font-size: .72rem;
+            letter-spacing: .02em;
+        }
+        .badge-pill { padding-left: .8em; padding-right: .8em; }
+        .badge-soft-success { background: #dcfce7; color: #166534; }
+        .badge-soft-warning { background: #fef3c7; color: #92400e; }
+        .badge-soft-danger  { background: #fee2e2; color: #991b1b; }
+        .badge-soft-info    { background: #dbeafe; color: #1e40af; }
+        .badge-soft-primary { background: var(--yp-primary-soft); color: var(--yp-primary-700); }
+        .badge-soft-secondary { background: #e2e8f0; color: #475569; }
+        .badge-success { background: var(--yp-success); }
+        .badge-danger  { background: var(--yp-danger); }
+        .badge-warning { background: var(--yp-warning); color: #fff; }
+        .badge-info    { background: var(--yp-info); }
+        .badge-primary { background: var(--yp-primary); }
+        .badge-secondary { background: #cbd5e1; color: #1e293b; }
+
+        /* =====================================================
+           Alerts
+           ===================================================== */
+        .alert {
+            border: 1px solid transparent;
+            border-left-width: 4px;
+            border-radius: var(--yp-radius-sm);
+            padding: .9rem 1.1rem;
+            font-size: .92rem;
+        }
+        .alert-success { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; border-left-color: var(--yp-success); }
+        .alert-danger  { background: #fef2f2; color: #991b1b; border-color: #fecaca; border-left-color: var(--yp-danger); }
+        .alert-warning { background: #fffbeb; color: #92400e; border-color: #fde68a; border-left-color: var(--yp-warning); }
+        .alert-info    { background: #eff6ff; color: #1e3a8a; border-color: #bfdbfe; border-left-color: var(--yp-info); }
+        .alert.alert-error { /* Django sometimes uses tags="error" */
+            background: #fef2f2; color: #991b1b; border-color: #fecaca; border-left-color: var(--yp-danger);
+        }
+
+        /* =====================================================
+           Section / module landing cards
+           ===================================================== */
+        .yp-page-intro {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid var(--yp-line);
+            border-radius: var(--yp-radius);
+            padding: 1.4rem 1.5rem;
+            display: flex; align-items: center;
+            gap: 1.1rem;
+            margin-bottom: 1.4rem;
+            box-shadow: var(--yp-shadow-sm);
+        }
+        .yp-page-intro .yp-intro-icon {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--yp-primary) 0%, var(--yp-accent) 100%);
+            color: #fff;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 12px 24px -10px rgba(79, 70, 229, .55);
+            flex-shrink: 0;
+        }
+        .yp-page-intro h2 { font-size: 1.15rem; margin: 0 0 .2rem; font-weight: 700; }
+        .yp-page-intro p { margin: 0; color: var(--yp-muted); font-size: .9rem; }
+        .yp-page-intro .yp-intro-meta { margin-left: auto; text-align: right; }
+        @media (max-width: 575.98px) {
+            .yp-page-intro { flex-wrap: wrap; }
+            .yp-page-intro .yp-intro-meta { margin-left: 0; text-align: left; width: 100%; }
+        }
+
+        .yp-section-card {
+            position: relative;
+            border: 1px solid var(--yp-line);
+            border-radius: 16px;
+            background: #fff;
+            padding: 1.4rem;
+            height: 100%;
+            display: flex; flex-direction: column;
+            box-shadow: 0 4px 12px -4px rgba(17, 24, 39, .12),
+                        0 2px 4px -2px rgba(17, 24, 39, .06);
+            transition: transform .2s ease, box-shadow .2s ease,
+                        border-color .2s ease;
+        }
+        /* Soft top accent line that brightens on hover. */
+        .yp-section-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 1.4rem; right: 1.4rem;
+            height: 3px;
+            border-radius: 0 0 6px 6px;
+            background: linear-gradient(90deg, var(--yp-primary) 0%, var(--yp-accent) 100%);
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+        .yp-section-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(79, 70, 229, .35);
+            box-shadow: 0 18px 36px -18px rgba(15, 23, 42, .25),
+                        0 6px 14px -8px rgba(79, 70, 229, .25);
+        }
+        .yp-section-card:hover::before { opacity: 1; }
+        .yp-section-card .yp-section-head {
+            display: flex; align-items: flex-start; gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        /* Base icon style — used by dashboard module progress cards. */
+        .yp-section-icon {
+            width: 48px; height: 48px;
+            border-radius: 0;
+            background: transparent;
+            color: #0f172a;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1.9rem;
+            flex-shrink: 0;
+            box-shadow: none;
+            transition: transform .2s ease, color .2s ease,
+                        box-shadow .2s ease;
+        }
+        .yp-module-card:hover .yp-section-icon {
+            transform: scale(1.1);
+            color: #000;
+        }
+
+        /* Section cards (module index pages) — transparent background,
+           blackish glyph (no chip). */
+        .yp-section-card .yp-section-icon {
+            width: 48px; height: 48px;
+            border-radius: 0;
+            background: transparent;
+            color: #0f172a;
+            font-size: 1.9rem;
+            box-shadow: none;
+        }
+        .yp-section-card:hover .yp-section-icon {
+            transform: scale(1.1);
+            color: #000;
+            box-shadow: none;
+        }
+        .yp-section-card.is-configured .yp-section-icon {
+            background: transparent;
+            color: #0f172a;
+        }
+        .yp-section-card.is-configured:hover .yp-section-icon { color: #000; }
+        .yp-section-card h5 { font-size: 1.02rem; margin: 0 0 .35rem; font-weight: 600; letter-spacing: -.005em; }
+        /* Modern pill badges inside section cards. */
+        .yp-section-card .badge {
+            font-size: .7rem;
+            font-weight: 600;
+            padding: .35em .7em;
+            letter-spacing: .02em;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            border-radius: 999px;
+        }
+        .yp-section-card .badge.badge-soft-success {
+            background: #d1fae5;
+            color: #065f46;
+            box-shadow: inset 0 0 0 1px rgba(16, 185, 129, .22);
+        }
+        .yp-section-card .badge.badge-soft-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            box-shadow: inset 0 0 0 1px rgba(100, 116, 139, .18);
+        }
+        /* Action button gets a subtle hover-pop when its card is hovered. */
+        .yp-section-card:hover .yp-btn-section {
+            box-shadow: 0 10px 22px -10px rgba(59, 130, 246, .7),
+                        inset 0 1px 0 rgba(255, 255, 255, .25);
+            transform: translateY(-1px);
+        }
+        .yp-section-card .yp-section-desc {
+            color: var(--yp-muted);
+            font-size: .85rem;
+            line-height: 1.5;
+            margin: 0 0 1rem;
+            flex: 1;
+        }
+
+        /* Empty state */
+        .yp-empty {
+            background: #fff;
+            border: 1px dashed var(--yp-line);
+            border-radius: var(--yp-radius);
+            text-align: center;
+            padding: 3rem 1.5rem;
+        }
+        .yp-empty .yp-empty-icon {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: var(--yp-primary-soft);
+            color: var(--yp-primary);
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+        }
+        .yp-empty h5 { font-weight: 600; margin-bottom: .35rem; }
+        .yp-empty p { color: var(--yp-muted); margin: 0; font-size: .9rem; }
+
+        /* Stat tiles for dashboard overview */
+        .yp-stat {
+            border-radius: var(--yp-radius);
+            padding: 1.2rem 1.3rem;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            min-height: 118px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: var(--yp-shadow);
+        }
+        .yp-stat .yp-stat-label {
+            font-size: .72rem; letter-spacing: .14em;
+            text-transform: uppercase;
+            opacity: .85; font-weight: 600;
+        }
+        .yp-stat .yp-stat-value {
+            font-size: 1.9rem; font-weight: 700;
+            margin-top: .15rem; line-height: 1.1;
+        }
+        .yp-stat .yp-stat-meta { font-size: .82rem; opacity: .85; }
+        .yp-stat .yp-stat-icon {
+            position: absolute;
+            right: -.4rem; bottom: -.6rem;
+            font-size: 4.2rem;
+            opacity: .14;
+        }
+        .yp-stat-primary { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); }
+        .yp-stat-success { background: linear-gradient(135deg, #10b981 0%, #047857 100%); }
+        .yp-stat-warning { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); }
+        .yp-stat-info    { background: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%); }
+
+        /* Module progress card on the overview */
+        .yp-module-card {
+            position: relative;
+            border: 1px solid var(--yp-line);
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 4px 12px -4px rgba(17, 24, 39, .12),
+                        0 2px 4px -2px rgba(17, 24, 39, .06);
+            transition: transform .2s ease, box-shadow .2s ease,
+                        border-color .2s ease;
+            overflow: hidden;
+        }
+        .yp-module-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 1.4rem; right: 1.4rem;
+            height: 3px;
+            border-radius: 0 0 6px 6px;
+            background: linear-gradient(90deg, var(--yp-primary) 0%, var(--yp-accent) 100%);
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+        .yp-module-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(79, 70, 229, .35);
+            box-shadow: 0 22px 40px -20px rgba(15, 23, 42, .28),
+                        0 8px 16px -10px rgba(79, 70, 229, .25);
+        }
+        .yp-module-card:hover::before { opacity: 1; }
+        .yp-module-card .card-body { padding: 1.4rem 1.4rem .9rem; }
+        .yp-module-card .progress {
+            height: 8px;
+            border-radius: 999px;
+            background: var(--yp-line-soft);
+            overflow: hidden;
+        }
+        .yp-module-card .progress-bar {
+            background: linear-gradient(90deg, var(--yp-primary) 0%, var(--yp-accent) 100%);
+        }
+
+        /* =====================================================
+           Section-image thumbnail grid (multi-upload UX)
+           ===================================================== */
+        .yp-image-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+        .yp-image-tile {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            border: 1px solid var(--yp-line);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f9fafb;
+            box-shadow: 0 1px 2px rgba(17, 24, 39, .05);
+            transition: transform .15s ease, box-shadow .15s ease,
+                        border-color .15s ease;
+        }
+        .yp-image-tile:hover {
+            transform: translateY(-2px);
+            border-color: #9ca3af;
+            box-shadow: 0 6px 14px -6px rgba(17, 24, 39, .18);
+        }
+        .yp-image-tile-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
+        }
+        .yp-image-tile-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .72);
+            color: #fff;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+            transition: background .15s ease, transform .12s ease;
+        }
+        .yp-image-tile-remove:hover {
+            background: var(--yp-danger);
+            transform: scale(1.08);
+        }
+        .yp-image-tile-remove:focus { outline: none; }
+
+        /* =====================================================
+           Image / video preview thumbnails
+           ===================================================== */
+        .image-preview-wrapper { position: relative; display: inline-block; }
+        .image-preview-thumb {
+            max-height: 96px;
+            border-radius: 10px;
+            border: 1px solid var(--yp-line);
+            display: block;
+            background: #f8fafc;
         }
         .video-preview-thumb {
             max-height: 220px;
             max-width: 100%;
-            border-radius: 4px;
-            border: 1px solid #ddd;
+            border-radius: 10px;
+            border: 1px solid var(--yp-line);
             display: block;
             background: #000;
         }
         .image-preview-clear {
             position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 22px;
-            height: 22px;
+            top: -8px; right: -8px;
+            width: 24px; height: 24px;
             padding: 0;
             border-radius: 50%;
-            background-color: #dc3545;
+            background-color: var(--yp-danger);
             color: #fff;
             border: 2px solid #fff;
             font-size: 11px;
             line-height: 1;
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
         }
-        .image-preview-clear:hover {
-            background-color: #b02a37;
+        .image-preview-clear:hover { background-color: #b91c1c; }
+
+        /* =====================================================
+           Misc
+           ===================================================== */
+        .main-footer {
+            background: #fff;
+            border-top: 1px solid var(--yp-line);
+            color: var(--yp-muted);
+            font-size: .85rem;
         }
+        ::selection { background: rgba(79, 70, 229, .18); }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 <div class="wrapper">
 
-    {# ---------- Top navbar ---------- #}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <ul class="navbar-nav">
             <li class="nav-item">
-                <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button" title="Toggle sidebar">
                     <i class="fas fa-bars"></i>
                 </a>
             </li>
-            <li class="nav-item d-none d-sm-inline-block">
-                <a href="{% url 'dashboard:index' %}" class="nav-link">Home</a>
-            </li>
         </ul>
 
-        <ul class="navbar-nav ml-auto">
+        <ul class="navbar-nav ml-auto align-items-center">
             <li class="nav-item">
-                <span class="nav-link">
-                    <i class="fas fa-user mr-1"></i>{{ request.user.username }}
-                </span>
+                <a class="nav-link" href="/" target="_blank" rel="noopener" title="View site">
+                    <i class="fas fa-external-link-alt mr-1"></i>
+                    <span class="d-none d-md-inline">View site</span>
+                </a>
             </li>
-            <li class="nav-item">
-                <form action="{% url 'dashboard:logout' %}" method="post" class="form-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-link nav-link">
-                        <i class="fas fa-sign-out-alt mr-1"></i>Logout
-                    </button>
-                </form>
+            <li class="nav-item dropdown ml-2">
+                <a class="nav-link dropdown-toggle d-flex align-items-center" data-toggle="dropdown" href="#" role="button">
+                    <span class="user-avatar mr-2">{{ request.user.username|slice:":1"|default:"U" }}</span>
+                    <span class="d-none d-md-inline">{{ request.user.username }}</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <h6 class="dropdown-header">
+                        Signed in as
+                        <strong class="d-block text-dark">{{ request.user.username }}</strong>
+                    </h6>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'dashboard:index' %}">
+                        <i class="fas fa-tachometer-alt fa-fw mr-2 text-muted"></i>Dashboard
+                    </a>
+                    <a class="dropdown-item" href="/" target="_blank" rel="noopener">
+                        <i class="fas fa-external-link-alt fa-fw mr-2 text-muted"></i>Open public site
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <form action="{% url 'dashboard:logout' %}" method="post" class="px-1">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item text-danger">
+                            <i class="fas fa-sign-out-alt fa-fw mr-2"></i>Logout
+                        </button>
+                    </form>
+                </div>
             </li>
         </ul>
     </nav>
 
-    {# ---------- Sidebar ---------- #}
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="{% url 'dashboard:index' %}" class="brand-link">
-            <i class="fas fa-graduation-cap brand-image" style="margin-left: .8rem; margin-right: .5rem;"></i>
-            <span class="brand-text font-weight-light">Young Professionals</span>
+            <span class="brand-image">
+                <i class="fas fa-graduation-cap"></i>
+            </span>
+            <span class="d-flex flex-column">
+                <span class="brand-text">Young Professionals</span>
+                <span class="brand-subtext">Content Studio</span>
+            </span>
         </a>
 
         <div class="sidebar">
             <nav class="mt-2">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+                    <li class="nav-header">Overview</li>
                     <li class="nav-item">
                         <a href="{% url 'dashboard:index' %}" class="nav-link {% if current_url_name == 'index' %}active{% endif %}">
                             <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -169,22 +1405,51 @@
                         </a>
                     </li>
 
+                    <li class="nav-header">Content</li>
+                    {% with content_keys='home about_us schools employers partners events insight' %}
+
+                    {# 1. Header Management — top-level (flat). #}
                     {% for module in dashboard_modules %}
-                        {% if module.is_flat %}
+                        {% if module.key == 'header' %}
                     <li class="nav-item">
                         <a href="{% url module.index_url %}" class="nav-link {% if module.is_active %}active{% endif %}">
                             <i class="nav-icon {{ module.icon }}"></i>
                             <p>{{ module.title }}</p>
                         </a>
                     </li>
-                        {% else %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {# 2. Content Management — new parent dropdown grouping every page module.
+                         Auto-opens when any child module is active. #}
+                    <li class="nav-item has-treeview yp-content-mgmt{% for module in dashboard_modules %}{% if module.is_active and module.key in content_keys.split %} menu-open{% endif %}{% endfor %}">
+                        <a href="#" class="nav-link{% for module in dashboard_modules %}{% if module.is_active and module.key in content_keys.split %} active{% endif %}{% endfor %}">
+                            <i class="nav-icon fas fa-layer-group"></i>
+                            <p>Content Management</p>
+                            <i class="nav-arrow fas fa-angle-left"></i>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            {% for module in dashboard_modules %}
+                                {% if module.key in content_keys.split %}
+                            <li class="nav-item">
+                                <a href="{% url module.index_url %}" class="nav-link {% if module.is_active %}active{% endif %}">
+                                    <i class="{{ module.icon }} nav-icon"></i>
+                                    <p>{{ module.title }}</p>
+                                </a>
+                            </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </li>
+
+                    {# 3. Data Management — top-level treeview with its own sections. #}
+                    {% for module in dashboard_modules %}
+                        {% if module.key == 'data' %}
                     <li class="nav-item has-treeview {% if module.is_active %}menu-open{% endif %}">
                         <a href="#" class="nav-link {% if module.is_active %}active{% endif %}">
                             <i class="nav-icon {{ module.icon }}"></i>
-                            <p>
-                                {{ module.title }}
-                                <i class="right fas fa-angle-left"></i>
-                            </p>
+                            <p>{{ module.title }}</p>
+                            <i class="nav-arrow fas fa-angle-left"></i>
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
@@ -206,11 +1471,31 @@
                         {% endif %}
                     {% endfor %}
 
-                    <li class="nav-header">ACCOUNT</li>
+                    {# 4. Footer Management — top-level (flat). #}
+                    {% for module in dashboard_modules %}
+                        {% if module.key == 'footer' %}
+                    <li class="nav-item">
+                        <a href="{% url module.index_url %}" class="nav-link {% if module.is_active %}active{% endif %}">
+                            <i class="nav-icon {{ module.icon }}"></i>
+                            <p>{{ module.title }}</p>
+                        </a>
+                    </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% endwith %}
+
+                    <li class="nav-header">Account</li>
+                    <li class="nav-item">
+                        <a href="/" target="_blank" rel="noopener" class="nav-link">
+                            <i class="nav-icon fas fa-external-link-alt"></i>
+                            <p>View public site</p>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <form action="{% url 'dashboard:logout' %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="nav-link bg-transparent border-0 text-left w-100" style="color: rgba(255,255,255,.8);">
+                            <button type="submit" class="nav-link bg-transparent border-0 text-left w-100" style="color: rgba(255,255,255,.78);">
                                 <i class="nav-icon fas fa-sign-out-alt"></i>
                                 <p>Logout</p>
                             </button>
@@ -221,35 +1506,60 @@
         </div>
     </aside>
 
-    {# ---------- Content ---------- #}
     <div class="content-wrapper">
+        {% block content_header %}
         <section class="content-header">
             <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
-                    </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="page-heading">
+                            <span class="page-heading-icon">
+                                {% spaceless %}
+                                {% for module in dashboard_modules %}
+                                    {% for section in module.sections %}
+                                        {% if section.bare_url_name == current_url_name %}<i class="{{ section.icon }}" data-page-icon="auto"></i>{% endif %}
+                                    {% endfor %}
+                                    {% if module.index_url_name == current_url_name %}<i class="{{ module.icon }}" data-page-icon="auto"></i>{% endif %}
+                                {% endfor %}
+                                {% endspaceless %}
+                                <i class="{% block page_icon %}fas fa-bookmark{% endblock %}" data-page-icon="fallback"></i>
+                            </span>
+                            <span>{% block page_title %}Dashboard{% endblock %}</span>
+                        </h1>
+                        <ol class="breadcrumb">
                             {% block breadcrumb %}
                                 <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">Home</a></li>
                             {% endblock %}
                         </ol>
                     </div>
+                    <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                        {% block page_actions %}{% endblock %}
+                    </div>
                 </div>
             </div>
         </section>
+        {% endblock content_header %}
 
-        <section class="content">
+        <section class="content pt-3">
             <div class="container-fluid">
                 {% if messages %}
+                    <div id="yp-flash-messages">
                     {% for message in messages %}
-                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            {% if message.tags == 'success' %}<i class="fas fa-check-circle mr-2"></i>
+                            {% elif message.tags == 'danger' or message.tags == 'error' %}<i class="fas fa-exclamation-circle mr-2"></i>
+                            {% elif message.tags == 'warning' %}<i class="fas fa-exclamation-triangle mr-2"></i>
+                            {% else %}<i class="fas fa-info-circle mr-2"></i>{% endif %}
                             {{ message }}
                         </div>
                     {% endfor %}
+                    </div>
                 {% endif %}
+
+                {% include "dashboard/_partials/section_tabs.html" %}
 
                 {% block content %}{% endblock %}
             </div>
@@ -257,17 +1567,124 @@
     </div>
 
     <footer class="main-footer">
-        <strong>Young Professionals</strong> &mdash; custom admin
+        <strong>Young Professionals</strong> &mdash; Content Studio
         <div class="float-right d-none d-sm-inline-block">
-            <b>v</b> 1.0
+            <span class="text-muted">v 1.0</span>
         </div>
     </footer>
+</div>
+
+<div class="modal fade" id="ypConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--yp-radius); border: 1px solid var(--yp-line);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--yp-line-soft);">
+                <h5 class="modal-title" id="ypConfirmTitle">
+                    <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                    <span data-confirm-title>Are you sure?</span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" data-confirm-detail>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--yp-line-soft);">
+                <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="ypConfirmAccept">
+                    <i class="fas fa-check mr-1"></i> Confirm
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 <script>
+    // Auto-dismiss flash messages after 6s.
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('#yp-flash-messages .alert').forEach(function (el) {
+            setTimeout(function () { $(el).alert('close'); }, 6000);
+        });
+    });
+
+    // Close every open sidebar submenu the moment the sidebar collapses.
+    // Watches body.class so it works regardless of what triggers the
+    // collapse (hamburger toggle, AdminLTE PushMenu API, etc.).
+    document.addEventListener('DOMContentLoaded', function () {
+        var sidebar = document.querySelector('.main-sidebar');
+        if (!sidebar) return;
+        var body = document.body;
+
+        function closeAllOpenSubmenus() {
+            var openItems = sidebar.querySelectorAll('.nav-item.menu-open');
+            if (!openItems.length) return;
+            if (typeof jQuery !== 'undefined') {
+                jQuery(openItems).each(function () {
+                    var $li = jQuery(this);
+                    var $ul = $li.children('.nav-treeview');
+                    $ul.stop(true, true).slideUp(200, function () {
+                        $li.removeClass('menu-open');
+                        jQuery(this).removeAttr('style');
+                    });
+                });
+            } else {
+                openItems.forEach(function (li) {
+                    li.classList.remove('menu-open');
+                    var ul = li.querySelector(':scope > .nav-treeview');
+                    if (ul) ul.removeAttribute('style');
+                });
+            }
+        }
+
+        if (body.classList.contains('sidebar-collapse')) closeAllOpenSubmenus();
+
+        var lastCollapsed = body.classList.contains('sidebar-collapse');
+        var observer = new MutationObserver(function () {
+            var nowCollapsed = body.classList.contains('sidebar-collapse');
+            if (nowCollapsed && !lastCollapsed) closeAllOpenSubmenus();
+            lastCollapsed = nowCollapsed;
+        });
+        observer.observe(body, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    // Global confirm-on-action handler.
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalEl = document.getElementById('ypConfirmModal');
+        if (!modalEl) return;
+        var $modal = $(modalEl);
+        var pending = null;
+
+        document.body.addEventListener('click', function (e) {
+            var trigger = e.target.closest('[data-confirm]');
+            if (!trigger) return;
+            if (trigger.dataset.ypConfirmed === '1') return; // already confirmed
+            e.preventDefault();
+            e.stopPropagation();
+            pending = trigger;
+            modalEl.querySelector('[data-confirm-title]').textContent = trigger.dataset.confirm || 'Are you sure?';
+            modalEl.querySelector('[data-confirm-detail]').textContent =
+                trigger.dataset.confirmDetail || 'This action cannot be undone.';
+            $modal.modal('show');
+        }, true);
+
+        document.getElementById('ypConfirmAccept').addEventListener('click', function () {
+            if (!pending) { $modal.modal('hide'); return; }
+            var trigger = pending;
+            pending = null;
+            $modal.modal('hide');
+            trigger.dataset.ypConfirmed = '1';
+            // Re-fire the original action.
+            if (trigger.tagName === 'A' && trigger.href) {
+                window.location.href = trigger.href;
+            } else {
+                trigger.click();
+            }
+        });
+    });
+
     // Image / video preview + clear handling for dashboard file fields.
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-image-field], [data-video-field]').forEach(function (wrap) {

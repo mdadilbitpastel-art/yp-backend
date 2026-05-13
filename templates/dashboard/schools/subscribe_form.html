@@ -16,10 +16,9 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-envelope-open-text mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.label %}
@@ -28,7 +27,6 @@
         </div>
     </div>
 
-    {# ------------ Subscribe Button ------------ #}
     <div class="card card-warning card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-mouse-pointer mr-1"></i> Subscribe Button</h3>
@@ -45,10 +43,8 @@
         </div>
     </div>
 
-    {# ------------ Images ------------ #}
     {% include "dashboard/home/_section_images.html" %}
 
-    {# ------------ Form Fields (manual list, add/remove) ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list mr-1"></i> Form Fields</h3>
@@ -103,7 +99,6 @@
     </div>
 </form>
 
-{# Hidden empty-form template used by the add-field script. #}
 <template id="subscribe-field-empty">
     <div class="subscribe-field-row border rounded p-3 mb-3">
         {% with field_formset.empty_form as empty %}

@@ -1,9 +1,8 @@
-{# Renders a single bound form field with AdminLTE styling. #}
 {% if field.field.widget.input_type == 'file' %}
     <div class="form-group" {% if is_video %}data-video-field{% else %}data-image-field{% endif %}>
         <label for="{{ field.id_for_label }}">
             {{ field.label }}
-            {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+            {% if field.field.required %}<span class="text-danger" title="Required">*</span>{% endif %}
         </label>
 
         {% if field.value and field.value.url %}
@@ -11,10 +10,9 @@
                 {% if is_video %}
                     <video src="{{ field.value.url }}" class="video-preview-thumb" controls></video>
                 {% else %}
-                    <img src="{{ field.value.url }}" class="image-preview-thumb">
+                    <img src="{{ field.value.url }}" class="image-preview-thumb" alt="{{ field.label }}">
                 {% endif %}
-                <button type="button" class="image-preview-clear" data-clear-existing
-                        title="Remove">
+                <button type="button" class="image-preview-clear" data-clear-existing title="Remove">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -31,8 +29,7 @@
             {% else %}
                 <img src="" class="image-preview-thumb" alt="">
             {% endif %}
-            <button type="button" class="image-preview-clear" data-clear-new
-                    title="Remove selection">
+            <button type="button" class="image-preview-clear" data-clear-new title="Remove selection">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -50,7 +47,7 @@
 <div class="form-group">
     <label for="{{ field.id_for_label }}">
         {{ field.label }}
-        {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+        {% if field.field.required %}<span class="text-danger" title="Required">*</span>{% endif %}
     </label>
 
     {% if field.field.widget.input_type == 'checkbox' %}

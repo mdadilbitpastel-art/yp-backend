@@ -16,10 +16,9 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Content ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-road mr-1"></i> Content</h3>
+            <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
             {% include "dashboard/home/_field.html" with field=form.label %}
@@ -27,7 +26,6 @@
         </div>
     </div>
 
-    {# ------------ Lanes ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-stream mr-1"></i> Lanes</h3>
@@ -85,7 +83,6 @@
     </div>
 </form>
 
-{# Empty-form template used by the add-lane script. #}
 <template id="lane-empty">
     <div class="lane-row border rounded p-3 mb-2">
         {% with lane_formset.empty_form as empty %}

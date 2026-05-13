@@ -1,0 +1,19 @@
+{% for module in dashboard_modules %}
+    {% if not module.is_flat and current_url_name in module.child_url_names and current_url_name != module.index_url_name %}
+    <div class="yp-section-tabs" role="tablist" aria-label="{{ module.title }} sections">
+        <a href="{% url module.index_url %}" class="yp-section-tab" role="tab" title="Back to {{ module.title }} overview">
+            <i class="fas fa-th-large"></i>
+            <span>All sections</span>
+        </a>
+        {% for section in module.sections %}
+        <a href="{% url section.url_name %}"
+           class="yp-section-tab {% if section.bare_url_name == current_url_name %}is-active{% endif %}"
+           role="tab"
+           aria-selected="{% if section.bare_url_name == current_url_name %}true{% else %}false{% endif %}">
+            <i class="{{ section.icon }}"></i>
+            <span>{{ section.title }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endfor %}

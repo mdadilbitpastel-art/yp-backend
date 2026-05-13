@@ -16,7 +16,6 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Search ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-search mr-1"></i> Search</h3>
@@ -26,7 +25,6 @@
         </div>
     </div>
 
-    {# ------------ Categories ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-th-list mr-1"></i> Categories</h3>
@@ -84,7 +82,6 @@
     </div>
 </form>
 
-{# Empty-form template used by the add-category script. #}
 <template id="category-empty">
     <div class="category-row border rounded p-3 mb-2">
         {% with category_formset.empty_form as empty %}

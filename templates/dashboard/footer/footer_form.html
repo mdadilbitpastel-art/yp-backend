@@ -15,7 +15,6 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
-    {# ------------ Logo ------------ #}
     <div class="card card-success card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-image mr-1"></i> Logo</h3>
@@ -25,7 +24,6 @@
         </div>
     </div>
 
-    {# ------------ Details ------------ #}
     <div class="card card-primary card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Details</h3>
@@ -48,7 +46,6 @@
         </div>
     </div>
 
-    {# ------------ Text links ------------ #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-link mr-1"></i> Text Links</h3>
@@ -99,7 +96,6 @@
     </div>
 </form>
 
-{# Hidden empty-form template used by the add-link script. #}
 <template id="footer-link-empty">
     <div class="footer-link-row border rounded p-3 mb-2">
         {% with link_formset.empty_form as empty %}
