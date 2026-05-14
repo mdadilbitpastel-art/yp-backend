@@ -1875,6 +1875,21 @@
         });
     });
 
+    // Tag every server-rendered "Delete" trash button on inline-formset rows so
+    // the confirm modal above kicks in. Newly-added unsaved rows use the same
+    // .remove-row class but title="Remove" — those skip the confirm because
+    // nothing's been saved yet.
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.remove-row[title="Delete"]').forEach(function (btn) {
+            if (btn.hasAttribute('data-confirm')) return;
+            btn.setAttribute('data-confirm', 'Delete this item?');
+            btn.setAttribute(
+                'data-confirm-detail',
+                'This item will be permanently removed when you save the form. This cannot be undone.'
+            );
+        });
+    });
+
     // Image / video preview + clear handling for dashboard file fields.
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('[data-image-field], [data-video-field]').forEach(function (wrap) {

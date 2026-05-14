@@ -75,7 +75,9 @@
       "Bash(/usr/bin/python3 build_api_sheet.py)",
       "Bash(./.venv/Scripts/python.exe build_api_xlsx.py)",
       "Bash(./.venv/Scripts/python.exe -c ' *)",
-      "Bash(./.venv/Scripts/python.exe build_api_single_sheet.py)"
+      "Bash(./.venv/Scripts/python.exe build_api_single_sheet.py)",
+      "Bash(./.venv/Scripts/python.exe -c \"import django; django.setup\\(\\) if hasattr\\(django, 'setup'\\) else None\")",
+      "Bash(./.venv/Scripts/python.exe -m py_compile dashboard/views.py dashboard/urls.py)"
     ]
   }
 }

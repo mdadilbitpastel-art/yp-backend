@@ -137,7 +137,7 @@
     <div class="card-header">
         <h3 class="card-title"><i class="fas fa-plug mr-2 text-info"></i>Frontend API</h3>
         <div class="card-tools">
-            <span class="badge badge-soft-info">7 pages</span>
+            <span class="badge badge-soft-info">7 pages + Header, Footer &amp; 4 Data feeds</span>
         </div>
     </div>
     <div class="card-body">
@@ -147,6 +147,30 @@
             every per-section endpoint.
         </p>
         <div class="accordion" id="frontend-api-accordion">
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-bars text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Header</strong>
+                        <a href="/api/home/header/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/home/header/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <span class="badge badge-soft-secondary ml-2">Shared across all pages</span>
+                    </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-shoe-prints text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Footer</strong>
+                        <a href="/api/home/footer/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/home/footer/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <span class="badge badge-soft-secondary ml-2">Shared across all pages</span>
+                    </div>
+            </div>
 
             <div class="card mb-2">
                 <div class="card-header p-2 yp-api-row">
@@ -297,7 +321,7 @@
                 </div>
             </div>
 
-            <div class="card mb-0">
+            <div class="card mb-2">
                 <div class="card-header p-2 yp-api-row">
                         <i class="fas fa-lightbulb text-primary yp-api-icon"></i>
                         <strong class="yp-api-name">Insight</strong>
@@ -318,6 +342,54 @@
                         <a href="/api/insight/subscribe/" target="_blank" class="badge badge-soft-secondary p-2 mr-1 mb-1">subscribe</a>
                     </div>
                 </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-database text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Data — Statistics</strong>
+                        <a href="/api/data/statistics/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/data/statistics/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <span class="badge badge-soft-secondary ml-2">All statistics</span>
+                    </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-briefcase text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Data — Employers</strong>
+                        <a href="/api/data/employers/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/data/employers/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <span class="badge badge-soft-secondary ml-2">All employers</span>
+                    </div>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-users text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Data — Team Members</strong>
+                        <a href="/api/data/team-members/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/data/team-members/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <span class="badge badge-soft-secondary ml-2">All team members</span>
+                    </div>
+            </div>
+
+            <div class="card mb-0">
+                <div class="card-header p-2 yp-api-row">
+                        <i class="fas fa-share-alt text-primary yp-api-icon"></i>
+                        <strong class="yp-api-name">Data — Social Media</strong>
+                        <a href="/api/data/social-media/" target="_blank" class="btn btn-info btn-sm yp-api-link">
+                            <code class="text-white">/api/data/social-media/</code>
+                            <i class="fas fa-external-link-alt ml-1"></i>
+                        </a>
+                        <span class="badge badge-soft-secondary ml-2">All social media icons</span>
+                    </div>
             </div>
 
         </div>
