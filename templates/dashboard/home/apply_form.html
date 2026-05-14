@@ -9,6 +9,114 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-ac-row {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        align-items: flex-start;
+    }
+    .yp-ac-row:first-child { border-top: 1px solid #e2e8f0; }
+    .yp-ac-imgs {
+        display: flex; gap: .55rem;
+        flex-shrink: 0;
+    }
+    .yp-ac-fields {
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: minmax(120px, 1fr) minmax(160px, 2fr);
+        gap: .55rem .75rem;
+    }
+    .yp-ac-fields .yp-ac-full { grid-column: 1 / -1; }
+    .yp-ac-fields .form-group { margin-bottom: 0; }
+    .yp-ac-fields label {
+        display: none;
+    }
+    .yp-ac-fields input[type="text"],
+    .yp-ac-fields input[type="url"],
+    .yp-ac-fields input:not([type]),
+    .yp-ac-fields textarea {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-ac-fields textarea {
+        min-height: 38px;
+        resize: vertical;
+        overflow-y: auto;
+    }
+    .yp-ac-fields input:focus, .yp-ac-fields textarea:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-ac-actions { flex-shrink: 0; }
+
+    /* Image dropzones — square */
+    .yp-img-wrap { position: relative; display: inline-block; }
+    .yp-img-drop {
+        position: relative;
+        width: 72px; height: 72px;
+        border: 1.5px dashed #94a3b8;
+        border-radius: 10px;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: border-color .15s ease, background .15s ease;
+    }
+    .yp-img-drop.small { width: 52px; height: 52px; }
+    .yp-img-drop:hover { border-color: var(--yp-primary); background: #eef2ff; }
+    .yp-img-drop input[type="file"] {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .yp-img-placeholder { color: #64748b; font-size: 1.1rem; pointer-events: none; }
+    .yp-img-thumb { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    .yp-img-clear {
+        position: absolute;
+        top: -4px; right: -4px;
+        width: 16px; height: 16px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .9);
+        color: #fff;
+        border: 2px solid #fff;
+        font-size: .55rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(15, 23, 42, .25);
+    }
+    .yp-img-clear:hover { background: #b91c1c; }
+    .yp-img-tag { display: block; text-align: center; font-size: .7rem; color: #64748b; margin-top: .25rem; }
+
+    .yp-ac-remove {
+        background: transparent;
+        border: none;
+        color: #b91c1c;
+        font-size: .9rem;
+        padding: .25rem .5rem;
+        cursor: pointer;
+    }
+    .yp-ac-remove:hover { color: #7f1d1d; }
+</style>
+
 <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -39,59 +147,83 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-briefcase mr-1"></i> Employers</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ company_formset.management_form }}
             {% if company_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ company_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ company_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
             <div id="apply-companies">
                 {% for company_form in company_formset %}
-                <div class="apply-company-row border rounded p-3 mb-3">
+                <div class="yp-ac-row apply-company-row">
                     {% for hidden in company_form.hidden_fields %}{{ hidden }}{% endfor %}
                     <input type="hidden" name="{{ company_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0 text-muted">
-                            <i class="fas fa-briefcase mr-1"></i>
-                            Employer {{ forloop.counter }}
-                            {% if company_form.title.value %}
-                                <small>— {{ company_form.title.value }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
+
+                    <div class="yp-ac-imgs">
+                        <div>
+                            <span class="yp-img-wrap" data-img-wrap>
+                                <label class="yp-img-drop mb-0" data-img-drop>
+                                    <img src="{% if company_form.large_image.value %}{{ company_form.large_image.value.url }}{% endif %}"
+                                         class="yp-img-thumb" data-img-thumb alt="image"
+                                         {% if not company_form.large_image.value %}style="display:none;"{% endif %}>
+                                    <i class="fas fa-image yp-img-placeholder" data-img-placeholder
+                                       {% if company_form.large_image.value %}style="display:none;"{% endif %}></i>
+                                    {{ company_form.large_image }}
+                                    <input type="checkbox"
+                                           name="{{ company_form.large_image.html_name }}-clear"
+                                           data-img-clear-flag style="display:none;">
+                                </label>
+                                <button type="button" class="yp-img-clear" data-img-clear title="Remove image"
+                                        {% if not company_form.large_image.value %}style="display:none;"{% endif %}>
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </span>
+                            <span class="yp-img-tag">Image</span>
+                        </div>
+                        <div>
+                            <span class="yp-img-wrap" data-img-wrap>
+                                <label class="yp-img-drop small mb-0" data-img-drop>
+                                    <img src="{% if company_form.small_image.value %}{{ company_form.small_image.value.url }}{% endif %}"
+                                         class="yp-img-thumb" data-img-thumb alt="logo"
+                                         {% if not company_form.small_image.value %}style="display:none;"{% endif %}>
+                                    <i class="fas fa-image yp-img-placeholder" data-img-placeholder
+                                       {% if company_form.small_image.value %}style="display:none;"{% endif %}></i>
+                                    {{ company_form.small_image }}
+                                    <input type="checkbox"
+                                           name="{{ company_form.small_image.html_name }}-clear"
+                                           data-img-clear-flag style="display:none;">
+                                </label>
+                                <button type="button" class="yp-img-clear" data-img-clear title="Remove logo"
+                                        {% if not company_form.small_image.value %}style="display:none;"{% endif %}>
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </span>
+                            <span class="yp-img-tag">Logo</span>
+                        </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            {% include "dashboard/home/_field.html" with field=company_form.label %}
-                        </div>
-                        <div class="col-md-8">
-                            {% include "dashboard/home/_field.html" with field=company_form.title %}
-                        </div>
-                        <div class="col-md-12">
-                            {% include "dashboard/home/_field.html" with field=company_form.description %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=company_form.button_text %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=company_form.button_url %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=company_form.large_image %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=company_form.small_image %}
-                        </div>
+
+                    <div class="yp-ac-fields">
+                        <div class="form-group">{{ company_form.label }}</div>
+                        <div class="form-group">{{ company_form.title }}</div>
+                        <div class="form-group yp-ac-full">{{ company_form.description }}</div>
+                        <div class="form-group">{{ company_form.button_text }}</div>
+                        <div class="form-group">{{ company_form.button_url }}</div>
+                    </div>
+
+                    <div class="yp-ac-actions">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-apply-company" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Employer
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-apply-company" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Employer
+                </button>
+            </div>
         </div>
     </div>
 
@@ -121,40 +253,52 @@
 </form>
 
 <template id="apply-company-empty">
-    <div class="apply-company-row border rounded p-3 mb-3">
-        {% with company_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-end align-items-center mb-2">
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
+    {% with company_formset.empty_form as empty %}
+    <div class="yp-ac-row apply-company-row">
+        {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+        <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+        <div class="yp-ac-imgs">
+            <div>
+                <span class="yp-img-wrap" data-img-wrap>
+                    <label class="yp-img-drop mb-0" data-img-drop>
+                        <img src="" class="yp-img-thumb" data-img-thumb alt="image" style="display:none;">
+                        <i class="fas fa-image yp-img-placeholder" data-img-placeholder></i>
+                        {{ empty.large_image }}
+                    </label>
+                    <button type="button" class="yp-img-clear" data-img-clear style="display:none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+                <span class="yp-img-tag">Image</span>
             </div>
-            <div class="row">
-                <div class="col-md-4">
-                    {% include "dashboard/home/_field.html" with field=empty.label %}
-                </div>
-                <div class="col-md-8">
-                    {% include "dashboard/home/_field.html" with field=empty.title %}
-                </div>
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=empty.description %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.button_text %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.button_url %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.large_image %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.small_image %}
-                </div>
+            <div>
+                <span class="yp-img-wrap" data-img-wrap>
+                    <label class="yp-img-drop small mb-0" data-img-drop>
+                        <img src="" class="yp-img-thumb" data-img-thumb alt="logo" style="display:none;">
+                        <i class="fas fa-image yp-img-placeholder" data-img-placeholder></i>
+                        {{ empty.small_image }}
+                    </label>
+                    <button type="button" class="yp-img-clear" data-img-clear style="display:none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+                <span class="yp-img-tag">Logo</span>
             </div>
-        {% endwith %}
+        </div>
+        <div class="yp-ac-fields">
+            <div class="form-group">{{ empty.label }}</div>
+            <div class="form-group">{{ empty.title }}</div>
+            <div class="form-group yp-ac-full">{{ empty.description }}</div>
+            <div class="form-group">{{ empty.button_text }}</div>
+            <div class="form-group">{{ empty.button_url }}</div>
+        </div>
+        <div class="yp-ac-actions">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     </div>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -167,14 +311,59 @@
     const addBtn = document.getElementById('add-apply-company');
     const tpl = document.getElementById('apply-company-empty');
 
+    function bindImgWrap(wrap) {
+        if (!wrap || wrap.dataset.bound) return;
+        wrap.dataset.bound = '1';
+        const drop = wrap.querySelector('[data-img-drop]');
+        if (!drop) return;
+        const fileInput = drop.querySelector('input[type="file"]');
+        const placeholder = drop.querySelector('[data-img-placeholder]');
+        const clearFlag = drop.querySelector('[data-img-clear-flag]');
+        const img = drop.querySelector('[data-img-thumb]');
+        const clearBtn = wrap.querySelector('[data-img-clear]');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    if (img) { img.src = ev.target.result; img.style.display = ''; }
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (clearBtn) clearBtn.style.display = '';
+                    if (clearFlag) clearFlag.checked = false;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (img) { img.src = ''; img.style.display = 'none'; }
+                if (fileInput) fileInput.value = '';
+                if (clearFlag) clearFlag.checked = true;
+                if (placeholder) placeholder.style.display = '';
+                clearBtn.style.display = 'none';
+            });
+        }
+    }
+
+    function bindAll(scope) {
+        (scope || document).querySelectorAll('[data-img-wrap]').forEach(bindImgWrap);
+    }
+
     addBtn.addEventListener('click', function () {
         const index = parseInt(totalInput.value, 10);
         const html = tpl.innerHTML.replace(/__prefix__/g, index);
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html.trim();
         const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
+        if (row) {
+            container.appendChild(row);
+            totalInput.value = index + 1;
+            bindAll(row);
+        }
     });
 
     container.addEventListener('click', function (e) {
@@ -186,6 +375,8 @@
         if (flag) flag.value = 'on';
         row.style.display = 'none';
     });
+
+    bindAll(document);
 })();
 </script>
 {% endblock %}

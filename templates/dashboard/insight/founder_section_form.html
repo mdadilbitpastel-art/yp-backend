@@ -9,6 +9,43 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-ifcat-table { table-layout: fixed; width: 100%; }
+    .yp-ifcat-table thead th {
+        background: #f8fafc;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: .65rem .75rem;
+        white-space: nowrap;
+    }
+    .yp-ifcat-table > tbody > tr.category-row > td {
+        padding: .6rem .75rem;
+        vertical-align: middle;
+        border-top: 1px solid #e2e8f0;
+    }
+    .yp-ifcat-table input[type="text"],
+    .yp-ifcat-table input:not([type]) {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-ifcat-table input:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+</style>
+
 <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -20,37 +57,47 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-th-list mr-1"></i> Categories</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ category_formset.management_form }}
             {% if category_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ category_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ category_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="category-rows">
-                {% for category_form in category_formset %}
-                <div class="category-row border rounded p-3 mb-2">
-                    {% for hidden in category_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ category_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="row align-items-end">
-                        <div class="col-md-10">
-                            {% include "dashboard/home/_field.html" with field=category_form.name %}
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="d-block">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
-                                    <i class="fas fa-trash mr-1"></i> Delete
+            <div class="table-responsive">
+                <table class="table yp-ifcat-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Category Name <span class="text-danger">*</span></th>
+                            <th style="width: 70px;" class="text-center">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="category-rows">
+                        {% for category_form in category_formset %}
+                        <tr class="category-row">
+                            <td>
+                                {% for hidden in category_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <input type="hidden" name="{{ category_form.DELETE.html_name }}" value="" class="delete-flag">
+                                {{ category_form.name }}
+                                {% for error in category_form.name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 70px;" class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                                    <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <button type="button" id="add-category" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Category
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-category" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Category
+                </button>
+            </div>
         </div>
     </div>
 
@@ -110,25 +157,20 @@
 </form>
 
 <template id="category-empty">
-    <div class="category-row border rounded p-3 mb-2">
-        {% with category_formset.empty_form as empty %}
+    {% with category_formset.empty_form as empty %}
+    <tr class="category-row">
+        <td>
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="row align-items-end">
-                <div class="col-md-10">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="d-block">&nbsp;</label>
-                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
-                            <i class="fas fa-times mr-1"></i> Remove
-                        </button>
-                    </div>
-                </div>
-            </div>
-        {% endwith %}
-    </div>
+            {{ empty.name }}
+        </td>
+        <td style="width: 70px;" class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -141,15 +183,19 @@
     const addBtn = document.getElementById('add-category');
     const tpl = document.getElementById('category-empty');
 
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-    });
+    if (addBtn && tpl && container && totalInput) {
+        addBtn.addEventListener('click', function () {
+            const index = parseInt(totalInput.value, 10);
+            const html = tpl.innerHTML.replace(/__prefix__/g, index);
+            const wrapper = document.createElement('tbody');
+            wrapper.innerHTML = html.trim();
+            const row = wrapper.querySelector('tr.category-row');
+            if (row) {
+                container.appendChild(row);
+                totalInput.value = index + 1;
+            }
+        });
+    }
 
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');

@@ -135,7 +135,13 @@ class FooterSettingsForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["logo", "title", "address", "email", "copyright_text"]
         widgets = {
             "logo": CleanFileInput(),
-            "address": forms.Textarea(attrs={"rows": 3}),
+            "title": forms.TextInput(attrs={"placeholder": "e.g. Stay connected"}),
+            "address": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Street, City, Country",
+            }),
+            "email": forms.EmailInput(attrs={"placeholder": "info@example.com"}),
+            "copyright_text": forms.TextInput(attrs={"placeholder": "© 2026 Your Company"}),
         }
         labels = {
             "logo": "Footer Logo",
@@ -150,6 +156,10 @@ class FooterLinkForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = FooterLink
         fields = ["label", "url"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Privacy Policy"}),
+            "url": forms.URLInput(attrs={"placeholder": "https://example.com/privacy"}),
+        }
         labels = {"label": "Label", "url": "URL"}
 
 
@@ -169,7 +179,11 @@ class HeaderSettingsForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = HeaderSettings
         fields = ["logo", "button_text", "button_url"]
-        widgets = {"logo": CleanFileInput()}
+        widgets = {
+            "logo": CleanFileInput(),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Get Started"}),
+            "button_url": forms.URLInput(attrs={"placeholder": "https://example.com/signup"}),
+        }
         labels = {
             "logo": "Header Logo",
             "button_text": "Button Text",
@@ -181,6 +195,10 @@ class HeaderTabForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = HeaderTab
         fields = ["label", "url"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. About Us"}),
+            "url": forms.TextInput(attrs={"placeholder": "/about-us/ or https://…"}),
+        }
         labels = {"label": "Tab Name", "url": "Tab Link"}
 
 
@@ -208,8 +226,21 @@ class HeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "bottom_note",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "rating": forms.NumberInput(attrs={"step": "0.1", "min": "0", "max": "5"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main headline shown in the hero"}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph below the headline",
+            }),
+            "highlight_text": forms.TextInput(attrs={"placeholder": "Word/phrase to highlight"}),
+            "primary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Get Started"}),
+            "primary_button_url": forms.TextInput(attrs={"placeholder": "/signup or https://…"}),
+            "secondary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
+            "secondary_button_url": forms.TextInput(attrs={"placeholder": "/about-us or https://…"}),
+            "rating": forms.NumberInput(attrs={
+                "step": "0.1", "min": "0", "max": "5",
+                "placeholder": "4.8",
+            }),
+            "bottom_note": forms.TextInput(attrs={"placeholder": "Small note under the buttons"}),
         }
         labels = {
             "title": "Title",
@@ -231,7 +262,12 @@ class FeatureSectionForm(BootstrapFormMixin, forms.ModelForm):
             "features_button_text",
         ]
         widgets = {
-            "features_description": forms.Textarea(attrs={"rows": 3}),
+            "features_title": forms.TextInput(attrs={"placeholder": "e.g. What we offer"}),
+            "features_description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short paragraph introducing the feature cards",
+            }),
+            "features_button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
         }
         labels = {
             "features_title": "Title",
@@ -244,7 +280,11 @@ class FeatureCardForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = FeatureCard
         fields = ["title", "icon", "button_url"]
-        widgets = {"icon": CleanFileInput()}
+        widgets = {
+            "icon": CleanFileInput(),
+            "title": forms.TextInput(attrs={"placeholder": "Card title"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/page or https://…"}),
+        }
         labels = {"title": "Title", "icon": "Icon", "button_url": "Button URL"}
 
 
@@ -296,10 +336,11 @@ class NetworkSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelFo
         ]
         widgets = {
             "network_section_video": CleanFileInput(attrs={"accept": "video/*"}),
+            "network_section_title": forms.TextInput(attrs={"placeholder": "e.g. Our growing network"}),
         }
         labels = {
             "network_section_title": "Title",
-            "network_section_video": "Video",
+            "network_section_video": "",
         }
 
     def __init__(self, *args, **kwargs):
@@ -315,6 +356,10 @@ class StatisticForm(BootstrapFormMixin, forms.ModelForm):
         model = Statistic
         fields = ["value", "label"]
         labels = {"value": "Value", "label": "Label"}
+        widgets = {
+            "value": forms.TextInput(attrs={"placeholder": "e.g. 1,200+"}),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Students placed"}),
+        }
 
 
 StatisticFormSet = forms.modelformset_factory(
@@ -358,7 +403,12 @@ class EmployerForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["name", "logo", "description", "url"]
         widgets = {
             "logo": CleanFileInput(),
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "name": forms.TextInput(attrs={"placeholder": "Company name"}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description of the company",
+            }),
+            "url": forms.URLInput(attrs={"placeholder": "https://example.com"}),
         }
         labels = {
             "name": "Name",
@@ -410,6 +460,12 @@ class ApplySectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm)
             "apply_section_bottom_button_url",
             "selected_employers",
         ]
+        widgets = {
+            "apply_section_title": forms.TextInput(attrs={"placeholder": "e.g. Apply to top companies"}),
+            "apply_section_subtitle": forms.TextInput(attrs={"placeholder": "Short tagline under the title"}),
+            "apply_section_bottom_button_text": forms.TextInput(attrs={"placeholder": "e.g. View All Companies"}),
+            "apply_section_bottom_button_url": forms.TextInput(attrs={"placeholder": "/companies or https://…"}),
+        }
         labels = {
             "apply_section_title": "Title",
             "apply_section_subtitle": "Sub-title",
@@ -435,9 +491,16 @@ class ApplyCompanyForm(BootstrapFormMixin, forms.ModelForm):
             "small_image",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description of the company",
+            }),
             "large_image": CleanFileInput(),
             "small_image": CleanFileInput(),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Featured"}),
+            "title": forms.TextInput(attrs={"placeholder": "Company name"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Apply Now"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "https://example.com/apply"}),
         }
         labels = {
             "label": "Label",
@@ -475,7 +538,17 @@ class TalentPoolSectionForm(BootstrapFormMixin, forms.ModelForm):
             "talent_pool_section_secondary_button_url",
         ]
         widgets = {
-            "talent_pool_section_description": forms.Textarea(attrs={"rows": 5}),
+            "talent_pool_section_description": forms.Textarea(attrs={
+                "rows": 5,
+                "placeholder": "Paragraph describing the talent pool",
+            }),
+            "talent_pool_section_label": forms.TextInput(attrs={"placeholder": "e.g. Talent Pool"}),
+            "talent_pool_section_title": forms.TextInput(attrs={"placeholder": "Main title"}),
+            "talent_pool_section_subtitle": forms.TextInput(attrs={"placeholder": "Short tagline"}),
+            "talent_pool_section_primary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Join Now"}),
+            "talent_pool_section_primary_button_url": forms.TextInput(attrs={"placeholder": "/join or https://…"}),
+            "talent_pool_section_secondary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
+            "talent_pool_section_secondary_button_url": forms.TextInput(attrs={"placeholder": "/about or https://…"}),
         }
         labels = {
             "talent_pool_section_label": "Label",
@@ -521,6 +594,11 @@ class SocialMediaSectionForm(SocialMediaPickerMixin, BootstrapFormMixin, forms.M
     class Meta:
         model = SocialMediaSection
         fields = ["label", "heading", "subtitle", "selected_social_media"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Follow us"}),
+            "heading": forms.TextInput(attrs={"placeholder": "Main title for the section"}),
+            "subtitle": forms.TextInput(attrs={"placeholder": "Short tagline"}),
+        }
         labels = {
             "label": "Label",
             "heading": "Title",
@@ -539,7 +617,10 @@ class SocialMediaIconForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = SocialMediaIcon
         fields = ["name", "icon"]
-        widgets = {"icon": CleanFileInput()}
+        widgets = {
+            "icon": CleanFileInput(),
+            "name": forms.TextInput(attrs={"placeholder": "e.g. LinkedIn"}),
+        }
         labels = {"name": "Name", "icon": "Icon"}
 
 
@@ -558,6 +639,9 @@ class TestimonialsSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = TestimonialsSection
         fields = ["title"]
+        widgets = {
+            "title": forms.TextInput(attrs={"placeholder": "e.g. What our community says"}),
+        }
         labels = {"title": "Title"}
 
 
@@ -567,7 +651,11 @@ class TestimonialUserForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["name", "profile_image", "message"]
         widgets = {
             "profile_image": CleanFileInput(),
-            "message": forms.Textarea(attrs={"rows": 3}),
+            "name": forms.TextInput(attrs={"placeholder": "Full name"}),
+            "message": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Their testimonial quote",
+            }),
         }
         labels = {
             "name": "Name",
@@ -606,7 +694,20 @@ class AppSectionForm(BootstrapFormMixin, forms.ModelForm):
             "bottom_note",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "title": forms.TextInput(attrs={"placeholder": "e.g. Get our app"}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about the app",
+            }),
+            "bottom_note": forms.TextInput(attrs={"placeholder": "Small note under the buttons"}),
+            **{
+                f"button_{i}_text": forms.TextInput(attrs={"placeholder": "Button label"})
+                for i in range(1, APP_BUTTON_COUNT + 1)
+            },
+            **{
+                f"button_{i}_url": forms.TextInput(attrs={"placeholder": "https://…"})
+                for i in range(1, APP_BUTTON_COUNT + 1)
+            },
         }
         labels = {
             "title": "Title",
@@ -630,7 +731,14 @@ class AboutUsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = AboutUsHeroSection
         fields = ["label", "title", "description"]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. About Us"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main hero title"}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph below the title",
+            }),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -648,6 +756,11 @@ class AboutUsSocialMediaSectionForm(
     class Meta:
         model = AboutUsSocialMediaSection
         fields = ["label", "heading", "subtitle", "selected_social_media"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Follow us"}),
+            "heading": forms.TextInput(attrs={"placeholder": "Main title for the section"}),
+            "subtitle": forms.TextInput(attrs={"placeholder": "Short tagline"}),
+        }
         labels = {
             "label": "Label",
             "heading": "Title",
@@ -666,6 +779,11 @@ class AboutUsCommunitySectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = AboutUsCommunitySection
         fields = ["label", "title", "subtitle"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Community"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main title"}),
+            "subtitle": forms.TextInput(attrs={"placeholder": "Short tagline"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -679,7 +797,13 @@ class AboutUsCommunityCardForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["image", "name", "description", "button_text", "button_url"]
         widgets = {
             "image": CleanFileInput(),
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "name": forms.TextInput(attrs={"placeholder": "Card name"}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description",
+            }),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/page or https://…"}),
         }
         labels = {
             "image": "Image",
@@ -729,6 +853,11 @@ class AboutUsTeamSectionForm(TeamMemberPickerMixin, BootstrapFormMixin, forms.Mo
     class Meta:
         model = AboutUsTeamSection
         fields = ["label", "title", "subtitle", "selected_team_members"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Team"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main title"}),
+            "subtitle": forms.TextInput(attrs={"placeholder": "Short tagline"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -752,18 +881,20 @@ class TeamMemberForm(BootstrapFormMixin, forms.ModelForm):
             "profile_image",
             "designation",
             "email_url",
-            "view_profile_text",
             "view_profile_url",
         ]
         widgets = {
             "profile_image": CleanFileInput(),
+            "name": forms.TextInput(attrs={"placeholder": "Full name"}),
+            "designation": forms.TextInput(attrs={"placeholder": "e.g. Co-founder"}),
+            "email_url": forms.TextInput(attrs={"placeholder": "mailto:name@example.com"}),
+            "view_profile_url": forms.URLInput(attrs={"placeholder": "https://linkedin.com/in/…"}),
         }
         labels = {
             "name": "Name",
             "profile_image": "Profile Image",
             "designation": "Designation",
             "email_url": "Email URL",
-            "view_profile_text": "View Profile Link Text",
             "view_profile_url": "View Profile URL",
         }
 
@@ -782,7 +913,14 @@ class AboutUsPledgeSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = AboutUsPledgeSection
         fields = ["label", "title", "description"]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Pledge"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main title"}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Pledge text",
+            }),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -797,6 +935,11 @@ class AboutUsJourneySectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = AboutUsJourneySection
         fields = ["label", "title", "subtitle"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Journey"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main title"}),
+            "subtitle": forms.TextInput(attrs={"placeholder": "Short tagline"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -810,7 +953,11 @@ class AboutUsJourneyCardForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["image", "title", "description"]
         widgets = {
             "image": CleanFileInput(),
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "title": forms.TextInput(attrs={"placeholder": "e.g. 2020 — Founded"}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description of this milestone",
+            }),
         }
         labels = {
             "image": "Image",
@@ -835,6 +982,11 @@ class AboutUsValuesSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = AboutUsValuesSection
         fields = ["label", "title", "subtitle"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Values"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main title"}),
+            "subtitle": forms.TextInput(attrs={"placeholder": "Short tagline"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -848,7 +1000,11 @@ class AboutUsValueCardForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["icon", "label", "note"]
         widgets = {
             "icon": CleanFileInput(),
-            "note": forms.Textarea(attrs={"rows": 3}),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Integrity"}),
+            "note": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short note explaining the value",
+            }),
         }
         labels = {"icon": "Icon", "label": "Label", "note": "Note"}
 
@@ -877,8 +1033,19 @@ class AboutUsFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_url",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
-            "founder_message": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short bio/description of the founder",
+            }),
+            "founder_message": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Personal message from the founder",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Meet the Founder"}),
+            "founder_name": forms.TextInput(attrs={"placeholder": "Full name"}),
+            "designation": forms.TextInput(attrs={"placeholder": "e.g. CEO & Co-founder"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Read More"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/about or https://…"}),
         }
         labels = {
             "label": "Label",
@@ -898,7 +1065,14 @@ class AboutUsMissionSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.
     class Meta:
         model = AboutUsMissionSection
         fields = ["label", "title", "description", "selected_statistics"]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about the mission",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Mission"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main title"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -925,7 +1099,18 @@ class SchoolsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "secondary_button_text",
             "secondary_button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph below the title",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. For Schools"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main hero title"}),
+            "primary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Get Started"}),
+            "primary_button_url": forms.TextInput(attrs={"placeholder": "/signup or https://…"}),
+            "secondary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
+            "secondary_button_url": forms.TextInput(attrs={"placeholder": "/about or https://…"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -944,6 +1129,10 @@ class SchoolsHelpSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = SchoolsHelpSection
         fields = ["label", "title"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. How we help"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main section title"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -955,7 +1144,11 @@ class SchoolsHelpCardForm(BootstrapFormMixin, forms.ModelForm):
         model = SchoolsHelpCard
         fields = ["title", "description"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "title": forms.TextInput(attrs={"placeholder": "Card title"}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description",
+            }),
         }
         labels = {
             "title": "Title",
@@ -988,7 +1181,14 @@ class SchoolsEmployerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.
             "selected_employers",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about partner employers",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Top Employers"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. View All"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/employers or https://…"}),
         }
         labels = {
             "label": "Label",
@@ -1011,7 +1211,12 @@ class SchoolsBenchmarkSectionForm(BootstrapFormMixin, forms.ModelForm):
         model = SchoolsBenchmarkSection
         fields = ["label", "title", "description"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about benchmarks",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Benchmarks"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
         }
         labels = {
             "label": "Label",
@@ -1025,7 +1230,11 @@ class SchoolsBenchmarkCardForm(BootstrapFormMixin, forms.ModelForm):
         model = SchoolsBenchmarkCard
         fields = ["title", "description"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "title": forms.TextInput(attrs={"placeholder": "Benchmark title"}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description",
+            }),
         }
         labels = {
             "title": "Title",
@@ -1055,7 +1264,16 @@ class SchoolsSubscribeSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_text",
             "button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about the subscribe form",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Stay updated"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Subscribe"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/subscribe or https://…"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1069,6 +1287,10 @@ class SchoolsSubscribeFieldForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = SchoolsSubscribeField
         fields = ["field_name", "placeholder"]
+        widgets = {
+            "field_name": forms.TextInput(attrs={"placeholder": "e.g. Email"}),
+            "placeholder": forms.TextInput(attrs={"placeholder": "e.g. you@example.com"}),
+        }
         labels = {
             "field_name": "Field Name",
             "placeholder": "Placeholder",
@@ -1092,7 +1314,12 @@ class SchoolsFaqSectionForm(BootstrapFormMixin, forms.ModelForm):
         model = SchoolsFaqSection
         fields = ["label", "title", "description"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short intro for the FAQ section",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. FAQ"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
         }
         labels = {
             "label": "Label",
@@ -1106,7 +1333,11 @@ class SchoolsFaqItemForm(BootstrapFormMixin, forms.ModelForm):
         model = SchoolsFaqItem
         fields = ["question", "answer"]
         widgets = {
-            "answer": forms.Textarea(attrs={"rows": 3}),
+            "question": forms.TextInput(attrs={"placeholder": "e.g. How does it work?"}),
+            "answer": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Answer to the question",
+            }),
         }
         labels = {
             "question": "Question",
@@ -1138,7 +1369,18 @@ class EmployersHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "secondary_button_text",
             "secondary_button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph below the title",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. For Employers"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main hero title"}),
+            "primary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Post a Job"}),
+            "primary_button_url": forms.TextInput(attrs={"placeholder": "/post or https://…"}),
+            "secondary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
+            "secondary_button_url": forms.TextInput(attrs={"placeholder": "/about or https://…"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1163,7 +1405,16 @@ class EmployersMissionSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_text",
             "button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about the mission",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Mission"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Get Started"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/start or https://…"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1177,6 +1428,9 @@ class EmployersMissionPointForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = EmployersMissionPoint
         fields = ["text"]
+        widgets = {
+            "text": forms.TextInput(attrs={"placeholder": "Mission point text"}),
+        }
         labels = {"text": "Point Text"}
 
 
@@ -1197,7 +1451,12 @@ class EmployersOfferSectionForm(BootstrapFormMixin, forms.ModelForm):
         model = EmployersOfferSection
         fields = ["label", "title", "description"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about what you offer",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. What we offer"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
         }
         labels = {
             "label": "Label",
@@ -1212,7 +1471,11 @@ class EmployersOfferCardForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["icon", "title", "description"]
         widgets = {
             "icon": CleanFileInput(),
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "title": forms.TextInput(attrs={"placeholder": "Card title"}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description",
+            }),
         }
         labels = {
             "icon": "Icon",
@@ -1244,7 +1507,14 @@ class EmployersEventsSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_url",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about the events",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Events"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. View All Events"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/events or https://…"}),
         }
         labels = {
             "label": "Label",
@@ -1280,7 +1550,12 @@ class PartnersHeroSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.Mo
         model = PartnersHeroSection
         fields = ["label", "title", "description", "selected_statistics"]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph below the title",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Partners"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main hero title"}),
         }
         labels = {
             "label": "Label",
@@ -1301,6 +1576,10 @@ class PartnersPartnerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.
     class Meta:
         model = PartnersPartnerSection
         fields = ["search_placeholder", "explore_button_text", "selected_employers"]
+        widgets = {
+            "search_placeholder": forms.TextInput(attrs={"placeholder": "e.g. Search partners…"}),
+            "explore_button_text": forms.TextInput(attrs={"placeholder": "e.g. Explore"}),
+        }
         labels = {
             "search_placeholder": "Search Placeholder",
             "explore_button_text": "Explore Button Text",
@@ -1315,6 +1594,9 @@ class PartnersCategoryForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = PartnersCategory
         fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "e.g. Investors"}),
+        }
         labels = {"name": "Category Name"}
 
 
@@ -1342,7 +1624,14 @@ class PartnersFamilySectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.M
             "load_more_button_url",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about the partner family",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Our Family"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "load_more_button_text": forms.TextInput(attrs={"placeholder": "e.g. Load More"}),
+            "load_more_button_url": forms.TextInput(attrs={"placeholder": "/partners or https://…"}),
         }
         labels = {
             "label": "Label",
@@ -1364,6 +1653,10 @@ class PartnersReviewSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = PartnersReviewSection
         fields = ["label", "title"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Reviews"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+        }
         labels = {"label": "Label", "title": "Title"}
 
 
@@ -1371,7 +1664,14 @@ class PartnersReviewCardForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = PartnersReviewCard
         fields = ["name", "designation", "message"]
-        widgets = {"message": forms.Textarea(attrs={"rows": 3})}
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Full name"}),
+            "designation": forms.TextInput(attrs={"placeholder": "e.g. CEO, Acme Co."}),
+            "message": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Their review/testimonial",
+            }),
+        }
         labels = {
             "name": "Name",
             "designation": "Designation",
@@ -1403,7 +1703,18 @@ class PartnersFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
             "secondary_button_text",
             "secondary_button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short bio/founder message",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Meet the Founder"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "primary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Read More"}),
+            "primary_button_url": forms.TextInput(attrs={"placeholder": "/about or https://…"}),
+            "secondary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Contact"}),
+            "secondary_button_url": forms.TextInput(attrs={"placeholder": "/contact or https://…"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1431,7 +1742,16 @@ class EventsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
             "secondary_button_url",
         ]
         widgets = {
-            "description": forms.Textarea(attrs={"rows": 4}),
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph below the title",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Events"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main hero title"}),
+            "primary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Register"}),
+            "primary_button_url": forms.TextInput(attrs={"placeholder": "/register or https://…"}),
+            "secondary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
+            "secondary_button_url": forms.TextInput(attrs={"placeholder": "/about or https://…"}),
         }
         labels = {
             "label": "Label",
@@ -1460,7 +1780,18 @@ class EventsFeaturedSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_text",
             "button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short description of the featured event",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Featured Event"}),
+            "datetime_label": forms.TextInput(attrs={"placeholder": "e.g. Fri 15 May - 10:00 - 16:00 BST"}),
+            "title": forms.TextInput(attrs={"placeholder": "Event title"}),
+            "category_label": forms.TextInput(attrs={"placeholder": "e.g. Workshop"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Register"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/register or https://…"}),
+        }
         labels = {
             "label": "Label",
             "datetime_label": "Date / Time (e.g. Fri 15 May - 10:00 - 16:00 BST)",
@@ -1479,6 +1810,11 @@ class EventsUpcomingSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = EventsUpcomingSection
         fields = ["label", "title", "card_button_text"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Upcoming"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "card_button_text": forms.TextInput(attrs={"placeholder": "e.g. Book Now"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1490,6 +1826,9 @@ class EventsUpcomingCategoryForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = EventsUpcomingCategory
         fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "e.g. Workshops"}),
+        }
         labels = {"name": "Category Name"}
 
 
@@ -1516,7 +1855,15 @@ class EventsUpcomingCardForm(BootstrapFormMixin, forms.ModelForm):
         ]
         widgets = {
             "image": CleanFileInput(),
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short description of the event",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Workshop"}),
+            "title": forms.TextInput(attrs={"placeholder": "Event title"}),
+            "years_label": forms.TextInput(attrs={"placeholder": "e.g. Years 12+"}),
+            "price_label": forms.TextInput(attrs={"placeholder": "e.g. Free"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/event or https://…"}),
         }
         labels = {
             "image": "Image",
@@ -1545,7 +1892,15 @@ class EventsMissedSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = EventsMissedSection
         fields = ["label", "title", "description", "card_button_text"]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph about past events",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Missed Events"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "card_button_text": forms.TextInput(attrs={"placeholder": "e.g. Watch Now"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1560,6 +1915,9 @@ class EventsMissedCardForm(BootstrapFormMixin, forms.ModelForm):
         fields = ["video", "title", "date_label", "button_url"]
         widgets = {
             "video": CleanFileInput(attrs={"accept": "video/*"}),
+            "title": forms.TextInput(attrs={"placeholder": "Event title"}),
+            "date_label": forms.TextInput(attrs={"placeholder": "e.g. AUG 2025"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/recap or https://…"}),
         }
         labels = {
             "video": "Video",
@@ -1591,7 +1949,16 @@ class EventsSubmitSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_text",
             "button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph inviting submissions",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Submit an Event"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Submit"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/submit or https://…"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1608,7 +1975,15 @@ class InsightHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = InsightHeroSection
         fields = ["label", "title", "description", "search_placeholder"]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph below the title",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Insights"}),
+            "title": forms.TextInput(attrs={"placeholder": "Main hero title"}),
+            "search_placeholder": forms.TextInput(attrs={"placeholder": "e.g. Search articles…"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1635,7 +2010,19 @@ class InsightFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_text",
             "button_url",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short article excerpt",
+            }),
+            "label_1": forms.TextInput(attrs={"placeholder": "e.g. Founder Story"}),
+            "label_2": forms.TextInput(attrs={"placeholder": "e.g. Featured"}),
+            "date_label": forms.TextInput(attrs={"placeholder": "e.g. 14 APR 2026"}),
+            "title": forms.TextInput(attrs={"placeholder": "Article title"}),
+            "meta_data": forms.TextInput(attrs={"placeholder": "e.g. By metro · 4 min read"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Read More"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/article or https://…"}),
+        }
         labels = {
             "label_1": "Label 1",
             "label_2": "Label 2",
@@ -1652,6 +2039,9 @@ class InsightFounderCategoryForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = InsightFounderCategory
         fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "e.g. Leadership"}),
+        }
         labels = {"name": "Category Name"}
 
 
@@ -1671,6 +2061,10 @@ class InsightArticleSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = InsightArticleSection
         fields = ["title", "card_button_text"]
+        widgets = {
+            "title": forms.TextInput(attrs={"placeholder": "e.g. Latest Articles"}),
+            "card_button_text": forms.TextInput(attrs={"placeholder": "e.g. Read Article"}),
+        }
         labels = {
             "title": "Title",
             "card_button_text": "Card Button Text (shared across all cards)",
@@ -1691,7 +2085,15 @@ class InsightArticleCardForm(BootstrapFormMixin, forms.ModelForm):
         ]
         widgets = {
             "image": CleanFileInput(),
-            "description": forms.Textarea(attrs={"rows": 3}),
+            "description": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Short article excerpt",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Article"}),
+            "date_label": forms.TextInput(attrs={"placeholder": "e.g. 15 APR 2026"}),
+            "title": forms.TextInput(attrs={"placeholder": "Article title"}),
+            "tag": forms.TextInput(attrs={"placeholder": "e.g. Career"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/article or https://…"}),
         }
         labels = {
             "label": "Label",
@@ -1720,6 +2122,10 @@ class InsightLaneSectionForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = InsightLaneSection
         fields = ["label", "title"]
+        widgets = {
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Pick your lane"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+        }
         labels = {"label": "Label", "title": "Title"}
 
 
@@ -1727,6 +2133,11 @@ class InsightLaneForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = InsightLane
         fields = ["name", "article_count", "url"]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "e.g. Career advice"}),
+            "article_count": forms.TextInput(attrs={"placeholder": "e.g. 12 articles"}),
+            "url": forms.TextInput(attrs={"placeholder": "/lane or https://…"}),
+        }
         labels = {
             "name": "Lane Name",
             "article_count": "Article Count",
@@ -1759,7 +2170,18 @@ class InsightSubscribeSectionForm(BootstrapFormMixin, forms.ModelForm):
             "button_url",
             "bottom_note",
         ]
-        widgets = {"description": forms.Textarea(attrs={"rows": 4})}
+        widgets = {
+            "description": forms.Textarea(attrs={
+                "rows": 4,
+                "placeholder": "Short paragraph inviting subscribers",
+            }),
+            "label": forms.TextInput(attrs={"placeholder": "e.g. Newsletter"}),
+            "title": forms.TextInput(attrs={"placeholder": "Section title"}),
+            "email_placeholder": forms.TextInput(attrs={"placeholder": "e.g. Your email address"}),
+            "button_text": forms.TextInput(attrs={"placeholder": "e.g. Subscribe"}),
+            "button_url": forms.TextInput(attrs={"placeholder": "/subscribe or https://…"}),
+            "bottom_note": forms.TextInput(attrs={"placeholder": "Small note under the form"}),
+        }
         labels = {
             "label": "Label",
             "title": "Title",
@@ -1786,7 +2208,16 @@ class AboutSectionForm(BootstrapFormMixin, forms.ModelForm):
             "about_section_secondary_button_url",
         ]
         widgets = {
-            "about_section_description": forms.Textarea(attrs={"rows": 5}),
+            "about_section_description": forms.Textarea(attrs={
+                "rows": 5,
+                "placeholder": "Paragraph describing the about/mission",
+            }),
+            "about_section_label": forms.TextInput(attrs={"placeholder": "e.g. About Us"}),
+            "about_section_title": forms.TextInput(attrs={"placeholder": "Main title"}),
+            "about_section_primary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Learn More"}),
+            "about_section_primary_button_url": forms.TextInput(attrs={"placeholder": "/about or https://…"}),
+            "about_section_secondary_button_text": forms.TextInput(attrs={"placeholder": "e.g. Contact Us"}),
+            "about_section_secondary_button_url": forms.TextInput(attrs={"placeholder": "/contact or https://…"}),
         }
         labels = {
             "about_section_label": "Label",

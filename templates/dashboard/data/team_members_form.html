@@ -8,6 +8,103 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-team-table { table-layout: fixed; width: 100%; }
+    .yp-team-table thead th {
+        background: #f8fafc;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: .65rem .75rem;
+        white-space: nowrap;
+    }
+    .yp-team-table > tbody > tr.member-row > td {
+        padding: .6rem .75rem;
+        vertical-align: middle;
+        border-top: 1px solid #e2e8f0;
+    }
+    .yp-team-table input[type="text"],
+    .yp-team-table input[type="email"],
+    .yp-team-table input[type="url"],
+    .yp-team-table input:not([type]) {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-team-table input:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-team-table .invalid-feedback { font-size: .75rem; margin-top: .15rem; }
+
+    /* Photo dropzone — circular, doubles as preview + upload trigger */
+    .yp-photo-wrap {
+        position: relative;
+        display: inline-block;
+        margin-left: -3px;
+    }
+    .yp-photo-drop {
+        position: relative;
+        width: 52px; height: 52px;
+        border: 1.5px dashed #94a3b8;
+        border-radius: 50%;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: border-color .15s ease, background .15s ease;
+    }
+    .yp-photo-drop:hover { border-color: var(--yp-primary); background: #eef2ff; }
+    .yp-photo-drop input[type="file"] {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .yp-photo-drop .yp-photo-placeholder {
+        color: #64748b;
+        font-size: 1.15rem;
+        pointer-events: none;
+    }
+    .yp-photo-drop .yp-photo-thumb {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        background: #fff;
+    }
+    .yp-photo-clear {
+        position: absolute;
+        top: -4px; right: -4px;
+        width: 16px; height: 16px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .9);
+        color: #fff;
+        border: 2px solid #fff;
+        font-size: .55rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(15, 23, 42, .25);
+    }
+    .yp-photo-clear:hover { background: #b91c1c; }
+</style>
+
 <div class="alert alert-info">
     <i class="fas fa-info-circle mr-1"></i>
     Team members added here are picked up by the About Us → Team section,
@@ -26,51 +123,87 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list-ol mr-1"></i> Team Members</h3>
         </div>
-        <div class="card-body">
-            <div id="member-rows">
-                {% for member_form in formset %}
-                <div class="member-row border rounded p-3 mb-3">
-                    {% for hidden in member_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ member_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-user mr-1 text-info"></i>
-                            Member <span class="member-position">{{ forloop.counter }}</span>
-                            {% if member_form.instance.name %}
-                                <small class="text-muted ml-2">— {{ member_form.instance.name }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=member_form.profile_image %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=member_form.name %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=member_form.designation %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=member_form.email_url %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=member_form.view_profile_text %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=member_form.view_profile_url %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table yp-team-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 85px;">Avatar</th>
+                            <th style="width: 20%;">Name <span class="text-danger">*</span></th>
+                            <th style="width: 20%;">Designation</th>
+                            <th style="width: 28%;">Email</th>
+                            <th>View URL</th>
+                            <th style="width: 70px;" class="text-center">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="member-rows">
+                        {% for member_form in formset %}
+                        <tr class="member-row">
+                            <td style="width: 85px;">
+                                {% for hidden in member_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <input type="hidden" name="{{ member_form.DELETE.html_name }}" value="" class="delete-flag">
+                                <span class="yp-photo-wrap" data-photo-wrap>
+                                    <label class="yp-photo-drop mb-0" data-photo-drop>
+                                        <img src="{% if member_form.profile_image.value %}{{ member_form.profile_image.value.url }}{% endif %}"
+                                             class="yp-photo-thumb" data-photo-thumb alt="photo"
+                                             {% if not member_form.profile_image.value %}style="display:none;"{% endif %}>
+                                        <i class="fas fa-user yp-photo-placeholder" data-photo-placeholder
+                                           {% if member_form.profile_image.value %}style="display:none;"{% endif %}></i>
+                                        {{ member_form.profile_image }}
+                                        <input type="checkbox"
+                                               name="{{ member_form.profile_image.html_name }}-clear"
+                                               data-photo-clear-flag
+                                               style="display:none;">
+                                    </label>
+                                    <button type="button" class="yp-photo-clear" data-photo-clear title="Remove photo"
+                                            {% if not member_form.profile_image.value %}style="display:none;"{% endif %}>
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </span>
+                                {% for error in member_form.profile_image.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 20%;">
+                                {{ member_form.name }}
+                                {% for error in member_form.name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 20%;">
+                                {{ member_form.designation }}
+                                {% for error in member_form.designation.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 28%;">
+                                {{ member_form.email_url }}
+                                {% for error in member_form.email_url.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {{ member_form.view_profile_url }}
+                                {% for error in member_form.view_profile_url.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 70px;" class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <button type="button" id="add-member" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Member
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-member" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Member
+                </button>
+            </div>
         </div>
     </div>
 
@@ -84,41 +217,33 @@
 </form>
 
 <template id="member-empty">
-    <div class="member-row border rounded p-3 mb-3">
-        {% with formset.empty_form as empty %}
+    {% with formset.empty_form as empty %}
+    <tr class="member-row">
+        <td style="width: 85px;">
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-user mr-1 text-info"></i>
-                    Member <span class="member-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
+            <span class="yp-photo-wrap" data-photo-wrap>
+                <label class="yp-photo-drop mb-0" data-photo-drop>
+                    <img src="" class="yp-photo-thumb" data-photo-thumb alt="photo" style="display:none;">
+                    <i class="fas fa-user yp-photo-placeholder" data-photo-placeholder></i>
+                    {{ empty.profile_image }}
+                </label>
+                <button type="button" class="yp-photo-clear" data-photo-clear title="Remove photo" style="display:none;">
+                    <i class="fas fa-times"></i>
                 </button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.profile_image %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.designation %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.email_url %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.view_profile_text %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.view_profile_url %}
-                </div>
-            </div>
-        {% endwith %}
-    </div>
+            </span>
+        </td>
+        <td style="width: 20%;">{{ empty.name }}</td>
+        <td style="width: 20%;">{{ empty.designation }}</td>
+        <td style="width: 28%;">{{ empty.email_url }}</td>
+        <td>{{ empty.view_profile_url }}</td>
+        <td style="width: 70px;" class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -131,26 +256,66 @@
     const addBtn = document.getElementById('add-member');
     const tpl = document.getElementById('member-empty');
 
-    function renumber() {
-        const rows = container.querySelectorAll('.member-row');
-        let visible = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visible += 1;
-            const label = row.querySelector('.member-position');
-            if (label) label.textContent = visible;
-        });
+    function bindPhotoWrap(wrap) {
+        if (!wrap || wrap.dataset.bound) return;
+        wrap.dataset.bound = '1';
+        const drop = wrap.querySelector('[data-photo-drop]');
+        if (!drop) return;
+        const fileInput = drop.querySelector('input[type="file"]');
+        const placeholder = drop.querySelector('[data-photo-placeholder]');
+        const clearFlag = drop.querySelector('[data-photo-clear-flag]');
+        const img = drop.querySelector('[data-photo-thumb]');
+        const clearBtn = wrap.querySelector('[data-photo-clear]');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    if (img) {
+                        img.src = ev.target.result;
+                        img.style.display = '';
+                    }
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (clearBtn) clearBtn.style.display = '';
+                    if (clearFlag) clearFlag.checked = false;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (img) {
+                    img.src = '';
+                    img.style.display = 'none';
+                }
+                if (fileInput) fileInput.value = '';
+                if (clearFlag) clearFlag.checked = true;
+                if (placeholder) placeholder.style.display = '';
+                clearBtn.style.display = 'none';
+            });
+        }
+    }
+
+    function bindAllPhotoDrops(scope) {
+        (scope || document).querySelectorAll('[data-photo-wrap]').forEach(bindPhotoWrap);
     }
 
     addBtn.addEventListener('click', function () {
         const index = parseInt(totalInput.value, 10);
         const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
+        const wrapper = document.createElement('tbody');
         wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumber();
+        const row = wrapper.querySelector('tr.member-row');
+        if (row) {
+            container.appendChild(row);
+            totalInput.value = index + 1;
+            bindAllPhotoDrops(row);
+        }
     });
 
     container.addEventListener('click', function (e) {
@@ -161,10 +326,9 @@
         const flag = row.querySelector('.delete-flag');
         if (flag) flag.value = 'on';
         row.style.display = 'none';
-        renumber();
     });
 
-    renumber();
+    bindAllPhotoDrops(document);
 })();
 </script>
 {% endblock %}

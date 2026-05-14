@@ -9,6 +9,44 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-ilane-table { table-layout: fixed; width: 100%; }
+    .yp-ilane-table thead th {
+        background: #f8fafc;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: .65rem .75rem;
+        white-space: nowrap;
+    }
+    .yp-ilane-table > tbody > tr.lane-row > td {
+        padding: .6rem .75rem;
+        vertical-align: middle;
+        border-top: 1px solid #e2e8f0;
+    }
+    .yp-ilane-table input[type="text"],
+    .yp-ilane-table input:not([type]) {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-ilane-table input:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-ilane-table .invalid-feedback { font-size: .75rem; margin-top: .15rem; }
+</style>
+
 <form method="post" novalidate>
     {% csrf_token %}
 
@@ -28,49 +66,63 @@
 
     <div class="card card-info card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-stream mr-1"></i> Lanes</h3>
+            <h3 class="card-title"><i class="fas fa-route mr-1"></i> Lanes</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ lane_formset.management_form }}
             {% if lane_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ lane_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ lane_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="lane-rows">
-                {% for lane_form in lane_formset %}
-                <div class="lane-row border rounded p-3 mb-2">
-                    {% for hidden in lane_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ lane_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-stream mr-1 text-info"></i>
-                            Lane <span class="lane-position">{{ forloop.counter }}</span>
-                            {% if lane_form.instance.name %}
-                                <small class="text-muted ml-2">— {{ lane_form.instance.name }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-5">
-                            {% include "dashboard/home/_field.html" with field=lane_form.name %}
-                        </div>
-                        <div class="col-md-3">
-                            {% include "dashboard/home/_field.html" with field=lane_form.article_count %}
-                        </div>
-                        <div class="col-md-4">
-                            {% include "dashboard/home/_field.html" with field=lane_form.url %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+            <div class="table-responsive">
+                <table class="table yp-ilane-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Lane Name <span class="text-danger">*</span></th>
+                            <th style="width: 25%;">Article Count</th>
+                            <th>URL</th>
+                            <th style="width: 70px;" class="text-center">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lane-rows">
+                        {% for lane_form in lane_formset %}
+                        <tr class="lane-row">
+                            <td style="width: 30%;">
+                                {% for hidden in lane_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <input type="hidden" name="{{ lane_form.DELETE.html_name }}" value="" class="delete-flag">
+                                {{ lane_form.name }}
+                                {% for error in lane_form.name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 25%;">
+                                {{ lane_form.article_count }}
+                                {% for error in lane_form.article_count.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {{ lane_form.url }}
+                                {% for error in lane_form.url.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 70px;" class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <button type="button" id="add-lane" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Lane
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-lane" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Lane
+                </button>
+            </div>
         </div>
     </div>
 
@@ -84,32 +136,22 @@
 </form>
 
 <template id="lane-empty">
-    <div class="lane-row border rounded p-3 mb-2">
-        {% with lane_formset.empty_form as empty %}
+    {% with lane_formset.empty_form as empty %}
+    <tr class="lane-row">
+        <td style="width: 30%;">
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-stream mr-1 text-info"></i>
-                    Lane <span class="lane-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
-            </div>
-            <div class="row">
-                <div class="col-md-5">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-3">
-                    {% include "dashboard/home/_field.html" with field=empty.article_count %}
-                </div>
-                <div class="col-md-4">
-                    {% include "dashboard/home/_field.html" with field=empty.url %}
-                </div>
-            </div>
-        {% endwith %}
-    </div>
+            {{ empty.name }}
+        </td>
+        <td style="width: 25%;">{{ empty.article_count }}</td>
+        <td>{{ empty.url }}</td>
+        <td style="width: 70px;" class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -121,29 +163,20 @@
     const container = document.getElementById('lane-rows');
     const addBtn = document.getElementById('add-lane');
     const tpl = document.getElementById('lane-empty');
-    if (!totalInput || !container || !addBtn || !tpl) return;
 
-    function renumber() {
-        const rows = container.querySelectorAll('.lane-row');
-        let visible = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visible += 1;
-            const label = row.querySelector('.lane-position');
-            if (label) label.textContent = visible;
+    if (addBtn && tpl && container && totalInput) {
+        addBtn.addEventListener('click', function () {
+            const index = parseInt(totalInput.value, 10);
+            const html = tpl.innerHTML.replace(/__prefix__/g, index);
+            const wrapper = document.createElement('tbody');
+            wrapper.innerHTML = html.trim();
+            const row = wrapper.querySelector('tr.lane-row');
+            if (row) {
+                container.appendChild(row);
+                totalInput.value = index + 1;
+            }
         });
     }
-
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumber();
-    });
 
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
@@ -153,10 +186,7 @@
         const flag = row.querySelector('.delete-flag');
         if (flag) flag.value = 'on';
         row.style.display = 'none';
-        renumber();
     });
-
-    renumber();
 })();
 </script>
 {% endblock %}

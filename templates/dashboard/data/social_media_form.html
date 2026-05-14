@@ -8,6 +8,113 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-sm-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: .25rem;
+        align-items: flex-start;
+    }
+    .yp-sm-slot {
+        width: 130px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .yp-sm-frame-wrap {
+        position: relative;
+        width: 130px;
+        display: inline-block;
+    }
+    .yp-sm-frame {
+        position: relative;
+        width: 130px; height: 130px;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1.5px solid #cbd5e1;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+    }
+    .yp-sm-slot.stage .yp-sm-frame {
+        border-style: dashed;
+        border-color: #94a3b8;
+        cursor: pointer;
+        transition: border-color .15s ease, background .15s ease;
+    }
+    .yp-sm-slot.stage .yp-sm-frame:hover {
+        border-color: var(--yp-primary);
+        background: #eef2ff;
+    }
+    .yp-sm-frame > input[type="file"] {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .yp-sm-frame .yp-sm-thumb {
+        width: 100%; height: 100%;
+        object-fit: contain;
+        background: #fff;
+    }
+    .yp-sm-frame .yp-sm-placeholder {
+        color: #94a3b8;
+        font-size: 1.6rem;
+        pointer-events: none;
+    }
+    .yp-sm-clear {
+        position: absolute;
+        top: -6px; right: -6px;
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .9);
+        color: #fff;
+        border: 2px solid #fff;
+        font-size: .65rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        padding: 0;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, .3);
+    }
+    .yp-sm-clear:hover { background: #b91c1c; }
+
+    .yp-sm-slot input.yp-sm-name {
+        margin-top: .55rem;
+        width: 130px;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .88rem;
+        line-height: 1.5;
+        height: 36px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+    .yp-sm-slot input.yp-sm-name:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-sm-slot input.yp-sm-name.has-error {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+    }
+    .yp-sm-error {
+        color: #b91c1c;
+        font-size: .8rem;
+        margin-bottom: .5rem;
+        min-height: 1rem;
+    }
+</style>
+
 <div class="alert alert-info">
     <i class="fas fa-info-circle mr-1"></i>
     Social media icons added here are picked up by the Home → Social Media
@@ -28,38 +135,64 @@
             <h3 class="card-title"><i class="fas fa-list-ol mr-1"></i> Social Media Icons</h3>
         </div>
         <div class="card-body">
-            <div id="icon-rows">
+            <div id="grid-error" class="yp-sm-error"></div>
+
+            <div id="sm-grid" class="yp-sm-grid">
                 {% for icon_form in formset %}
-                <div class="icon-row border rounded p-3 mb-3">
+                <div class="yp-sm-slot saved" data-row-id="row-{{ forloop.counter0 }}">
+                    <span class="yp-sm-frame-wrap">
+                        <span class="yp-sm-frame">
+                            {% if icon_form.icon.value %}
+                                <img class="yp-sm-thumb" src="{{ icon_form.icon.value.url }}" alt="{{ icon_form.instance.name }}">
+                            {% else %}
+                                <i class="fas fa-share-alt yp-sm-placeholder"></i>
+                            {% endif %}
+                        </span>
+                        <button type="button" class="yp-sm-clear yp-sm-remove" title="Remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                    <input type="text" class="yp-sm-name yp-sm-saved-name"
+                           value="{{ icon_form.instance.name }}"
+                           data-row-id="row-{{ forloop.counter0 }}"
+                           placeholder="Media *">
+                </div>
+                {% endfor %}
+
+                <div id="sm-stage" class="yp-sm-slot stage">
+                    <span class="yp-sm-frame-wrap">
+                        <label class="yp-sm-frame mb-0">
+                            <i id="stage-placeholder" class="fas fa-plus yp-sm-placeholder"></i>
+                            <input type="file" id="stage-file" accept="image/*">
+                        </label>
+                    </span>
+                </div>
+            </div>
+
+            <div id="formset-rows" style="display:none;">
+                {% for icon_form in formset %}
+                <div class="formset-row" data-row-id="row-{{ forloop.counter0 }}">
                     {% for hidden in icon_form.hidden_fields %}{{ hidden }}{% endfor %}
                     <input type="hidden" name="{{ icon_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-share-alt mr-1 text-info"></i>
-                            Icon <span class="icon-position">{{ forloop.counter }}</span>
-                            {% if icon_form.instance.name %}
-                                <small class="text-muted ml-2">— {{ icon_form.instance.name }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=icon_form.name %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=icon_form.icon %}
-                        </div>
-                    </div>
+                    {{ icon_form.name }}
+                    {{ icon_form.icon }}
+                    <input type="checkbox"
+                           name="{{ icon_form.icon.html_name }}-clear"
+                           class="icon-clear-flag">
                 </div>
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-icon" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Icon
-            </button>
+            {% for icon_form in formset %}
+                {% if icon_form.errors %}
+                    <div class="alert alert-warning mt-3">
+                        <strong>{{ icon_form.instance.name|default:"Icon" }}:</strong>
+                        {% for field, errs in icon_form.errors.items %}
+                            {% for err in errs %}{{ field }}: {{ err }}<br>{% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
         </div>
     </div>
 
@@ -73,29 +206,17 @@
 </form>
 
 <template id="icon-empty">
-    <div class="icon-row border rounded p-3 mb-3">
-        {% with formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-share-alt mr-1 text-info"></i>
-                    Icon <span class="icon-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.icon %}
-                </div>
-            </div>
-        {% endwith %}
+    {% with formset.empty_form as empty %}
+    <div class="formset-row">
+        {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+        <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+        {{ empty.name }}
+        {{ empty.icon }}
+        <input type="checkbox"
+               name="{{ empty.icon.html_name }}-clear"
+               class="icon-clear-flag">
     </div>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -104,44 +225,156 @@
 (function () {
     const prefix = "{{ formset.prefix }}";
     const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
-    const container = document.getElementById('icon-rows');
-    const addBtn = document.getElementById('add-icon');
     const tpl = document.getElementById('icon-empty');
+    const formsetRows = document.getElementById('formset-rows');
+    const grid = document.getElementById('sm-grid');
+    const stage = document.getElementById('sm-stage');
+    const stageFile = document.getElementById('stage-file');
+    const gridError = document.getElementById('grid-error');
 
-    function renumberPositions() {
-        const rows = container.querySelectorAll('.icon-row');
-        let visibleIndex = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visibleIndex += 1;
-            const label = row.querySelector('.icon-position');
-            if (label) label.textContent = visibleIndex;
-        });
+    grid.querySelectorAll('.yp-sm-slot.saved').forEach(bindSavedSlot);
+
+    function bindSavedSlot(slot) {
+        const rowId = slot.getAttribute('data-row-id');
+        const removeBtn = slot.querySelector('.yp-sm-remove');
+        const nameInput = slot.querySelector('.yp-sm-saved-name');
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function () {
+                const row = formsetRows.querySelector('[data-row-id="' + rowId + '"]');
+                if (row) {
+                    const flag = row.querySelector('.delete-flag');
+                    if (flag) flag.value = 'on';
+                }
+                slot.remove();
+                clearGridError();
+            });
+        }
+        if (nameInput) {
+            nameInput.addEventListener('input', function () {
+                const row = formsetRows.querySelector('[data-row-id="' + rowId + '"]');
+                if (!row) return;
+                const hidden = row.querySelector('input[name$="-name"]');
+                if (hidden) hidden.value = nameInput.value;
+                if (nameInput.value.trim()) {
+                    nameInput.classList.remove('has-error');
+                    clearGridError();
+                }
+            });
+        }
     }
 
-    addBtn.addEventListener('click', function () {
+    function showGridError(msg) {
+        gridError.textContent = msg;
+    }
+    function clearGridError() {
+        gridError.textContent = '';
+    }
+
+    function findEmptyNameInputs() {
+        const empties = [];
+        grid.querySelectorAll('.yp-sm-slot.saved').forEach(function (slot) {
+            const input = slot.querySelector('.yp-sm-saved-name');
+            if (input && !input.value.trim()) empties.push(input);
+        });
+        return empties;
+    }
+
+    /* Block opening the picker if any previous name is empty. */
+    stageFile.addEventListener('click', function (e) {
+        const empties = findEmptyNameInputs();
+        if (empties.length > 0) {
+            e.preventDefault();
+            empties.forEach(function (i) { i.classList.add('has-error'); });
+            showGridError('Please enter a name for each added icon before adding another.');
+            empties[0].focus();
+        }
+    });
+
+    /* Picking a file commits a new saved slot regardless of name. */
+    stageFile.addEventListener('change', function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        clearGridError();
+
         const index = parseInt(totalInput.value, 10);
         const html = tpl.innerHTML.replace(/__prefix__/g, index);
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html.trim();
         const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumberPositions();
-    });
-
-    container.addEventListener('click', function (e) {
-        const btn = e.target.closest('.remove-row');
-        if (!btn) return;
-        const row = btn.closest('.icon-row');
         if (!row) return;
-        const flag = row.querySelector('.delete-flag');
-        if (flag) flag.value = 'on';
-        row.style.display = 'none';
-        renumberPositions();
+
+        const rowId = 'row-new-' + Date.now() + '-' + index;
+        row.setAttribute('data-row-id', rowId);
+
+        const hiddenFile = row.querySelector('input[type="file"]');
+        if (hiddenFile) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            hiddenFile.files = dt.files;
+        }
+
+        formsetRows.appendChild(row);
+        totalInput.value = index + 1;
+
+        const slot = document.createElement('div');
+        slot.className = 'yp-sm-slot saved';
+        slot.setAttribute('data-row-id', rowId);
+
+        const frameWrap = document.createElement('span');
+        frameWrap.className = 'yp-sm-frame-wrap';
+
+        const frame = document.createElement('span');
+        frame.className = 'yp-sm-frame';
+        const img = document.createElement('img');
+        img.className = 'yp-sm-thumb';
+        img.alt = '';
+        const reader = new FileReader();
+        reader.onload = function (ev) { img.src = ev.target.result; };
+        reader.readAsDataURL(file);
+        frame.appendChild(img);
+
+        const x = document.createElement('button');
+        x.type = 'button';
+        x.className = 'yp-sm-clear yp-sm-remove';
+        x.title = 'Remove';
+        x.innerHTML = '<i class="fas fa-times"></i>';
+
+        frameWrap.appendChild(frame);
+        frameWrap.appendChild(x);
+
+        const nameField = document.createElement('input');
+        nameField.type = 'text';
+        nameField.className = 'yp-sm-name yp-sm-saved-name';
+        nameField.value = '';
+        nameField.placeholder = 'Media *';
+        nameField.setAttribute('data-row-id', rowId);
+
+        slot.appendChild(frameWrap);
+        slot.appendChild(nameField);
+
+        grid.insertBefore(slot, stage);
+        bindSavedSlot(slot);
+
+        /* Reset the stage's file input so picking the same filename again still fires change. */
+        stageFile.value = '';
+
+        nameField.focus();
     });
 
-    renumberPositions();
+    /* Final guard on submit — block if any saved name is empty. */
+    const realForm = document.querySelector('form');
+    if (realForm) {
+        realForm.addEventListener('submit', function (e) {
+            const empties = findEmptyNameInputs();
+            if (empties.length > 0) {
+                e.preventDefault();
+                empties.forEach(function (i) { i.classList.add('has-error'); });
+                showGridError('Please enter a name for each added icon before saving.');
+                empties[0].focus();
+            }
+        });
+    }
 })();
 </script>
 {% endblock %}

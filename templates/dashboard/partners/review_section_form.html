@@ -9,6 +9,46 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-prev-table { table-layout: fixed; width: 100%; }
+    .yp-prev-table thead th {
+        background: #f8fafc;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: .65rem .75rem;
+        white-space: nowrap;
+    }
+    .yp-prev-table > tbody > tr.review-row > td {
+        padding: .6rem .75rem;
+        vertical-align: middle;
+        border-top: 1px solid #e2e8f0;
+    }
+    .yp-prev-table input[type="text"],
+    .yp-prev-table input:not([type]),
+    .yp-prev-table textarea {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-prev-table textarea { min-height: 38px; resize: vertical; overflow-y: auto; }
+    .yp-prev-table input:focus, .yp-prev-table textarea:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-prev-table .invalid-feedback { font-size: .75rem; margin-top: .15rem; }
+</style>
+
 <form method="post" novalidate>
     {% csrf_token %}
 
@@ -30,47 +70,61 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-comment-dots mr-1"></i> Review Cards</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ card_formset.management_form }}
             {% if card_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ card_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="review-rows">
-                {% for card_form in card_formset %}
-                <div class="review-row border rounded p-3 mb-3">
-                    {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-user mr-1 text-info"></i>
-                            Review <span class="review-position">{{ forloop.counter }}</span>
-                            {% if card_form.instance.name %}
-                                <small class="text-muted ml-2">— {{ card_form.instance.name }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.name %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.designation %}
-                        </div>
-                        <div class="col-md-12">
-                            {% include "dashboard/home/_field.html" with field=card_form.message %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+            <div class="table-responsive">
+                <table class="table yp-prev-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 22%;">Name <span class="text-danger">*</span></th>
+                            <th style="width: 22%;">Designation</th>
+                            <th>Message</th>
+                            <th style="width: 70px;" class="text-center">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="review-rows">
+                        {% for card_form in card_formset %}
+                        <tr class="review-row">
+                            <td style="width: 22%;">
+                                {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
+                                {{ card_form.name }}
+                                {% for error in card_form.name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 22%;">
+                                {{ card_form.designation }}
+                                {% for error in card_form.designation.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {{ card_form.message }}
+                                {% for error in card_form.message.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 70px;" class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <button type="button" id="add-review" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Review
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-review" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Review
+                </button>
+            </div>
         </div>
     </div>
 
@@ -84,32 +138,22 @@
 </form>
 
 <template id="review-empty">
-    <div class="review-row border rounded p-3 mb-3">
-        {% with card_formset.empty_form as empty %}
+    {% with card_formset.empty_form as empty %}
+    <tr class="review-row">
+        <td style="width: 22%;">
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-user mr-1 text-info"></i>
-                    Review <span class="review-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.designation %}
-                </div>
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=empty.message %}
-                </div>
-            </div>
-        {% endwith %}
-    </div>
+            {{ empty.name }}
+        </td>
+        <td style="width: 22%;">{{ empty.designation }}</td>
+        <td>{{ empty.message }}</td>
+        <td style="width: 70px;" class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -122,27 +166,19 @@
     const addBtn = document.getElementById('add-review');
     const tpl = document.getElementById('review-empty');
 
-    function renumberPositions() {
-        const rows = container.querySelectorAll('.review-row');
-        let visibleIndex = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visibleIndex += 1;
-            const label = row.querySelector('.review-position');
-            if (label) label.textContent = visibleIndex;
+    if (addBtn && tpl && container && totalInput) {
+        addBtn.addEventListener('click', function () {
+            const index = parseInt(totalInput.value, 10);
+            const html = tpl.innerHTML.replace(/__prefix__/g, index);
+            const wrapper = document.createElement('tbody');
+            wrapper.innerHTML = html.trim();
+            const row = wrapper.querySelector('tr.review-row');
+            if (row) {
+                container.appendChild(row);
+                totalInput.value = index + 1;
+            }
         });
     }
-
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumberPositions();
-    });
 
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
@@ -152,10 +188,7 @@
         const flag = row.querySelector('.delete-flag');
         if (flag) flag.value = 'on';
         row.style.display = 'none';
-        renumberPositions();
     });
-
-    renumberPositions();
 })();
 </script>
 {% endblock %}

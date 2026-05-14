@@ -9,6 +9,128 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Categories table */
+    .yp-ecat-table { table-layout: fixed; width: 100%; }
+    .yp-ecat-table thead th {
+        background: #f8fafc;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: .65rem .75rem;
+        white-space: nowrap;
+    }
+    .yp-ecat-table > tbody > tr.category-row > td {
+        padding: .6rem .75rem;
+        vertical-align: middle;
+        border-top: 1px solid #e2e8f0;
+    }
+    .yp-ecat-table input[type="text"], .yp-ecat-table input:not([type]) {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-ecat-table input:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+
+    /* Upcoming card slim row */
+    .yp-uec-row {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        align-items: flex-start;
+    }
+    .yp-uec-row:first-child { border-top: 1px solid #e2e8f0; }
+    .yp-uec-imgs { flex-shrink: 0; }
+    .yp-uec-fields {
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: minmax(140px, 1fr) minmax(140px, 2fr);
+        gap: .55rem .75rem;
+    }
+    .yp-uec-fields .yp-uec-full { grid-column: 1 / -1; }
+    .yp-uec-fields .form-group { margin-bottom: 0; }
+    .yp-uec-fields label { display: none; }
+    .yp-uec-fields input[type="text"],
+    .yp-uec-fields input[type="url"],
+    .yp-uec-fields input:not([type]),
+    .yp-uec-fields textarea {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-uec-fields textarea { min-height: 38px; resize: vertical; overflow-y: auto; }
+    .yp-uec-fields input:focus, .yp-uec-fields textarea:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-uec-actions { flex-shrink: 0; }
+
+    .yp-img-wrap { position: relative; display: inline-block; }
+    .yp-img-drop {
+        position: relative;
+        width: 80px; height: 80px;
+        border: 1.5px dashed #94a3b8;
+        border-radius: 10px;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: border-color .15s ease, background .15s ease;
+    }
+    .yp-img-drop:hover { border-color: var(--yp-primary); background: #eef2ff; }
+    .yp-img-drop input[type="file"] {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .yp-img-placeholder { color: #64748b; font-size: 1.2rem; pointer-events: none; }
+    .yp-img-thumb { width: 100%; height: 100%; object-fit: cover; background: #fff; }
+    .yp-img-clear {
+        position: absolute;
+        top: -4px; right: -4px;
+        width: 16px; height: 16px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .9);
+        color: #fff;
+        border: 2px solid #fff;
+        font-size: .55rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(15, 23, 42, .25);
+    }
+    .yp-img-clear:hover { background: #b91c1c; }
+</style>
+
 <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -31,37 +153,47 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-tags mr-1"></i> Category Labels</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ category_formset.management_form }}
             {% if category_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ category_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ category_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="category-rows">
-                {% for category_form in category_formset %}
-                <div class="category-row border rounded p-3 mb-2">
-                    {% for hidden in category_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ category_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="row align-items-end">
-                        <div class="col-md-10">
-                            {% include "dashboard/home/_field.html" with field=category_form.name %}
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="d-block">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
-                                    <i class="fas fa-trash mr-1"></i> Delete
+            <div class="table-responsive">
+                <table class="table yp-ecat-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Category Name <span class="text-danger">*</span></th>
+                            <th style="width: 70px;" class="text-center">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="category-rows">
+                        {% for category_form in category_formset %}
+                        <tr class="category-row">
+                            <td>
+                                {% for hidden in category_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <input type="hidden" name="{{ category_form.DELETE.html_name }}" value="" class="delete-flag">
+                                {{ category_form.name }}
+                                {% for error in category_form.name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 70px;" class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                                    <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <button type="button" id="add-category" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Category
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-category" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Category
+                </button>
+            </div>
         </div>
     </div>
 
@@ -69,57 +201,61 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-th-large mr-1"></i> Event Cards</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ card_formset.management_form }}
             {% if card_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ card_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
             <div id="card-rows">
                 {% for card_form in card_formset %}
-                <div class="card-row border rounded p-3 mb-3">
+                <div class="yp-uec-row card-row">
                     {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
                     <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-calendar-day mr-1 text-info"></i>
-                            Card <span class="card-position">{{ forloop.counter }}</span>
-                            {% if card_form.instance.title %}
-                                <small class="text-muted ml-2">— {{ card_form.instance.title }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
+
+                    <div class="yp-uec-imgs">
+                        <span class="yp-img-wrap" data-img-wrap>
+                            <label class="yp-img-drop mb-0" data-img-drop>
+                                <img src="{% if card_form.image.value %}{{ card_form.image.value.url }}{% endif %}"
+                                     class="yp-img-thumb" data-img-thumb alt="image"
+                                     {% if not card_form.image.value %}style="display:none;"{% endif %}>
+                                <i class="fas fa-image yp-img-placeholder" data-img-placeholder
+                                   {% if card_form.image.value %}style="display:none;"{% endif %}></i>
+                                {{ card_form.image }}
+                                <input type="checkbox"
+                                       name="{{ card_form.image.html_name }}-clear"
+                                       data-img-clear-flag style="display:none;">
+                            </label>
+                            <button type="button" class="yp-img-clear" data-img-clear title="Remove image"
+                                    {% if not card_form.image.value %}style="display:none;"{% endif %}>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </span>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.image %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.label %}
-                            {% include "dashboard/home/_field.html" with field=card_form.title %}
-                        </div>
-                        <div class="col-md-12">
-                            {% include "dashboard/home/_field.html" with field=card_form.description %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.years_label %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.price_label %}
-                        </div>
-                        <div class="col-md-12">
-                            {% include "dashboard/home/_field.html" with field=card_form.button_url %}
-                        </div>
+
+                    <div class="yp-uec-fields">
+                        <div class="form-group">{{ card_form.label }}</div>
+                        <div class="form-group">{{ card_form.title }}</div>
+                        <div class="form-group yp-uec-full">{{ card_form.description }}</div>
+                        <div class="form-group">{{ card_form.years_label }}</div>
+                        <div class="form-group">{{ card_form.price_label }}</div>
+                        <div class="form-group yp-uec-full">{{ card_form.button_url }}</div>
+                    </div>
+
+                    <div class="yp-uec-actions">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-card" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Card
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-card" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Card
+                </button>
+            </div>
         </div>
     </div>
 
@@ -133,70 +269,101 @@
 </form>
 
 <template id="category-empty">
-    <div class="category-row border rounded p-3 mb-2">
-        {% with category_formset.empty_form as empty %}
+    {% with category_formset.empty_form as empty %}
+    <tr class="category-row">
+        <td>
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="row align-items-end">
-                <div class="col-md-10">
-                    {% include "dashboard/home/_field.html" with field=empty.name %}
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="d-block">&nbsp;</label>
-                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
-                            <i class="fas fa-times mr-1"></i> Remove
-                        </button>
-                    </div>
-                </div>
-            </div>
-        {% endwith %}
-    </div>
+            {{ empty.name }}
+        </td>
+        <td style="width: 70px;" class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>
+    {% endwith %}
 </template>
 
 <template id="card-empty">
-    <div class="card-row border rounded p-3 mb-3">
-        {% with card_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-calendar-day mr-1 text-info"></i>
-                    Card <span class="card-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
+    {% with card_formset.empty_form as empty %}
+    <div class="yp-uec-row card-row">
+        {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+        <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+        <div class="yp-uec-imgs">
+            <span class="yp-img-wrap" data-img-wrap>
+                <label class="yp-img-drop mb-0" data-img-drop>
+                    <img src="" class="yp-img-thumb" data-img-thumb alt="image" style="display:none;">
+                    <i class="fas fa-image yp-img-placeholder" data-img-placeholder></i>
+                    {{ empty.image }}
+                </label>
+                <button type="button" class="yp-img-clear" data-img-clear style="display:none;">
+                    <i class="fas fa-times"></i>
                 </button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.image %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.label %}
-                    {% include "dashboard/home/_field.html" with field=empty.title %}
-                </div>
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=empty.description %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.years_label %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.price_label %}
-                </div>
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=empty.button_url %}
-                </div>
-            </div>
-        {% endwith %}
+            </span>
+        </div>
+        <div class="yp-uec-fields">
+            <div class="form-group">{{ empty.label }}</div>
+            <div class="form-group">{{ empty.title }}</div>
+            <div class="form-group yp-uec-full">{{ empty.description }}</div>
+            <div class="form-group">{{ empty.years_label }}</div>
+            <div class="form-group">{{ empty.price_label }}</div>
+            <div class="form-group yp-uec-full">{{ empty.button_url }}</div>
+        </div>
+        <div class="yp-uec-actions">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     </div>
+    {% endwith %}
 </template>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 (function () {
+    function bindImgWrap(wrap) {
+        if (!wrap || wrap.dataset.bound) return;
+        wrap.dataset.bound = '1';
+        const drop = wrap.querySelector('[data-img-drop]');
+        if (!drop) return;
+        const fileInput = drop.querySelector('input[type="file"]');
+        const placeholder = drop.querySelector('[data-img-placeholder]');
+        const clearFlag = drop.querySelector('[data-img-clear-flag]');
+        const img = drop.querySelector('[data-img-thumb]');
+        const clearBtn = wrap.querySelector('[data-img-clear]');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    if (img) { img.src = ev.target.result; img.style.display = ''; }
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (clearBtn) clearBtn.style.display = '';
+                    if (clearFlag) clearFlag.checked = false;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (img) { img.src = ''; img.style.display = 'none'; }
+                if (fileInput) fileInput.value = '';
+                if (clearFlag) clearFlag.checked = true;
+                if (placeholder) placeholder.style.display = '';
+                clearBtn.style.display = 'none';
+            });
+        }
+    }
+    function bindAllImgWraps(scope) {
+        (scope || document).querySelectorAll('[data-img-wrap]').forEach(bindImgWrap);
+    }
+
     function wireFormset(opts) {
         const totalInput = document.querySelector('input[name="' + opts.prefix + '-TOTAL_FORMS"]');
         const container = document.getElementById(opts.containerId);
@@ -204,27 +371,24 @@
         const tpl = document.getElementById(opts.tplId);
         if (!totalInput || !container || !addBtn || !tpl) return;
 
-        function renumber() {
-            if (!opts.positionSelector) return;
-            const rows = container.querySelectorAll('.' + opts.rowClass);
-            let visible = 0;
-            rows.forEach(function (row) {
-                if (row.style.display === 'none') return;
-                visible += 1;
-                const label = row.querySelector(opts.positionSelector);
-                if (label) label.textContent = visible;
-            });
-        }
-
         addBtn.addEventListener('click', function () {
             const index = parseInt(totalInput.value, 10);
             const html = tpl.innerHTML.replace(/__prefix__/g, index);
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = html.trim();
-            const row = wrapper.firstElementChild;
-            container.appendChild(row);
-            totalInput.value = index + 1;
-            renumber();
+            let row;
+            if (opts.isTableRow) {
+                const wrapper = document.createElement('tbody');
+                wrapper.innerHTML = html.trim();
+                row = wrapper.querySelector('tr.' + opts.rowClass);
+            } else {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = html.trim();
+                row = wrapper.firstElementChild;
+            }
+            if (row) {
+                container.appendChild(row);
+                totalInput.value = index + 1;
+                bindAllImgWraps(row);
+            }
         });
 
         container.addEventListener('click', function (e) {
@@ -235,10 +399,7 @@
             const flag = row.querySelector('.delete-flag');
             if (flag) flag.value = 'on';
             row.style.display = 'none';
-            renumber();
         });
-
-        renumber();
     }
 
     wireFormset({
@@ -247,6 +408,7 @@
         addBtnId: 'add-category',
         tplId: 'category-empty',
         rowClass: 'category-row',
+        isTableRow: true,
     });
     wireFormset({
         prefix: 'cards',
@@ -254,8 +416,9 @@
         addBtnId: 'add-card',
         tplId: 'card-empty',
         rowClass: 'card-row',
-        positionSelector: '.card-position',
     });
+
+    bindAllImgWraps(document);
 })();
 </script>
 {% endblock %}

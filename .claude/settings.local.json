@@ -69,7 +69,13 @@
       "Bash(.venv/Scripts/python.exe -)",
       "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -c ' *)",
       "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -)",
-      "Bash(PYTHONIOENCODING=utf-8 python3 -)"
+      "Bash(PYTHONIOENCODING=utf-8 python3 -)",
+      "Bash(/usr/bin/python3 -m pip install --quiet --user openpyxl)",
+      "Bash(/usr/bin/python3 -c \"import openpyxl; print\\(openpyxl.__version__\\)\")",
+      "Bash(/usr/bin/python3 build_api_sheet.py)",
+      "Bash(./.venv/Scripts/python.exe build_api_xlsx.py)",
+      "Bash(./.venv/Scripts/python.exe -c ' *)",
+      "Bash(./.venv/Scripts/python.exe build_api_single_sheet.py)"
     ]
   }
 }

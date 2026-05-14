@@ -9,6 +9,119 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-mec-row {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        align-items: flex-start;
+    }
+    .yp-mec-row:first-child { border-top: 1px solid #e2e8f0; }
+    .yp-mec-video { flex-shrink: 0; }
+    .yp-mec-fields {
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr);
+        gap: .55rem .75rem;
+    }
+    .yp-mec-fields .yp-mec-full { grid-column: 1 / -1; }
+    .yp-mec-fields .form-group { margin-bottom: 0; }
+    .yp-mec-fields label { display: none; }
+    .yp-mec-fields input[type="text"],
+    .yp-mec-fields input[type="url"],
+    .yp-mec-fields input:not([type]) {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-mec-fields input:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-mec-actions { flex-shrink: 0; }
+
+    .yp-vid-wrap { position: relative; display: inline-block; }
+    .yp-vid-drop {
+        position: relative;
+        width: 160px; height: 100px;
+        border: 1.5px dashed #94a3b8;
+        border-radius: 10px;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: border-color .15s ease, background .15s ease;
+    }
+    .yp-vid-drop:hover { border-color: var(--yp-primary); background: #eef2ff; }
+    .yp-vid-drop input[type="file"] {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .yp-vid-placeholder {
+        color: #94a3b8;
+        font-size: 1.4rem;
+        pointer-events: none;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .2rem;
+    }
+    .yp-vid-placeholder-hint { font-size: .7rem; }
+    .yp-vid-preview {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        background: #0f172a;
+        pointer-events: none;
+    }
+    .yp-vid-play {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .65);
+        color: #fff;
+        font-size: .85rem;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        pointer-events: none;
+        border: 2px solid rgba(255, 255, 255, .9);
+        box-shadow: 0 4px 10px rgba(15, 23, 42, .4);
+    }
+    .yp-vid-clear {
+        position: absolute;
+        top: -4px; right: -4px;
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .9);
+        color: #fff;
+        border: 2px solid #fff;
+        font-size: .55rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        padding: 0;
+        box-shadow: 0 2px 4px rgba(15, 23, 42, .25);
+    }
+    .yp-vid-clear:hover { background: #b91c1c; }
+</style>
+
 <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -30,50 +143,68 @@
 
     <div class="card card-info card-outline">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-film mr-1"></i> Missed Event Cards</h3>
+            <h3 class="card-title"><i class="fas fa-play-circle mr-1"></i> Missed Event Cards</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ card_formset.management_form }}
             {% if card_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ card_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ card_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
             <div id="card-rows">
                 {% for card_form in card_formset %}
-                <div class="card-row border rounded p-3 mb-3">
+                <div class="yp-mec-row card-row">
                     {% for hidden in card_form.hidden_fields %}{{ hidden }}{% endfor %}
                     <input type="hidden" name="{{ card_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-play-circle mr-1 text-info"></i>
-                            Card <span class="card-position">{{ forloop.counter }}</span>
-                            {% if card_form.instance.title %}
-                                <small class="text-muted ml-2">— {{ card_form.instance.title }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
+
+                    <div class="yp-mec-video">
+                        <span class="yp-vid-wrap" data-vid-wrap>
+                            <label class="yp-vid-drop mb-0" data-vid-drop>
+                                <video src="{% if card_form.video.value %}{{ card_form.video.value.url }}{% endif %}"
+                                       class="yp-vid-preview" data-vid-preview
+                                       preload="metadata" muted playsinline
+                                       {% if not card_form.video.value %}style="display:none;"{% endif %}></video>
+                                <span class="yp-vid-placeholder" data-vid-placeholder
+                                      {% if card_form.video.value %}style="display:none;"{% endif %}>
+                                    <i class="fas fa-video"></i>
+                                    <span class="yp-vid-placeholder-hint">Click to upload</span>
+                                </span>
+                                <span class="yp-vid-play" data-vid-play
+                                      {% if not card_form.video.value %}style="display:none;"{% endif %}>
+                                    <i class="fas fa-play"></i>
+                                </span>
+                                {{ card_form.video }}
+                                <input type="checkbox"
+                                       name="{{ card_form.video.html_name }}-clear"
+                                       data-vid-clear-flag style="display:none;">
+                            </label>
+                            <button type="button" class="yp-vid-clear" data-vid-clear title="Remove video"
+                                    {% if not card_form.video.value %}style="display:none;"{% endif %}>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </span>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.video is_video=True %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=card_form.title %}
-                            {% include "dashboard/home/_field.html" with field=card_form.date_label %}
-                        </div>
-                        <div class="col-md-12">
-                            {% include "dashboard/home/_field.html" with field=card_form.button_url %}
-                        </div>
+
+                    <div class="yp-mec-fields">
+                        <div class="form-group">{{ card_form.title }}</div>
+                        <div class="form-group">{{ card_form.date_label }}</div>
+                        <div class="form-group yp-mec-full">{{ card_form.button_url }}</div>
+                    </div>
+
+                    <div class="yp-mec-actions">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <button type="button" id="add-card" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Missed Event
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-card" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Missed Event
+                </button>
+            </div>
         </div>
     </div>
 
@@ -87,33 +218,43 @@
 </form>
 
 <template id="card-empty">
-    <div class="card-row border rounded p-3 mb-3">
-        {% with card_formset.empty_form as empty %}
-            {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
-            <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-play-circle mr-1 text-info"></i>
-                    Card <span class="card-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
+    {% with card_formset.empty_form as empty %}
+    <div class="yp-mec-row card-row">
+        {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
+        <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
+
+        <div class="yp-mec-video">
+            <span class="yp-vid-wrap" data-vid-wrap>
+                <label class="yp-vid-drop mb-0" data-vid-drop>
+                    <video src="" class="yp-vid-preview" data-vid-preview preload="metadata" muted playsinline style="display:none;"></video>
+                    <span class="yp-vid-placeholder" data-vid-placeholder>
+                        <i class="fas fa-video"></i>
+                        <span class="yp-vid-placeholder-hint">Click to upload</span>
+                    </span>
+                    <span class="yp-vid-play" data-vid-play style="display:none;">
+                        <i class="fas fa-play"></i>
+                    </span>
+                    {{ empty.video }}
+                </label>
+                <button type="button" class="yp-vid-clear" data-vid-clear style="display:none;">
+                    <i class="fas fa-times"></i>
                 </button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.video is_video=True %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.title %}
-                    {% include "dashboard/home/_field.html" with field=empty.date_label %}
-                </div>
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=empty.button_url %}
-                </div>
-            </div>
-        {% endwith %}
+            </span>
+        </div>
+
+        <div class="yp-mec-fields">
+            <div class="form-group">{{ empty.title }}</div>
+            <div class="form-group">{{ empty.date_label }}</div>
+            <div class="form-group yp-mec-full">{{ empty.button_url }}</div>
+        </div>
+
+        <div class="yp-mec-actions">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
     </div>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -126,27 +267,76 @@
     const addBtn = document.getElementById('add-card');
     const tpl = document.getElementById('card-empty');
 
-    function renumberPositions() {
-        const rows = container.querySelectorAll('.card-row');
-        let visibleIndex = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visibleIndex += 1;
-            const label = row.querySelector('.card-position');
-            if (label) label.textContent = visibleIndex;
-        });
+    function bindVidWrap(wrap) {
+        if (!wrap || wrap.dataset.bound) return;
+        wrap.dataset.bound = '1';
+        const drop = wrap.querySelector('[data-vid-drop]');
+        if (!drop) return;
+        const fileInput = drop.querySelector('input[type="file"]');
+        const placeholder = drop.querySelector('[data-vid-placeholder]');
+        const clearFlag = drop.querySelector('[data-vid-clear-flag]');
+        const video = drop.querySelector('[data-vid-preview]');
+        const play = drop.querySelector('[data-vid-play]');
+        const clearBtn = wrap.querySelector('[data-vid-clear]');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                if (file.type && !file.type.startsWith('video/')) {
+                    fileInput.value = '';
+                    return;
+                }
+                if (video) {
+                    if (video.src && video.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(video.src);
+                    }
+                    video.src = URL.createObjectURL(file);
+                    video.style.display = '';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+                if (play) play.style.display = '';
+                if (clearBtn) clearBtn.style.display = '';
+                if (clearFlag) clearFlag.checked = false;
+            });
+        }
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (video) {
+                    if (video.src && video.src.startsWith('blob:')) {
+                        URL.revokeObjectURL(video.src);
+                    }
+                    video.removeAttribute('src');
+                    video.style.display = 'none';
+                }
+                if (fileInput) fileInput.value = '';
+                if (clearFlag) clearFlag.checked = true;
+                if (placeholder) placeholder.style.display = '';
+                if (play) play.style.display = 'none';
+                clearBtn.style.display = 'none';
+            });
+        }
+    }
+    function bindAll(scope) {
+        (scope || document).querySelectorAll('[data-vid-wrap]').forEach(bindVidWrap);
     }
 
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumberPositions();
-    });
+    if (addBtn && tpl && container && totalInput) {
+        addBtn.addEventListener('click', function () {
+            const index = parseInt(totalInput.value, 10);
+            const html = tpl.innerHTML.replace(/__prefix__/g, index);
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = html.trim();
+            const row = wrapper.firstElementChild;
+            if (row) {
+                container.appendChild(row);
+                totalInput.value = index + 1;
+                bindAll(row);
+            }
+        });
+    }
 
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
@@ -156,10 +346,9 @@
         const flag = row.querySelector('.delete-flag');
         if (flag) flag.value = 'on';
         row.style.display = 'none';
-        renumberPositions();
     });
 
-    renumberPositions();
+    bindAll(document);
 })();
 </script>
 {% endblock %}

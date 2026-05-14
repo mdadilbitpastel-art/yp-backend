@@ -9,6 +9,44 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .yp-ssub-table { table-layout: fixed; width: 100%; }
+    .yp-ssub-table thead th {
+        background: #f8fafc;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: .65rem .75rem;
+        white-space: nowrap;
+    }
+    .yp-ssub-table > tbody > tr.subscribe-field-row > td {
+        padding: .6rem .75rem;
+        vertical-align: middle;
+        border-top: 1px solid #e2e8f0;
+    }
+    .yp-ssub-table input[type="text"],
+    .yp-ssub-table input:not([type]) {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-ssub-table input:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-ssub-table .invalid-feedback { font-size: .75rem; margin-top: .15rem; }
+</style>
+
 <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -49,44 +87,54 @@
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-list mr-1"></i> Form Fields</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ field_formset.management_form }}
             {% if field_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ field_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ field_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="subscribe-fields">
-                {% for field_form in field_formset %}
-                <div class="subscribe-field-row border rounded p-3 mb-3">
-                    {% for hidden in field_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ field_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list mr-1 text-info"></i>
-                            Field <span class="field-position">{{ forloop.counter }}</span>
-                            {% if field_form.instance.field_name %}
-                                <small class="text-muted ml-2">— {{ field_form.instance.field_name }}</small>
-                            {% endif %}
-                        </h5>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Delete">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=field_form.field_name %}
-                        </div>
-                        <div class="col-md-6">
-                            {% include "dashboard/home/_field.html" with field=field_form.placeholder %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+            <div class="table-responsive">
+                <table class="table yp-ssub-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Field Name <span class="text-danger">*</span></th>
+                            <th>Placeholder</th>
+                            <th style="width: 70px;" class="text-center">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subscribe-fields">
+                        {% for field_form in field_formset %}
+                        <tr class="subscribe-field-row">
+                            <td style="width: 35%;">
+                                {% for hidden in field_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <input type="hidden" name="{{ field_form.DELETE.html_name }}" value="" class="delete-flag">
+                                {{ field_form.field_name }}
+                                {% for error in field_form.field_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {{ field_form.placeholder }}
+                                {% for error in field_form.placeholder.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 70px;" class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <button type="button" id="add-subscribe-field" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Field
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-subscribe-field" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Field
+                </button>
+            </div>
         </div>
     </div>
 
@@ -100,29 +148,21 @@
 </form>
 
 <template id="subscribe-field-empty">
-    <div class="subscribe-field-row border rounded p-3 mb-3">
-        {% with field_formset.empty_form as empty %}
+    {% with field_formset.empty_form as empty %}
+    <tr class="subscribe-field-row">
+        <td style="width: 35%;">
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="mb-0">
-                    <i class="fas fa-list mr-1 text-info"></i>
-                    Field <span class="field-position"></span>
-                </h5>
-                <button type="button" class="btn btn-dark btn-sm remove-row" title="Remove">
-                    <i class="fas fa-times mr-1"></i> Remove
-                </button>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.field_name %}
-                </div>
-                <div class="col-md-6">
-                    {% include "dashboard/home/_field.html" with field=empty.placeholder %}
-                </div>
-            </div>
-        {% endwith %}
-    </div>
+            {{ empty.field_name }}
+        </td>
+        <td>{{ empty.placeholder }}</td>
+        <td style="width: 70px;" class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>
+    {% endwith %}
 </template>
 {% endblock %}
 
@@ -135,27 +175,19 @@
     const addBtn = document.getElementById('add-subscribe-field');
     const tpl = document.getElementById('subscribe-field-empty');
 
-    function renumberPositions() {
-        const rows = container.querySelectorAll('.subscribe-field-row');
-        let visibleIndex = 0;
-        rows.forEach(function (row) {
-            if (row.style.display === 'none') return;
-            visibleIndex += 1;
-            const label = row.querySelector('.field-position');
-            if (label) label.textContent = visibleIndex;
+    if (addBtn && tpl && container && totalInput) {
+        addBtn.addEventListener('click', function () {
+            const index = parseInt(totalInput.value, 10);
+            const html = tpl.innerHTML.replace(/__prefix__/g, index);
+            const wrapper = document.createElement('tbody');
+            wrapper.innerHTML = html.trim();
+            const row = wrapper.querySelector('tr.subscribe-field-row');
+            if (row) {
+                container.appendChild(row);
+                totalInput.value = index + 1;
+            }
         });
     }
-
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-        renumberPositions();
-    });
 
     container.addEventListener('click', function (e) {
         const btn = e.target.closest('.remove-row');
@@ -165,10 +197,7 @@
         const flag = row.querySelector('.delete-flag');
         if (flag) flag.value = 'on';
         row.style.display = 'none';
-        renumberPositions();
     });
-
-    renumberPositions();
 })();
 </script>
 {% endblock %}

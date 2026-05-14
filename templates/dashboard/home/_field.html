@@ -1,40 +1,48 @@
 {% if field.field.widget.input_type == 'file' %}
-    <div class="form-group" {% if is_video %}data-video-field{% else %}data-image-field{% endif %}>
+    <div class="form-group" data-yp-file-field {% if is_video %}data-video-field{% else %}data-image-field{% endif %}>
+        {% if field.label %}
         <label for="{{ field.id_for_label }}">
             {{ field.label }}
             {% if field.field.required %}<span class="text-danger" title="Required">*</span>{% endif %}
         </label>
-
-        {% if field.value and field.value.url %}
-            <div class="image-preview-wrapper mb-2" data-existing-preview>
-                {% if is_video %}
-                    <video src="{{ field.value.url }}" class="video-preview-thumb" controls></video>
-                {% else %}
-                    <img src="{{ field.value.url }}" class="image-preview-thumb" alt="{{ field.label }}">
-                {% endif %}
-                <button type="button" class="image-preview-clear" data-clear-existing title="Remove">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <input type="checkbox"
-                   name="{{ field.html_name }}-clear"
-                   id="{{ field.html_name }}-clear-id"
-                   data-clear-checkbox
-                   style="display:none;">
         {% endif %}
 
-        <div class="image-preview-wrapper mb-2" data-new-preview style="display:none;">
-            {% if is_video %}
-                <video src="" class="video-preview-thumb" controls></video>
-            {% else %}
-                <img src="" class="image-preview-thumb" alt="">
-            {% endif %}
-            <button type="button" class="image-preview-clear" data-clear-new title="Remove selection">
+        <div class="yp-file-wrap" data-yp-file-wrap>
+            <label class="yp-file-drop {% if is_video %}yp-file-drop-video{% endif %} mb-0" data-yp-file-drop>
+                {% if is_video %}
+                    <video src="{% if field.value and field.value.url %}{{ field.value.url }}{% endif %}"
+                           class="yp-file-preview" data-yp-file-preview
+                           preload="metadata" muted playsinline
+                           {% if not field.value or not field.value.url %}style="display:none;"{% endif %}></video>
+                    <span class="yp-file-play-badge" data-yp-file-play-badge
+                          {% if not field.value or not field.value.url %}style="display:none;"{% endif %}>
+                        <i class="fas fa-play"></i>
+                    </span>
+                {% else %}
+                    <img src="{% if field.value and field.value.url %}{{ field.value.url }}{% endif %}"
+                         class="yp-file-preview" data-yp-file-preview alt=""
+                         {% if not field.value or not field.value.url %}style="display:none;"{% endif %}>
+                {% endif %}
+                <span class="yp-file-empty" data-yp-file-empty
+                      {% if field.value and field.value.url %}style="display:none;"{% endif %}>
+                    <i class="{% if is_video %}fas fa-video{% else %}fas fa-image{% endif %} yp-file-empty-icon"></i>
+                    <span class="yp-file-empty-hint">Click to upload</span>
+                </span>
+                {{ field }}
+                {% if field.value and field.value.url %}
+                    <input type="checkbox"
+                           name="{{ field.html_name }}-clear"
+                           id="{{ field.html_name }}-clear-id"
+                           data-yp-file-clear-flag
+                           style="display:none;">
+                {% endif %}
+            </label>
+            <button type="button" class="yp-file-clear" data-yp-file-clear title="Remove"
+                    {% if not field.value or not field.value.url %}style="display:none;"{% endif %}>
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
-        {{ field }}
         {% if field.help_text %}
             <small class="form-text text-muted">{{ field.help_text }}</small>
         {% endif %}

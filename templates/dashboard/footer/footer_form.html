@@ -5,6 +5,104 @@
 {% block breadcrumb %}{% endblock %}
 
 {% block content %}
+<style>
+    /* Compact footer page styles — mirrors the Data Management standard. */
+    .yp-footer-logo-wrap { position: relative; display: inline-block; }
+    .yp-footer-logo-drop {
+        position: relative;
+        width: 160px; height: 110px;
+        border: 1.5px dashed #94a3b8;
+        border-radius: 12px;
+        background: #f8fafc;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: border-color .15s ease, background .15s ease;
+    }
+    .yp-footer-logo-drop:hover { border-color: var(--yp-primary); background: #eef2ff; }
+    .yp-footer-logo-drop input[type="file"] {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    .yp-footer-logo-drop .yp-footer-logo-placeholder {
+        color: #64748b;
+        font-size: 1.4rem;
+        pointer-events: none;
+    }
+    .yp-footer-logo-drop .yp-footer-logo-thumb {
+        width: 100%; height: 100%;
+        object-fit: contain;
+        background: #fff;
+    }
+    .yp-footer-logo-clear {
+        position: absolute;
+        top: -6px; right: -6px;
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        background: rgba(15, 23, 42, .9);
+        color: #fff;
+        border: 2px solid #fff;
+        font-size: .65rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        padding: 0;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, .3);
+    }
+    .yp-footer-logo-clear:hover { background: #b91c1c; }
+    .yp-footer-logo-hint {
+        margin-left: 1rem;
+        color: var(--yp-muted, #64748b);
+        font-size: .82rem;
+    }
+
+    /* Links table */
+    .yp-flink-table { table-layout: fixed; width: 100%; }
+    .yp-flink-table thead th {
+        background: #f8fafc;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e2e8f0;
+        padding: .65rem .75rem;
+        white-space: nowrap;
+    }
+    .yp-flink-table > tbody > tr.footer-link-row > td {
+        padding: .6rem .75rem;
+        vertical-align: middle;
+        border-top: 1px solid #e2e8f0;
+    }
+    .yp-flink-table input[type="text"],
+    .yp-flink-table input[type="url"],
+    .yp-flink-table input:not([type]) {
+        width: 100%;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.5;
+        height: 38px;
+        box-sizing: border-box;
+    }
+    .yp-flink-table input:focus {
+        border-color: var(--yp-primary);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-flink-table .invalid-feedback { font-size: .75rem; margin-top: .15rem; }
+</style>
+
 <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
 
@@ -12,75 +110,115 @@
         <div class="alert alert-danger">{{ form.non_field_errors|join:" " }}</div>
     {% endif %}
 
+    {# ---------------- Logo ---------------- #}
     <div class="card card-success card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-image mr-1"></i> Logo</h3>
         </div>
-        <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.logo %}
+        <div class="card-body d-flex align-items-center">
+            <span class="yp-footer-logo-wrap" data-logo-wrap>
+                <label class="yp-footer-logo-drop mb-0" data-logo-drop>
+                    <img class="yp-footer-logo-thumb" data-logo-thumb alt="logo"
+                         src="{% if form.logo.value %}{{ form.logo.value.url }}{% endif %}"
+                         {% if not form.logo.value %}style="display:none;"{% endif %}>
+                    <i class="fas fa-image yp-footer-logo-placeholder" data-logo-placeholder
+                       {% if form.logo.value %}style="display:none;"{% endif %}></i>
+                    {{ form.logo }}
+                    <input type="checkbox"
+                           name="{{ form.logo.html_name }}-clear"
+                           data-logo-clear-flag
+                           style="display:none;">
+                </label>
+                <button type="button" class="yp-footer-logo-clear" data-logo-clear title="Remove logo"
+                        {% if not form.logo.value %}style="display:none;"{% endif %}>
+                    <i class="fas fa-times"></i>
+                </button>
+            </span>
+            <span class="yp-footer-logo-hint">
+                Click the box to upload. PNG or SVG recommended for crisp rendering.
+            </span>
+            {% for error in form.logo.errors %}
+                <div class="invalid-feedback d-block ml-3">{{ error }}</div>
+            {% endfor %}
         </div>
     </div>
 
+    {# ---------------- Details ---------------- #}
     <div class="card card-primary card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Details</h3>
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-6">
                     {% include "dashboard/home/_field.html" with field=form.title %}
-                </div>
-                <div class="col-md-12">
-                    {% include "dashboard/home/_field.html" with field=form.address %}
                 </div>
                 <div class="col-md-6">
                     {% include "dashboard/home/_field.html" with field=form.email %}
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-12">
+                    {% include "dashboard/home/_field.html" with field=form.address %}
+                </div>
+                <div class="col-md-12">
                     {% include "dashboard/home/_field.html" with field=form.copyright_text %}
                 </div>
             </div>
         </div>
     </div>
 
+    {# ---------------- Text Links ---------------- #}
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-link mr-1"></i> Text Links</h3>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {{ link_formset.management_form }}
             {% if link_formset.non_form_errors %}
-                <div class="alert alert-danger">{{ link_formset.non_form_errors|join:" " }}</div>
+                <div class="alert alert-danger m-3">{{ link_formset.non_form_errors|join:" " }}</div>
             {% endif %}
 
-            <div id="footer-links">
-                {% for link_form in link_formset %}
-                <div class="footer-link-row border rounded p-3 mb-2">
-                    {% for hidden in link_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <input type="hidden" name="{{ link_form.DELETE.html_name }}" value="" class="delete-flag">
-                    <div class="row">
-                        <div class="col-md-5">
-                            {% include "dashboard/home/_field.html" with field=link_form.label %}
-                        </div>
-                        <div class="col-md-5">
-                            {% include "dashboard/home/_field.html" with field=link_form.url %}
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="d-block">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger remove-row d-block w-100" title="Delete">
-                                    <i class="fas fa-trash mr-1"></i> Delete
+            <div class="table-responsive">
+                <table class="table yp-flink-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Label <span class="text-danger">*</span></th>
+                            <th>URL <span class="text-danger">*</span></th>
+                            <th style="width: 70px;" class="text-center">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="footer-links">
+                        {% for link_form in link_formset %}
+                        <tr class="footer-link-row">
+                            <td style="width: 35%;">
+                                {% for hidden in link_form.hidden_fields %}{{ hidden }}{% endfor %}
+                                <input type="hidden" name="{{ link_form.DELETE.html_name }}" value="" class="delete-flag">
+                                {{ link_form.label }}
+                                {% for error in link_form.label.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {{ link_form.url }}
+                                {% for error in link_form.url.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </td>
+                            <td style="width: 70px;" class="text-center align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-row" title="Delete">
+                                    <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
-            <button type="button" id="add-footer-link" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-plus mr-1"></i> Add Link
-            </button>
+            <div class="p-3 border-top">
+                <button type="button" id="add-footer-link" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Link
+                </button>
+            </div>
         </div>
     </div>
 
@@ -94,59 +232,99 @@
 </form>
 
 <template id="footer-link-empty">
-    <div class="footer-link-row border rounded p-3 mb-2">
-        {% with link_formset.empty_form as empty %}
+    {% with link_formset.empty_form as empty %}
+    <tr class="footer-link-row">
+        <td style="width: 35%;">
             {% for hidden in empty.hidden_fields %}{{ hidden }}{% endfor %}
             <input type="hidden" name="{{ empty.DELETE.html_name }}" value="" class="delete-flag">
-            <div class="row">
-                <div class="col-md-5">
-                    {% include "dashboard/home/_field.html" with field=empty.label %}
-                </div>
-                <div class="col-md-5">
-                    {% include "dashboard/home/_field.html" with field=empty.url %}
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="d-block">&nbsp;</label>
-                        <button type="button" class="btn btn-dark remove-row d-block w-100" title="Remove">
-                            <i class="fas fa-times mr-1"></i> Remove
-                        </button>
-                    </div>
-                </div>
-            </div>
-        {% endwith %}
-    </div>
+            {{ empty.label }}
+        </td>
+        <td>{{ empty.url }}</td>
+        <td style="width: 70px;" class="text-center align-middle">
+            <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>
+    {% endwith %}
 </template>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 (function () {
+    /* ---- Logo dropzone wiring (single image) ---- */
+    const logoWrap = document.querySelector('[data-logo-wrap]');
+    if (logoWrap) {
+        const drop = logoWrap.querySelector('[data-logo-drop]');
+        const fileInput = drop.querySelector('input[type="file"]');
+        const placeholder = drop.querySelector('[data-logo-placeholder]');
+        const clearFlag = drop.querySelector('[data-logo-clear-flag]');
+        const img = drop.querySelector('[data-logo-thumb]');
+        const clearBtn = logoWrap.querySelector('[data-logo-clear]');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    if (img) {
+                        img.src = ev.target.result;
+                        img.style.display = '';
+                    }
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (clearBtn) clearBtn.style.display = '';
+                    if (clearFlag) clearFlag.checked = false;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (img) { img.src = ''; img.style.display = 'none'; }
+                if (fileInput) fileInput.value = '';
+                if (clearFlag) clearFlag.checked = true;
+                if (placeholder) placeholder.style.display = '';
+                clearBtn.style.display = 'none';
+            });
+        }
+    }
+
+    /* ---- Footer link formset (compact table) ---- */
     const prefix = "{{ link_formset.prefix }}";
     const totalInput = document.querySelector('input[name="' + prefix + '-TOTAL_FORMS"]');
     const container = document.getElementById('footer-links');
     const addBtn = document.getElementById('add-footer-link');
     const tpl = document.getElementById('footer-link-empty');
 
-    addBtn.addEventListener('click', function () {
-        const index = parseInt(totalInput.value, 10);
-        const html = tpl.innerHTML.replace(/__prefix__/g, index);
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = html.trim();
-        const row = wrapper.firstElementChild;
-        container.appendChild(row);
-        totalInput.value = index + 1;
-    });
+    if (addBtn && tpl && container && totalInput) {
+        addBtn.addEventListener('click', function () {
+            const index = parseInt(totalInput.value, 10);
+            const html = tpl.innerHTML.replace(/__prefix__/g, index);
+            const wrapper = document.createElement('tbody');
+            wrapper.innerHTML = html.trim();
+            const row = wrapper.querySelector('tr.footer-link-row');
+            if (row) {
+                container.appendChild(row);
+                totalInput.value = index + 1;
+            }
+        });
+    }
 
-    container.addEventListener('click', function (e) {
-        const btn = e.target.closest('.remove-row');
-        if (!btn) return;
-        const row = btn.closest('.footer-link-row');
-        if (!row) return;
-        const flag = row.querySelector('.delete-flag');
-        if (flag) flag.value = 'on';
-        row.style.display = 'none';
-    });
+    if (container) {
+        container.addEventListener('click', function (e) {
+            const btn = e.target.closest('.remove-row');
+            if (!btn) return;
+            const row = btn.closest('.footer-link-row');
+            if (!row) return;
+            const flag = row.querySelector('.delete-flag');
+            if (flag) flag.value = 'on';
+            row.style.display = 'none';
+        });
+    }
 })();
 </script>
 {% endblock %}

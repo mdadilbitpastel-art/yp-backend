@@ -593,11 +593,12 @@
            ===================================================== */
         .content-wrapper { background: var(--yp-bg); }
         .card {
-            border: 1px solid var(--yp-line);
+            border: 1.5px solid #94a3b8;
             border-radius: var(--yp-radius);
             background: #fff;
-            box-shadow: 0 4px 12px -4px rgba(17, 24, 39, .1),
-                        0 2px 4px -2px rgba(17, 24, 39, .05);
+            box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .35),
+                        0 4px 10px -4px rgba(15, 23, 42, .22),
+                        0 0 0 1px rgba(15, 23, 42, .04);
             margin-bottom: 1.25rem;
         }
         .card-header {
@@ -653,27 +654,27 @@
         }
         .btn-success { background: var(--yp-success); border-color: var(--yp-success); }
         .btn-success:hover, .btn-success:focus { background: #059669; border-color: #059669; }
-        /* Light-black (slate-gray) gradient — dashboard "Manage" buttons. */
+        /* Light red gradient — dashboard "Manage" buttons. */
         .yp-btn-manage {
-            background: linear-gradient(135deg, #475569 0%, #334155 100%);
-            border: 1px solid #475569;
-            color: #fff;
-            box-shadow: 0 6px 14px -8px rgba(51, 65, 85, .5),
-                        inset 0 1px 0 rgba(255, 255, 255, .18);
+            background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            box-shadow: 0 6px 14px -8px rgba(239, 68, 68, .35),
+                        inset 0 1px 0 rgba(255, 255, 255, .45);
             transition: background .15s ease, border-color .15s ease,
                         box-shadow .2s ease, transform .15s ease, color .15s ease;
         }
         .yp-btn-manage:hover, .yp-btn-manage:focus {
-            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-            border-color: #334155;
-            color: #fff;
-            box-shadow: 0 10px 22px -10px rgba(51, 65, 85, .65),
-                        inset 0 1px 0 rgba(255, 255, 255, .22);
+            background: linear-gradient(135deg, #fca5a5 0%, #f87171 100%);
+            border-color: #f87171;
+            color: #7f1d1d;
+            box-shadow: 0 10px 22px -10px rgba(239, 68, 68, .5),
+                        inset 0 1px 0 rgba(255, 255, 255, .5);
             transform: translateY(-1px);
         }
         .yp-module-card:hover .yp-btn-manage {
-            box-shadow: 0 10px 22px -10px rgba(51, 65, 85, .65),
-                        inset 0 1px 0 rgba(255, 255, 255, .22);
+            box-shadow: 0 10px 22px -10px rgba(239, 68, 68, .5),
+                        inset 0 1px 0 rgba(255, 255, 255, .5);
             transform: translateY(-1px);
         }
 
@@ -808,8 +809,9 @@
            the dashboard or module-index pages.
            ===================================================== */
         form .card {
-            box-shadow: 0 4px 14px -6px rgba(15, 23, 42, .12),
-                        0 2px 4px -2px rgba(15, 23, 42, .05);
+            box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .35),
+                        0 4px 10px -4px rgba(15, 23, 42, .22),
+                        0 0 0 1px rgba(15, 23, 42, .04);
             margin-bottom: 1.5rem;
             overflow: hidden;
         }
@@ -1000,19 +1002,28 @@
         .alert.alert-error { /* Django sometimes uses tags="error" */
             background: #fef2f2; color: #991b1b; border-color: #fecaca; border-left-color: var(--yp-danger);
         }
+        /* Links inside alerts — match the alert's tint, stay visible, underline on hover. */
+        .alert a { font-weight: 600; text-decoration: underline; }
+        .alert-success a { color: #047857; }
+        .alert-danger a, .alert.alert-error a { color: #b91c1c; }
+        .alert-warning a { color: #b45309; }
+        .alert-info a { color: #1d4ed8; }
+        .alert a:hover { text-decoration: none; opacity: .85; }
 
         /* =====================================================
            Section / module landing cards
            ===================================================== */
         .yp-page-intro {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid var(--yp-line);
+            border: 1.5px solid #94a3b8;
             border-radius: var(--yp-radius);
             padding: 1.4rem 1.5rem;
             display: flex; align-items: center;
             gap: 1.1rem;
             margin-bottom: 1.4rem;
-            box-shadow: var(--yp-shadow-sm);
+            box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .35),
+                        0 4px 10px -4px rgba(15, 23, 42, .22),
+                        0 0 0 1px rgba(15, 23, 42, .04);
         }
         .yp-page-intro .yp-intro-icon {
             width: 56px; height: 56px;
@@ -1035,14 +1046,15 @@
 
         .yp-section-card {
             position: relative;
-            border: 1px solid var(--yp-line);
+            border: 1.5px solid #94a3b8;
             border-radius: 16px;
             background: #fff;
             padding: 1.4rem;
             height: 100%;
             display: flex; flex-direction: column;
-            box-shadow: 0 4px 12px -4px rgba(17, 24, 39, .12),
-                        0 2px 4px -2px rgba(17, 24, 39, .06);
+            box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .35),
+                        0 4px 10px -4px rgba(15, 23, 42, .22),
+                        0 0 0 1px rgba(15, 23, 42, .04);
             transition: transform .2s ease, box-shadow .2s ease,
                         border-color .2s ease;
         }
@@ -1146,10 +1158,13 @@
         /* Empty state */
         .yp-empty {
             background: #fff;
-            border: 1px dashed var(--yp-line);
+            border: 1.5px dashed #94a3b8;
             border-radius: var(--yp-radius);
             text-align: center;
             padding: 3rem 1.5rem;
+            box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .35),
+                        0 4px 10px -4px rgba(15, 23, 42, .22),
+                        0 0 0 1px rgba(15, 23, 42, .04);
         }
         .yp-empty .yp-empty-icon {
             width: 64px; height: 64px;
@@ -1173,7 +1188,10 @@
             overflow: hidden;
             min-height: 118px;
             display: flex; flex-direction: column; justify-content: space-between;
-            box-shadow: var(--yp-shadow);
+            border: 1.5px solid rgba(15, 23, 42, .25);
+            box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .45),
+                        0 4px 10px -4px rgba(15, 23, 42, .3),
+                        0 0 0 1px rgba(15, 23, 42, .06);
         }
         .yp-stat .yp-stat-label {
             font-size: .72rem; letter-spacing: .14em;
@@ -1199,11 +1217,12 @@
         /* Module progress card on the overview */
         .yp-module-card {
             position: relative;
-            border: 1px solid var(--yp-line);
+            border: 1.5px solid #94a3b8;
             border-radius: 16px;
             background: #fff;
-            box-shadow: 0 4px 12px -4px rgba(17, 24, 39, .12),
-                        0 2px 4px -2px rgba(17, 24, 39, .06);
+            box-shadow: 0 10px 24px -10px rgba(15, 23, 42, .35),
+                        0 4px 10px -4px rgba(15, 23, 42, .22),
+                        0 0 0 1px rgba(15, 23, 42, .04);
             transition: transform .2s ease, box-shadow .2s ease,
                         border-color .2s ease;
             overflow: hidden;
@@ -1297,8 +1316,8 @@
         .yp-image-grid:empty { display: none; }
         .yp-image-tile {
             position: relative;
-            width: 140px;
-            height: 140px;
+            width: 168px;
+            height: 168px;
             border: 1px solid var(--yp-line);
             border-radius: 14px;
             overflow: hidden;
@@ -1412,6 +1431,99 @@
             font-size: .85rem;
         }
         ::selection { background: rgba(79, 70, 229, .18); }
+
+        /* =====================================================
+           Global file dropzone (replaces native "Choose file")
+           Used by every form field rendered through _field.html
+           ===================================================== */
+        .yp-file-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .yp-file-drop {
+            position: relative;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            width: 160px; height: 110px;
+            border: 1.5px dashed #94a3b8;
+            border-radius: 12px;
+            background: #f8fafc;
+            cursor: pointer;
+            overflow: hidden;
+            transition: border-color .15s ease, background .15s ease;
+        }
+        .yp-file-drop.yp-file-drop-video {
+            width: 220px; height: 140px;
+        }
+        .yp-file-drop:hover {
+            border-color: var(--yp-primary);
+            background: #eef2ff;
+        }
+        .yp-file-drop input[type="file"] {
+            position: absolute;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .yp-file-drop .yp-file-preview {
+            width: 100%; height: 100%;
+            object-fit: contain;
+            background: #fff;
+        }
+        .yp-file-empty {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            color: #64748b;
+            pointer-events: none;
+            gap: .25rem;
+        }
+        .yp-file-empty-icon { font-size: 1.4rem; }
+        .yp-file-empty-hint { font-size: .75rem; }
+        .yp-file-clear {
+            position: absolute;
+            top: -6px; right: -6px;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, .9);
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: .65rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            padding: 0;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, .3);
+        }
+        .yp-file-clear:hover { background: #b91c1c; }
+
+        /* Video preview: hide native controls and show static first frame
+           with a play-icon badge overlay so it doesn't auto-play inline. */
+        .yp-file-drop video.yp-file-preview {
+            pointer-events: none;
+            background: #0f172a;
+        }
+        .yp-file-drop video.yp-file-preview::-webkit-media-controls { display: none !important; }
+        .yp-file-play-badge {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, .65);
+            color: #fff;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            pointer-events: none;
+            border: 2px solid rgba(255, 255, 255, .9);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, .4);
+        }
     </style>
 
     {% block extra_head %}{% endblock %}
@@ -1829,6 +1941,76 @@
                         URL.revokeObjectURL(newMedia.src);
                         newMedia.removeAttribute('src');
                     }
+                });
+            }
+        });
+    });
+
+    /* Global file dropzone handler — new yp-file-wrap pattern. */
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-yp-file-wrap]').forEach(function (wrap) {
+            if (wrap.dataset.bound) return;
+            wrap.dataset.bound = '1';
+            var drop = wrap.querySelector('[data-yp-file-drop]');
+            if (!drop) return;
+            var fileInput = drop.querySelector('input[type="file"]');
+            var preview = drop.querySelector('[data-yp-file-preview]');
+            var empty = drop.querySelector('[data-yp-file-empty]');
+            var clearBtn = wrap.querySelector('[data-yp-file-clear]');
+            var clearFlag = drop.querySelector('[data-yp-file-clear-flag]');
+            var playBadge = drop.querySelector('[data-yp-file-play-badge]');
+            var parentField = wrap.closest('[data-yp-file-field]');
+            var isVideo = parentField && parentField.hasAttribute('data-video-field');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function (e) {
+                    var file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    var typePrefix = isVideo ? 'video/' : 'image/';
+                    if (file.type && !file.type.startsWith(typePrefix)) {
+                        fileInput.value = '';
+                        return;
+                    }
+                    if (preview) {
+                        if (isVideo) {
+                            if (preview.src && preview.src.startsWith('blob:')) {
+                                URL.revokeObjectURL(preview.src);
+                            }
+                            preview.src = URL.createObjectURL(file);
+                            preview.style.display = '';
+                            preview.pause && preview.pause();
+                        } else {
+                            var reader = new FileReader();
+                            reader.onload = function (ev) {
+                                preview.src = ev.target.result;
+                                preview.style.display = '';
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                    if (empty) empty.style.display = 'none';
+                    if (clearBtn) clearBtn.style.display = '';
+                    if (playBadge) playBadge.style.display = '';
+                    if (clearFlag) clearFlag.checked = false;
+                });
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (preview) {
+                        if (isVideo && preview.src && preview.src.startsWith('blob:')) {
+                            URL.revokeObjectURL(preview.src);
+                        }
+                        preview.removeAttribute('src');
+                        preview.style.display = 'none';
+                    }
+                    if (fileInput) fileInput.value = '';
+                    if (clearFlag) clearFlag.checked = true;
+                    if (empty) empty.style.display = '';
+                    if (playBadge) playBadge.style.display = 'none';
+                    clearBtn.style.display = 'none';
                 });
             }
         });
