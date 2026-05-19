@@ -1040,7 +1040,13 @@
             box-shadow: 0 12px 24px -10px rgba(13, 148, 136, .55);
             flex-shrink: 0;
         }
-        .yp-page-intro h2 { font-size: 1.15rem; margin: 0 0 .2rem; font-weight: 700; }
+        .yp-page-intro h2 {
+            font-size: 1.15rem;
+            margin: 0 0 .2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(15, 23, 42, .18),
+                         0 1px 0 rgba(255, 255, 255, .6);
+        }
         .yp-page-intro p { margin: 0; color: var(--yp-muted); font-size: .9rem; }
         .yp-page-intro .yp-intro-meta { margin-left: auto; text-align: right; }
         @media (max-width: 575.98px) {
@@ -2036,5 +2042,86 @@
     });
 </script>
 {% block extra_scripts %}{% endblock %}
+
+<script>
+(function () {
+    if (!('sessionStorage' in window)) return;
+
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+
+    const KEY_PREFIX = 'yp-scroll:';
+    const key = KEY_PREFIX + window.location.pathname + window.location.search;
+    const MAX_KEYS = 60;
+
+    function prune() {
+        try {
+            const keys = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const k = sessionStorage.key(i);
+                if (k && k.startsWith(KEY_PREFIX)) keys.push(k);
+            }
+            if (keys.length <= MAX_KEYS) return;
+            keys
+                .map(function (k) {
+                    let ts = 0;
+                    try { ts = JSON.parse(sessionStorage.getItem(k) || '{}').t || 0; } catch (_) {}
+                    return { k: k, t: ts };
+                })
+                .sort(function (a, b) { return a.t - b.t; })
+                .slice(0, keys.length - MAX_KEYS)
+                .forEach(function (item) { sessionStorage.removeItem(item.k); });
+        } catch (_) {}
+    }
+
+    let saveTimer = null;
+    function save() {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(function () {
+            try {
+                sessionStorage.setItem(key, JSON.stringify({
+                    y: window.scrollY || window.pageYOffset || 0,
+                    t: Date.now(),
+                }));
+            } catch (_) {}
+        }, 120);
+    }
+
+    function restore() {
+        try {
+            const raw = sessionStorage.getItem(key);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            const y = parseInt(data && data.y, 10);
+            if (!y) return;
+            requestAnimationFrame(function () {
+                window.scrollTo(0, y);
+                requestAnimationFrame(function () { window.scrollTo(0, y); });
+            });
+        } catch (_) {}
+    }
+
+    window.addEventListener('scroll', save, { passive: true });
+    window.addEventListener('beforeunload', function () {
+        clearTimeout(saveTimer);
+        try {
+            sessionStorage.setItem(key, JSON.stringify({
+                y: window.scrollY || window.pageYOffset || 0,
+                t: Date.now(),
+            }));
+        } catch (_) {}
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', restore);
+    } else {
+        restore();
+    }
+    window.addEventListener('load', restore);
+
+    prune();
+})();
+</script>
 </body>
 </html>

@@ -114,6 +114,7 @@ if DATABASE_URL:
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
+            conn_health_checks=True,
             ssl_require=True,
         )
     }
@@ -126,6 +127,8 @@ else:
             "PASSWORD": config("DB_PASSWORD", default="yppass2026_"),
             "HOST": config("DB_HOST", default="localhost"),
             "PORT": config("DB_PORT", default="5432"),
+            "CONN_MAX_AGE": 60,
+            "CONN_HEALTH_CHECKS": True,
         }
     }
 
@@ -232,6 +235,14 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": config("THROTTLE_ANON", default="120/min"),
+        "user": config("THROTTLE_USER", default="600/min"),
+    },
 }
 
 

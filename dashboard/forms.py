@@ -325,7 +325,8 @@ class StatisticPickerMixin:
 
 class NetworkSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelForm):
     """Stats / Network section editor — section heading + optional video
-    upload + a picker that selects which `Statistic` rows to display."""
+    upload + a picker that selects which `Statistic` rows to display.
+    The visible picker UI lives in `_statistic_picker_table.html`."""
 
     class Meta:
         model = NetworkSection
@@ -346,6 +347,9 @@ class NetworkSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelFo
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_statistics_field()
+        field = self.fields.get("selected_statistics")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class StatisticForm(BootstrapFormMixin, forms.ModelForm):
@@ -449,7 +453,8 @@ SectionImageFormSet = generic_inlineformset_factory(
 class ApplySectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm):
     """Apply section editor — heading + sub-heading + bottom button +
     employer picker from Data Management. Company cards live on the
-    inline `ApplyCompanyFormSet`."""
+    inline `ApplyCompanyFormSet`. The visible picker UI lives in
+    `_employer_picker_table.html`."""
 
     class Meta:
         model = ApplySection
@@ -476,6 +481,11 @@ class ApplySectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_employers_field()
+        # Swap the default checkbox widget for hidden inputs — the
+        # table-based picker partial owns the visible UI on this page.
+        field = self.fields.get("selected_employers")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class ApplyCompanyForm(BootstrapFormMixin, forms.ModelForm):
@@ -589,7 +599,8 @@ class SocialMediaPickerMixin:
 
 class SocialMediaSectionForm(SocialMediaPickerMixin, BootstrapFormMixin, forms.ModelForm):
     """Social Media homepage section — label, heading/title, sub-title.
-    Icons are picked from Data Management → Social Media."""
+    Icons are picked from Data Management → Social Media. The visible
+    picker UI lives in `_social_media_picker_table.html`."""
 
     class Meta:
         model = SocialMediaSection
@@ -608,6 +619,11 @@ class SocialMediaSectionForm(SocialMediaPickerMixin, BootstrapFormMixin, forms.M
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_social_media_field()
+        # The template renders the table UI directly; swap to hidden
+        # inputs so the form just accepts the submitted ID list.
+        field = self.fields.get("selected_social_media")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class SocialMediaIconForm(BootstrapFormMixin, forms.ModelForm):
@@ -751,7 +767,8 @@ class AboutUsSocialMediaSectionForm(
 ):
     """About Us — social media section. Has its own copy of
     label/heading/sub-title (independent of the home page) and its own
-    selection of icons from Data Management → Social Media."""
+    selection of icons from Data Management → Social Media. The visible
+    picker UI lives in `_social_media_picker_table.html`."""
 
     class Meta:
         model = AboutUsSocialMediaSection
@@ -770,6 +787,11 @@ class AboutUsSocialMediaSectionForm(
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_social_media_field()
+        # The template renders the table UI directly; swap to hidden
+        # inputs so the form just accepts the submitted ID list.
+        field = self.fields.get("selected_social_media")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class AboutUsCommunitySectionForm(BootstrapFormMixin, forms.ModelForm):
@@ -826,17 +848,17 @@ AboutUsCommunityCardFormSet = forms.inlineformset_factory(
 class TeamMemberPickerMixin:
     """Mixin for forms that expose a `selected_team_members` M2M field.
 
-    Renders the picker as a plain checkbox list showing each
-    `TeamMember`'s name only. Mirrors the Statistic / Employer /
-    SocialMedia picker pattern."""
+    The field accepts a list of TeamMember IDs submitted via hidden
+    inputs (`<input type="hidden" name="selected_team_members" …>`)
+    that the AJAX-powered table picker in the template maintains. The
+    Django widget itself renders nothing — the picker UI is rendered by
+    `templates/dashboard/home/_team_member_picker.html`."""
 
     def _configure_team_members_field(self):
         field = self.fields.get("selected_team_members")
         if not field:
             return
-        field.widget = forms.CheckboxSelectMultiple(
-            attrs={"class": "team-member-picker"}
-        )
+        field.widget = forms.MultipleHiddenInput()
         field.queryset = TeamMember.objects.all()
         field.required = False
         field.label = "Team Members"
@@ -888,7 +910,7 @@ class TeamMemberForm(BootstrapFormMixin, forms.ModelForm):
             "name": forms.TextInput(attrs={"placeholder": "Full name"}),
             "designation": forms.TextInput(attrs={"placeholder": "e.g. Co-founder"}),
             "email_url": forms.TextInput(attrs={"placeholder": "mailto:name@example.com"}),
-            "view_profile_url": forms.URLInput(attrs={"placeholder": "https://linkedin.com/in/…"}),
+            "view_profile_url": forms.URLInput(attrs={"placeholder": "https://example.com"}),
         }
         labels = {
             "name": "Name",
@@ -1060,7 +1082,8 @@ class AboutUsFounderSectionForm(BootstrapFormMixin, forms.ModelForm):
 
 class AboutUsMissionSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelForm):
     """About Us page — mission section editor. Stats are picked from the
-    central `Statistic` table; images live on `SectionImage`."""
+    central `Statistic` table; images live on `SectionImage`. The visible
+    picker UI lives in `_statistic_picker_table.html`."""
 
     class Meta:
         model = AboutUsMissionSection
@@ -1082,6 +1105,9 @@ class AboutUsMissionSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_statistics_field()
+        field = self.fields.get("selected_statistics")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class SchoolsHeroSectionForm(BootstrapFormMixin, forms.ModelForm):
@@ -1168,7 +1194,12 @@ SchoolsHelpCardFormSet = forms.inlineformset_factory(
 class SchoolsEmployerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm):
     """Schools page — employer section editor. The list of available
     employers lives in Data Management; the form just picks which ones
-    to display on this page."""
+    to display on this page.
+
+    Unlike the other employer-picker forms (Apply, Partners) this one
+    renders the selection via the dedicated table-based picker partial,
+    so the form's widget is swapped to MultipleHiddenInput — the visible
+    UI lives in `_employer_picker_table.html`."""
 
     class Meta:
         model = SchoolsEmployerSection
@@ -1201,6 +1232,11 @@ class SchoolsEmployerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_employers_field()
+        # Override the default checkbox widget with hidden inputs — the
+        # table-based picker partial owns the visible UI for this form.
+        field = self.fields.get("selected_employers")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class SchoolsBenchmarkSectionForm(BootstrapFormMixin, forms.ModelForm):
@@ -1544,7 +1580,8 @@ EmployersEventImageFormSet = forms.inlineformset_factory(
 
 class PartnersHeroSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.ModelForm):
     """Partners page — top hero section editor. Label, title, description,
-    plus a picker that selects which `Statistic` rows to display."""
+    plus a picker that selects which `Statistic` rows to display. The
+    visible picker UI lives in `_statistic_picker_table.html`."""
 
     class Meta:
         model = PartnersHeroSection
@@ -1566,6 +1603,9 @@ class PartnersHeroSectionForm(StatisticPickerMixin, BootstrapFormMixin, forms.Mo
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_statistics_field()
+        field = self.fields.get("selected_statistics")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class PartnersPartnerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.ModelForm):

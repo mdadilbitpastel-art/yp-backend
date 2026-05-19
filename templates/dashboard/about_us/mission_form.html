@@ -27,16 +27,16 @@
         </div>
     </div>
 
-    {% include "dashboard/home/_section_images.html" %}
-
     <div class="card card-info card-outline">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-square mr-1"></i> Statistics</h3>
         </div>
         <div class="card-body">
-            {% include "dashboard/home/_statistic_picker.html" with field=form.selected_statistics %}
+            {% include "dashboard/home/_statistic_picker_table.html" with field=form.selected_statistics %}
         </div>
     </div>
+
+    {% include "dashboard/home/_section_images.html" %}
 
     <div class="card">
         <div class="card-body text-right">

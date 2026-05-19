@@ -143,6 +143,16 @@ urlpatterns = [
         name="team_members_edit",
     ),
     path(
+        "data/team-members/picker.json",
+        views.TeamMemberPickerAPIView.as_view(),
+        name="team_members_picker_api",
+    ),
+    path(
+        "data/employers/picker.json",
+        views.EmployerPickerAPIView.as_view(),
+        name="employers_picker_api",
+    ),
+    path(
         "data/social-media/",
         views.SocialMediaIconsEditView.as_view(),
         name="social_media_icons_edit",

@@ -1,63 +1,62 @@
-<div class="form-group team-member-picker-wrapper mb-0"
-     data-team-picker
-     data-api-url="{% url 'dashboard:team_members_picker_api' %}"
+<div class="form-group employer-picker-wrapper mb-0"
+     data-employer-picker
+     data-api-url="{% url 'dashboard:employers_picker_api' %}"
      data-field-name="{{ field.name }}"
-     data-total="{{ team_total_count|default:0 }}"
-     data-selected-ids="[{{ selected_team_member_ids|join:',' }}]">
+     data-total="{{ employer_total_count|default:0 }}"
+     data-selected-ids="[{{ selected_employer_ids|join:',' }}]">
 
-    {% if team_total_count == 0 %}
+    {% if employer_total_count == 0 %}
         <div class="alert alert-warning mb-0">
             <i class="fas fa-info-circle mr-1"></i>
-            No team members yet — add some in
-            <a href="{% url 'dashboard:team_members_edit' %}">Data Management → Team Members</a>
+            No employers yet — add some in
+            <a href="{% url 'dashboard:employers_edit' %}">Data Management → Employers</a>
             first.
         </div>
     {% else %}
         <div class="card card-outline mb-0" style="border: 1px solid #ced4da; box-shadow: none;">
             <div class="card-header d-flex align-items-center" style="gap: .75rem; background: #f8fafc;">
                 <span class="font-weight-bold mr-auto">
-                    Members
-                    <span class="badge badge-light ml-1" data-team-total-badge>{{ team_total_count }}</span>
+                    Employers
+                    <span class="badge badge-light ml-1" data-employer-total-badge>{{ employer_total_count }}</span>
                     <span class="yp-tip ml-1"
-                          data-tip="Tick the members you want to display in this section. Only the checked members appear on the public About Us → Team page. Use the search box to find a member quickly and the pager to browse through all available members from Data Management → Team Members.">
+                          data-tip="Tick the employers you want to display in this section. Only the checked logos appear on the public Schools page. Use the search box to find a specific employer quickly, and the pager to browse all available employers from Data Management → Employers.">
                         <i class="fas fa-info-circle"></i>
                     </span>
-                    <span class="text-muted small ml-2" data-team-selected-info>
-                        <span data-team-selected-count>{{ selected_team_member_ids|length }}</span> selected
+                    <span class="text-muted small ml-2" data-employer-selected-info>
+                        <span data-employer-selected-count>{{ selected_employer_ids|length }}</span> selected
                     </span>
                 </span>
                 <div class="position-relative" style="flex: 1 1 auto; max-width: 340px;">
                     <input type="search"
                            class="form-control form-control-sm yp-search-input"
-                           placeholder="Search name, designation, or email…"
+                           placeholder="Search employer name or description…"
                            autocomplete="off"
-                           data-team-search>
-                    <span class="yp-search-spinner" data-team-search-spinner aria-hidden="true"></span>
+                           data-employer-search>
+                    <span class="yp-search-spinner" data-employer-search-spinner aria-hidden="true"></span>
                 </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0 yp-team-picker-table">
+                    <table class="table table-hover mb-0 yp-employer-picker-table">
                         <thead style="background: #f8fafc;">
                             <tr>
                                 <th style="width: 44px;" class="text-center">
                                     <input type="checkbox"
-                                           data-team-select-page
+                                           data-employer-select-page
                                            title="Select / unselect everyone on this page">
                                 </th>
-                                <th style="width: 64px;"></th>
+                                <th style="width: 80px;">Logo</th>
                                 <th>Name</th>
-                                <th>Designation</th>
                             </tr>
                         </thead>
-                        <tbody data-team-rows>
-                            <tr><td colspan="4" class="text-center text-muted py-4">Loading…</td></tr>
+                        <tbody data-employer-rows>
+                            <tr><td colspan="3" class="text-center text-muted py-4">Loading…</td></tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="p-2 border-top d-flex align-items-center justify-content-between flex-wrap" style="gap: .5rem;">
-                    <span class="text-muted small" data-team-page-info></span>
-                    <ul class="pagination pagination-sm mb-0" data-team-pager></ul>
+                    <span class="text-muted small" data-employer-page-info></span>
+                    <ul class="pagination pagination-sm mb-0" data-employer-pager></ul>
                 </div>
             </div>
         </div>
@@ -66,7 +65,7 @@
             {{ field.help_text }}
         </small>
 
-        <div data-team-hidden style="display:none;"></div>
+        <div data-employer-hidden style="display:none;"></div>
     {% endif %}
 
     {% for error in field.errors %}
@@ -75,28 +74,29 @@
 </div>
 
 <style>
-    .yp-team-picker-table { table-layout: auto; }
-    .yp-team-picker-table tbody tr { cursor: pointer; }
-    .yp-team-picker-table tbody td { padding: .55rem .75rem; vertical-align: middle; }
-    .yp-team-picker-table .yp-avatar {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-        background: #f1f5f9;
+    .yp-employer-picker-table { table-layout: auto; }
+    .yp-employer-picker-table tbody tr { cursor: pointer; }
+    .yp-employer-picker-table tbody td { padding: .55rem .75rem; vertical-align: middle; }
+    .yp-employer-picker-table .yp-logo-img {
+        width: 48px; height: 48px;
+        border-radius: 8px;
+        object-fit: contain;
+        background: #fff;
         border: 1px solid #e2e8f0;
+        padding: 4px;
         display: inline-block;
     }
-    .yp-team-picker-table .yp-avatar-fallback {
-        width: 36px; height: 36px;
-        border-radius: 50%;
+    .yp-employer-picker-table .yp-logo-fallback {
+        width: 48px; height: 48px;
+        border-radius: 8px;
         background: #f1f5f9;
         border: 1px solid #e2e8f0;
         color: #94a3b8;
         display: inline-flex;
         align-items: center; justify-content: center;
-        font-size: .85rem;
+        font-size: 1.1rem;
     }
-    .yp-team-picker-table input[type="checkbox"] {
+    .yp-employer-picker-table input[type="checkbox"] {
         -webkit-appearance: none;
         appearance: none;
         width: 18px;
@@ -110,16 +110,16 @@
         transition: background .12s ease, border-color .12s ease;
         vertical-align: middle;
     }
-    .yp-team-picker-table input[type="checkbox"]:hover { border-color: #94a3b8; }
-    .yp-team-picker-table input[type="checkbox"]:focus-visible {
+    .yp-employer-picker-table input[type="checkbox"]:hover { border-color: #94a3b8; }
+    .yp-employer-picker-table input[type="checkbox"]:focus-visible {
         outline: none;
         box-shadow: 0 0 0 3px rgba(5, 150, 105, .25);
     }
-    .yp-team-picker-table input[type="checkbox"]:checked {
+    .yp-employer-picker-table input[type="checkbox"]:checked {
         background: #059669;
         border-color: #047857;
     }
-    .yp-team-picker-table input[type="checkbox"]:checked::after {
+    .yp-employer-picker-table input[type="checkbox"]:checked::after {
         content: '';
         position: absolute;
         left: 4px;
@@ -130,11 +130,11 @@
         border-width: 0 2.5px 2.5px 0;
         transform: rotate(45deg);
     }
-    .yp-team-picker-table input[type="checkbox"]:indeterminate {
+    .yp-employer-picker-table input[type="checkbox"]:indeterminate {
         background: #059669;
         border-color: #047857;
     }
-    .yp-team-picker-table input[type="checkbox"]:indeterminate::after {
+    .yp-employer-picker-table input[type="checkbox"]:indeterminate::after {
         content: '';
         position: absolute;
         left: 3px;
@@ -144,9 +144,9 @@
         background: #fff;
         border-radius: 2px;
     }
-    .yp-team-picker-table tr.is-selected { background: #ecfdf5; }
-    .team-member-picker-wrapper .yp-search-input { padding-right: 32px; }
-    .team-member-picker-wrapper .yp-search-spinner {
+    .yp-employer-picker-table tr.is-selected { background: #ecfdf5; }
+    .employer-picker-wrapper .yp-search-input { padding-right: 32px; }
+    .employer-picker-wrapper .yp-search-spinner {
         position: absolute;
         right: 10px;
         top: 50%;
@@ -159,7 +159,7 @@
         pointer-events: none;
         animation: yp-spin .8s linear infinite;
     }
-    .team-member-picker-wrapper .yp-search-spinner.is-active { opacity: 1; }
+    .employer-picker-wrapper .yp-search-spinner.is-active { opacity: 1; }
     @keyframes yp-spin { to { transform: rotate(360deg); } }
 
     .yp-tip {
@@ -213,19 +213,19 @@
 
 <script>
 (function () {
-    const root = document.querySelector('[data-team-picker]');
+    const root = document.querySelector('[data-employer-picker]');
     if (!root) return;
 
     const apiUrl = root.dataset.apiUrl;
     const fieldName = root.dataset.fieldName;
-    const rowsBody = root.querySelector('[data-team-rows]');
-    const pagerEl = root.querySelector('[data-team-pager]');
-    const pageInfoEl = root.querySelector('[data-team-page-info]');
-    const searchInput = root.querySelector('[data-team-search]');
-    const spinner = root.querySelector('[data-team-search-spinner]');
-    const selectAllCb = root.querySelector('[data-team-select-page]');
-    const hiddenBox = root.querySelector('[data-team-hidden]');
-    const selectedCountEl = root.querySelector('[data-team-selected-count]');
+    const rowsBody = root.querySelector('[data-employer-rows]');
+    const pagerEl = root.querySelector('[data-employer-pager]');
+    const pageInfoEl = root.querySelector('[data-employer-page-info]');
+    const searchInput = root.querySelector('[data-employer-search]');
+    const spinner = root.querySelector('[data-employer-search-spinner]');
+    const selectAllCb = root.querySelector('[data-employer-select-page]');
+    const hiddenBox = root.querySelector('[data-employer-hidden]');
+    const selectedCountEl = root.querySelector('[data-employer-selected-count]');
 
     if (!rowsBody) return;
 
@@ -258,26 +258,25 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function renderRows(members) {
-        if (!members.length) {
+    function renderRows(employers) {
+        if (!employers.length) {
             rowsBody.innerHTML =
-                '<tr><td colspan="4" class="text-center text-muted py-4">No members match.</td></tr>';
+                '<tr><td colspan="3" class="text-center text-muted py-4">No employers match.</td></tr>';
             return;
         }
-        const html = members.map(function (m) {
-            const checked = selectedSet.has(String(m.id)) ? 'checked' : '';
+        const html = employers.map(function (e) {
+            const checked = selectedSet.has(String(e.id)) ? 'checked' : '';
             const rowClass = checked ? 'is-selected' : '';
-            const avatar = m.profile_image
-                ? '<img class="yp-avatar" src="' + escapeHtml(m.profile_image) + '" alt="">'
-                : '<span class="yp-avatar-fallback"><i class="fas fa-user"></i></span>';
+            const logo = e.logo
+                ? '<img class="yp-logo-img" src="' + escapeHtml(e.logo) + '" alt="">'
+                : '<span class="yp-logo-fallback"><i class="fas fa-briefcase"></i></span>';
             return ''
-                + '<tr class="' + rowClass + '" data-member-id="' + m.id + '">'
+                + '<tr class="' + rowClass + '" data-employer-id="' + e.id + '">'
                 + '<td class="text-center">'
-                + '<input type="checkbox" data-team-row-cb value="' + m.id + '" ' + checked + '>'
+                + '<input type="checkbox" data-employer-row-cb value="' + e.id + '" ' + checked + '>'
                 + '</td>'
-                + '<td>' + avatar + '</td>'
-                + '<td>' + escapeHtml(m.name) + '</td>'
-                + '<td class="text-muted">' + escapeHtml(m.designation) + '</td>'
+                + '<td>' + logo + '</td>'
+                + '<td>' + escapeHtml(e.name) + '</td>'
                 + '</tr>';
         }).join('');
         rowsBody.innerHTML = html;
@@ -297,7 +296,7 @@
             } else if (opts.active) {
                 items.push('<li class="page-item active"><span class="page-link">' + label + '</span></li>');
             } else {
-                items.push('<li class="page-item"><a class="page-link" href="#" data-team-goto="' + target + '">' + label + '</a></li>');
+                items.push('<li class="page-item"><a class="page-link" href="#" data-employer-goto="' + target + '">' + label + '</a></li>');
             }
         }
         btn('&laquo;', page - 1, { disabled: page <= 1 });
@@ -314,7 +313,7 @@
 
     function setSelectAllState() {
         if (!selectAllCb) return;
-        const cbs = rowsBody.querySelectorAll('[data-team-row-cb]');
+        const cbs = rowsBody.querySelectorAll('[data-employer-row-cb]');
         if (!cbs.length) {
             selectAllCb.checked = false;
             selectAllCb.indeterminate = false;
@@ -344,7 +343,7 @@
             .then(function (data) {
                 inflight = null;
                 if (spinner) spinner.classList.remove('is-active');
-                renderRows(data.members || []);
+                renderRows(data.employers || []);
                 renderPager(data.page, data.num_pages);
                 currentPage = data.page;
                 if (pageInfoEl) {
@@ -362,12 +361,12 @@
                 if (err && err.name === 'AbortError') return;
                 if (spinner) spinner.classList.remove('is-active');
                 rowsBody.innerHTML =
-                    '<tr><td colspan="4" class="text-center text-danger py-4">Failed to load members.</td></tr>';
+                    '<tr><td colspan="3" class="text-center text-danger py-4">Failed to load employers.</td></tr>';
             });
     }
 
     rowsBody.addEventListener('change', function (e) {
-        const cb = e.target.closest('[data-team-row-cb]');
+        const cb = e.target.closest('[data-employer-row-cb]');
         if (!cb) return;
         const id = String(cb.value);
         if (cb.checked) selectedSet.add(id);
@@ -378,10 +377,10 @@
     });
 
     rowsBody.addEventListener('click', function (e) {
-        if (e.target.closest('[data-team-row-cb]')) return;
-        const tr = e.target.closest('tr[data-member-id]');
+        if (e.target.closest('[data-employer-row-cb]')) return;
+        const tr = e.target.closest('tr[data-employer-id]');
         if (!tr) return;
-        const cb = tr.querySelector('[data-team-row-cb]');
+        const cb = tr.querySelector('[data-employer-row-cb]');
         if (!cb) return;
         cb.checked = !cb.checked;
         cb.dispatchEvent(new Event('change', { bubbles: true }));
@@ -389,7 +388,7 @@
 
     if (selectAllCb) {
         selectAllCb.addEventListener('change', function () {
-            const cbs = rowsBody.querySelectorAll('[data-team-row-cb]');
+            const cbs = rowsBody.querySelectorAll('[data-employer-row-cb]');
             cbs.forEach(function (cb) {
                 cb.checked = selectAllCb.checked;
                 const id = String(cb.value);
@@ -403,10 +402,10 @@
 
     if (pagerEl) {
         pagerEl.addEventListener('click', function (e) {
-            const a = e.target.closest('[data-team-goto]');
+            const a = e.target.closest('[data-employer-goto]');
             if (!a) return;
             e.preventDefault();
-            const target = parseInt(a.dataset.teamGoto, 10);
+            const target = parseInt(a.dataset.employerGoto, 10);
             if (!target || target === currentPage) return;
             currentPage = target;
             fetchPage();

@@ -10,7 +10,7 @@ services:
     runtime: python
     plan: free
     buildCommand: "./build.sh"
-    startCommand: "gunicorn young_professionals.wsgi:application"
+    startCommand: "gunicorn young_professionals.wsgi:application --workers 3 --threads 4 --worker-class gthread --timeout 30 --max-requests 1000 --max-requests-jitter 50 --access-logfile -"
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.4

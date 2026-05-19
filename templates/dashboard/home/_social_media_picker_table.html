@@ -1,0 +1,296 @@
+<div class="form-group social-media-picker-wrapper mb-0"
+     data-social-picker
+     data-field-name="{{ field.name }}">
+
+    {% if not social_icons %}
+        <div class="alert alert-warning mb-0">
+            <i class="fas fa-info-circle mr-1"></i>
+            No social media icons yet — add some in
+            <a href="{% url 'dashboard:social_media_icons_edit' %}">Data Management → Social Media</a>
+            first.
+        </div>
+    {% else %}
+        <div class="card card-outline mb-0" style="border: 1px solid #ced4da; box-shadow: none;">
+            <div class="card-header d-flex align-items-center" style="gap: .75rem; background: #f8fafc;">
+                <span class="font-weight-bold mr-auto">
+                    Social Media Icons
+                    <span class="badge badge-light ml-1">{{ social_icons|length }}</span>
+                    <span class="yp-tip ml-1"
+                          data-tip="Tick the social media icons you want to display in this section. Only the checked icons appear on the public page. Add new icons or edit existing ones from Data Management → Social Media.">
+                        <i class="fas fa-info-circle"></i>
+                    </span>
+                    <span class="text-muted small ml-2">
+                        <span data-social-selected-count>{{ selected_social_media_ids|length }}</span> selected
+                    </span>
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="yp-social-table-scroll">
+                    <table class="table table-hover mb-0 yp-social-picker-table">
+                        <thead style="background: #f8fafc;">
+                            <tr>
+                                <th style="width: 44px;" class="text-center">
+                                    <input type="checkbox" data-social-select-all
+                                           title="Select / unselect all icons">
+                                </th>
+                                <th style="width: 80px;">Icon</th>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for icon in social_icons %}
+                                <tr data-social-id="{{ icon.pk }}"{% if icon.pk in selected_social_media_ids %} class="is-selected"{% endif %}>
+                                    <td class="text-center">
+                                        <input type="checkbox" data-social-row-cb
+                                               value="{{ icon.pk }}"
+                                               {% if icon.pk in selected_social_media_ids %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        {% if icon.icon %}
+                                            <img class="yp-social-icon" src="{{ icon.icon.url }}" alt="">
+                                        {% else %}
+                                            <span class="yp-social-icon-fallback"><i class="fas fa-share-alt"></i></span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ icon.name }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <small class="form-text text-muted mt-2">
+            {{ field.help_text }}
+        </small>
+
+        <div data-social-hidden style="display:none;">
+            {% for sid in selected_social_media_ids %}
+                <input type="hidden" name="{{ field.name }}" value="{{ sid }}">
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% for error in field.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>
+
+<style>
+    .yp-social-table-scroll {
+        /* 10 rows of ~56px each = ~560px before scrolling kicks in. */
+        max-height: 560px;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    .yp-social-picker-table { table-layout: auto; margin: 0; }
+    .yp-social-picker-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #f8fafc;
+        box-shadow: inset 0 -1px 0 #e2e8f0;
+    }
+    .yp-social-picker-table tbody tr { cursor: pointer; }
+    .yp-social-picker-table tbody td { padding: .55rem .75rem; vertical-align: middle; }
+    .yp-social-picker-table .yp-social-icon {
+        width: 36px; height: 36px;
+        border-radius: 8px;
+        object-fit: contain;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        padding: 4px;
+        display: inline-block;
+    }
+    .yp-social-picker-table .yp-social-icon-fallback {
+        width: 36px; height: 36px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #94a3b8;
+        display: inline-flex;
+        align-items: center; justify-content: center;
+        font-size: 1rem;
+    }
+    .yp-social-picker-table input[type="checkbox"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        margin: 0;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        position: relative;
+        transition: background .12s ease, border-color .12s ease;
+        vertical-align: middle;
+    }
+    .yp-social-picker-table input[type="checkbox"]:hover { border-color: #94a3b8; }
+    .yp-social-picker-table input[type="checkbox"]:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, .25);
+    }
+    .yp-social-picker-table input[type="checkbox"]:checked {
+        background: #059669;
+        border-color: #047857;
+    }
+    .yp-social-picker-table input[type="checkbox"]:checked::after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 0px;
+        width: 6px;
+        height: 12px;
+        border: solid #fff;
+        border-width: 0 2.5px 2.5px 0;
+        transform: rotate(45deg);
+    }
+    .yp-social-picker-table input[type="checkbox"]:indeterminate {
+        background: #059669;
+        border-color: #047857;
+    }
+    .yp-social-picker-table input[type="checkbox"]:indeterminate::after {
+        content: '';
+        position: absolute;
+        left: 3px;
+        top: 6px;
+        width: 11px;
+        height: 2.5px;
+        background: #fff;
+        border-radius: 2px;
+    }
+    .yp-social-picker-table tr.is-selected { background: #ecfdf5; }
+
+    .yp-tip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: help;
+        color: #0ea5e9;
+        font-size: .95rem;
+    }
+    .yp-tip:hover { color: #0284c7; }
+    .yp-tip::after {
+        content: attr(data-tip);
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 0;
+        transform: translateX(-12px);
+        background: #1f2937;
+        color: #f9fafb;
+        padding: .6rem .75rem;
+        border-radius: 6px;
+        font-size: .78rem;
+        font-weight: 400;
+        line-height: 1.45;
+        white-space: normal;
+        width: 300px;
+        max-width: 90vw;
+        box-shadow: 0 8px 22px -8px rgba(15, 23, 42, .4);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .12s ease, transform .12s ease;
+        z-index: 1080;
+    }
+    .yp-tip::before {
+        content: '';
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 4px;
+        border: 6px solid transparent;
+        border-bottom-color: #1f2937;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .12s ease;
+        z-index: 1081;
+    }
+    .yp-tip:hover::after,
+    .yp-tip:focus::after,
+    .yp-tip:hover::before,
+    .yp-tip:focus::before { opacity: 1; }
+</style>
+
+<script>
+(function () {
+    const root = document.querySelector('[data-social-picker]');
+    if (!root) return;
+
+    const fieldName = root.dataset.fieldName;
+    const hiddenBox = root.querySelector('[data-social-hidden]');
+    const selectedCountEl = root.querySelector('[data-social-selected-count]');
+    const selectAllCb = root.querySelector('[data-social-select-all]');
+    const rowCbs = root.querySelectorAll('[data-social-row-cb]');
+
+    if (!hiddenBox) return;
+
+    const selectedSet = new Set();
+    rowCbs.forEach(function (cb) {
+        if (cb.checked) selectedSet.add(String(cb.value));
+    });
+
+    function syncHidden() {
+        hiddenBox.innerHTML = '';
+        selectedSet.forEach(function (id) {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = fieldName;
+            inp.value = id;
+            hiddenBox.appendChild(inp);
+        });
+        if (selectedCountEl) selectedCountEl.textContent = selectedSet.size;
+    }
+
+    function setSelectAllState() {
+        if (!selectAllCb) return;
+        if (!rowCbs.length) {
+            selectAllCb.checked = false;
+            selectAllCb.indeterminate = false;
+            return;
+        }
+        let on = 0;
+        rowCbs.forEach(function (cb) { if (cb.checked) on++; });
+        selectAllCb.checked = on === rowCbs.length;
+        selectAllCb.indeterminate = on > 0 && on < rowCbs.length;
+    }
+
+    rowCbs.forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            const id = String(cb.value);
+            if (cb.checked) selectedSet.add(id);
+            else selectedSet.delete(id);
+            cb.closest('tr').classList.toggle('is-selected', cb.checked);
+            syncHidden();
+            setSelectAllState();
+        });
+    });
+
+    // Row click anywhere → toggle checkbox.
+    root.querySelectorAll('tr[data-social-id]').forEach(function (tr) {
+        tr.addEventListener('click', function (e) {
+            if (e.target.closest('[data-social-row-cb]')) return;
+            const cb = tr.querySelector('[data-social-row-cb]');
+            if (!cb) return;
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+
+    if (selectAllCb) {
+        selectAllCb.addEventListener('change', function () {
+            rowCbs.forEach(function (cb) {
+                cb.checked = selectAllCb.checked;
+                const id = String(cb.value);
+                if (cb.checked) selectedSet.add(id);
+                else selectedSet.delete(id);
+                cb.closest('tr').classList.toggle('is-selected', cb.checked);
+            });
+            syncHidden();
+        });
+    }
+
+    setSelectAllState();
+    syncHidden();
+})();
+</script>

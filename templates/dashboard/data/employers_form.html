@@ -153,7 +153,7 @@
                                         <img src="{% if employer_form.logo.value %}{{ employer_form.logo.value.url }}{% endif %}"
                                              class="yp-logo-thumb" data-logo-thumb alt="logo"
                                              {% if not employer_form.logo.value %}style="display:none;"{% endif %}>
-                                        <i class="fas fa-image yp-logo-placeholder" data-logo-placeholder
+                                        <i class="fas fa-shapes yp-logo-placeholder" data-logo-placeholder
                                            {% if employer_form.logo.value %}style="display:none;"{% endif %}></i>
                                         {{ employer_form.logo }}
                                         <input type="checkbox"
@@ -225,7 +225,7 @@
             <span class="yp-logo-wrap" data-logo-wrap>
                 <label class="yp-logo-drop mb-0" data-logo-drop>
                     <img src="" class="yp-logo-thumb" data-logo-thumb alt="logo" style="display:none;">
-                    <i class="fas fa-image yp-logo-placeholder" data-logo-placeholder></i>
+                    <i class="fas fa-shapes yp-logo-placeholder" data-logo-placeholder></i>
                     {{ empty.logo }}
                 </label>
                 <button type="button" class="yp-logo-clear" data-logo-clear title="Remove logo" style="display:none;">

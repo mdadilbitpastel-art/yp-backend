@@ -9,9 +9,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import QueryDict
+from django.http import JsonResponse, QueryDict
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import TemplateView, UpdateView
 
 from about_us.models import (
@@ -403,6 +404,14 @@ class SchoolsEmployerEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return SchoolsEmployerSection.load()
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["selected_employer_ids"] = list(
+            self.object.selected_employers.values_list("pk", flat=True)
+        )
+        ctx["employer_total_count"] = Employer.objects.count()
+        return ctx
+
     def form_valid(self, form):
         messages.success(self.request, "Schools employer section saved successfully.")
         return super().form_valid(form)
@@ -579,6 +588,14 @@ class EmployersNetworkEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return NetworkSection.load()
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["statistics"] = list(Statistic.objects.all().order_by("order", "id"))
+        ctx["selected_statistic_ids"] = list(
+            self.object.selected_statistics.values_list("pk", flat=True)
+        )
+        return ctx
+
     def form_valid(self, form):
         messages.success(self.request, "Network section saved successfully.")
         return super().form_valid(form)
@@ -638,6 +655,16 @@ class AboutUsSocialMediaEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return AboutUsSocialMediaSection.load()
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["social_icons"] = list(
+            SocialMediaIcon.objects.all().order_by("order", "id")
+        )
+        ctx["selected_social_media_ids"] = list(
+            self.object.selected_social_media.values_list("pk", flat=True)
+        )
+        return ctx
+
     def form_valid(self, form):
         messages.success(
             self.request, "About Us social media section saved successfully."
@@ -686,6 +713,14 @@ class AboutUsTeamEditView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return AboutUsTeamSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["selected_team_member_ids"] = list(
+            self.object.selected_team_members.values_list("pk", flat=True)
+        )
+        ctx["team_total_count"] = TeamMember.objects.count()
+        return ctx
 
     def form_valid(self, form):
         messages.success(self.request, "About Us team section saved successfully.")
@@ -792,6 +827,14 @@ class AboutUsMissionEditView(SectionImagesMixin, LoginRequiredMixin, UpdateView)
     def get_object(self, queryset=None):
         return AboutUsMissionSection.load()
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["statistics"] = list(Statistic.objects.all().order_by("order", "id"))
+        ctx["selected_statistic_ids"] = list(
+            self.object.selected_statistics.values_list("pk", flat=True)
+        )
+        return ctx
+
 
 
 class HeroEditView(SectionImagesMixin, LoginRequiredMixin, UpdateView):
@@ -858,6 +901,14 @@ class NetworkEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return NetworkSection.load()
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["statistics"] = list(Statistic.objects.all().order_by("order", "id"))
+        ctx["selected_statistic_ids"] = list(
+            self.object.selected_statistics.values_list("pk", flat=True)
+        )
+        return ctx
+
     def form_valid(self, form):
         messages.success(self.request, "Network section saved successfully.")
         return super().form_valid(form)
@@ -889,6 +940,10 @@ class ApplyEditView(LoginRequiredMixin, UpdateView):
             "company_formset",
             ApplyCompanyFormSet(instance=self.object),
         )
+        ctx["selected_employer_ids"] = list(
+            self.object.selected_employers.values_list("pk", flat=True)
+        )
+        ctx["employer_total_count"] = Employer.objects.count()
         return ctx
 
     def post(self, request, *args, **kwargs):
@@ -943,6 +998,16 @@ class SocialMediaEditView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return SocialMediaSection.load()
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["social_icons"] = list(
+            SocialMediaIcon.objects.all().order_by("order", "id")
+        )
+        ctx["selected_social_media_ids"] = list(
+            self.object.selected_social_media.values_list("pk", flat=True)
+        )
+        return ctx
+
     def form_valid(self, form):
         messages.success(self.request, "Social Media section saved successfully.")
         return super().form_valid(form)
@@ -972,6 +1037,14 @@ class PartnersHeroEditView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return PartnersHeroSection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["statistics"] = list(Statistic.objects.all().order_by("order", "id"))
+        ctx["selected_statistic_ids"] = list(
+            self.object.selected_statistics.values_list("pk", flat=True)
+        )
+        return ctx
 
     def form_valid(self, form):
         messages.success(self.request, "Partners hero section saved successfully.")
@@ -1456,6 +1529,117 @@ class TeamMembersEditView(LoginRequiredMixin, TemplateView):
         ctx["search_query"] = query
         ctx["total_count"] = page.paginator.count
         return self.render_to_response(ctx)
+
+
+class TeamMemberPickerAPIView(LoginRequiredMixin, View):
+    """JSON endpoint that powers the paginated, searchable team-member
+    picker on the About Us → Team Section page. Returns:
+
+        {
+          "members": [{"id", "name", "designation", "profile_image"}],
+          "page": N, "num_pages": N, "total": N, "page_size": N
+        }
+    """
+
+    page_size = 10
+
+    def get(self, request, *args, **kwargs):
+        from django.db.models import Case, IntegerField, Value, When
+
+        query = request.GET.get("q", "").strip()
+        selected_raw = request.GET.get("selected_ids", "")
+        selected_ids = [int(x) for x in selected_raw.split(",") if x.isdigit()]
+
+        qs = TeamMember.objects.all()
+        if query:
+            qs = qs.filter(
+                Q(name__icontains=query)
+                | Q(designation__icontains=query)
+                | Q(email_url__icontains=query)
+            )
+
+        if selected_ids:
+            qs = qs.annotate(
+                _is_selected=Case(
+                    When(pk__in=selected_ids, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            ).order_by("_is_selected", "order", "id")
+        else:
+            qs = qs.order_by("order", "id")
+
+        paginator = Paginator(qs, self.page_size)
+        page = paginator.get_page(request.GET.get("page"))
+        members = []
+        for m in page.object_list:
+            members.append({
+                "id": m.pk,
+                "name": m.name,
+                "designation": m.designation,
+                "profile_image": m.profile_image.url if m.profile_image else "",
+            })
+        return JsonResponse({
+            "members": members,
+            "page": page.number,
+            "num_pages": paginator.num_pages,
+            "total": paginator.count,
+            "page_size": self.page_size,
+        })
+
+
+class EmployerPickerAPIView(LoginRequiredMixin, View):
+    """JSON endpoint that powers the paginated, searchable employer
+    picker on the Schools → Employer Section page. Returns:
+
+        {
+          "employers": [{"id", "name", "logo"}],
+          "page": N, "num_pages": N, "total": N, "page_size": N
+        }
+    """
+
+    page_size = 10
+
+    def get(self, request, *args, **kwargs):
+        from django.db.models import Case, IntegerField, Value, When
+
+        query = request.GET.get("q", "").strip()
+        selected_raw = request.GET.get("selected_ids", "")
+        selected_ids = [int(x) for x in selected_raw.split(",") if x.isdigit()]
+
+        qs = Employer.objects.all()
+        if query:
+            qs = qs.filter(
+                Q(name__icontains=query) | Q(description__icontains=query)
+            )
+
+        if selected_ids:
+            qs = qs.annotate(
+                _is_selected=Case(
+                    When(pk__in=selected_ids, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            ).order_by("_is_selected", "order", "id")
+        else:
+            qs = qs.order_by("order", "id")
+
+        paginator = Paginator(qs, self.page_size)
+        page = paginator.get_page(request.GET.get("page"))
+        employers = []
+        for e in page.object_list:
+            employers.append({
+                "id": e.pk,
+                "name": e.name,
+                "logo": e.logo.url if e.logo else "",
+            })
+        return JsonResponse({
+            "employers": employers,
+            "page": page.number,
+            "num_pages": paginator.num_pages,
+            "total": paginator.count,
+            "page_size": self.page_size,
+        })
 
 
 class SocialMediaIconsEditView(LoginRequiredMixin, TemplateView):
