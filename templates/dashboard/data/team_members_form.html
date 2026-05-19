@@ -103,6 +103,29 @@
         box-shadow: 0 2px 4px rgba(15, 23, 42, .25);
     }
     .yp-photo-clear:hover { background: #b91c1c; }
+
+    .yp-pager { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+    .yp-pager .yp-pager-info { color: #475569; font-size: .85rem; }
+    .yp-pager .pagination { margin: 0; }
+
+    .yp-search-wrap { flex: 1 1 auto; max-width: 420px; margin-left: auto; }
+    .yp-search-input { padding-right: 32px; width: 100%; }
+    .yp-search-spinner {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        width: 14px; height: 14px;
+        margin-top: -7px;
+        border: 2px solid #cbd5e1;
+        border-top-color: var(--yp-primary, #4f46e5);
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .15s ease;
+        animation: yp-spin .8s linear infinite;
+    }
+    .yp-search-spinner.is-active { opacity: 1; }
+    @keyframes yp-spin { to { transform: rotate(360deg); } }
 </style>
 
 <div class="alert alert-info">
@@ -111,7 +134,8 @@
     which selects which ones to show independently.
 </div>
 
-<form method="post" enctype="multipart/form-data" novalidate>
+<form method="post" enctype="multipart/form-data" novalidate id="team-members-form"
+      action="?{% if search_query %}q={{ search_query|urlencode }}&amp;{% endif %}page={{ page_obj.number }}">
     {% csrf_token %}
 
     {{ formset.management_form }}
@@ -120,8 +144,22 @@
     {% endif %}
 
     <div class="card card-info card-outline">
-        <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-list-ol mr-1"></i> Team Members</h3>
+        <div class="card-header d-flex align-items-center" style="gap: .75rem;">
+            <h3 class="card-title mb-0 mr-auto">
+                <i class="fas fa-list-ol mr-1"></i> Team Members
+                {% if total_count %}
+                    <span class="badge badge-light ml-1">{{ total_count }}</span>
+                {% endif %}
+            </h3>
+            <div class="yp-search-wrap position-relative">
+                <input type="search"
+                       id="team-search"
+                       value="{{ search_query }}"
+                       class="form-control form-control-sm yp-search-input"
+                       placeholder="Search name, designation, or email…"
+                       autocomplete="off">
+                <span class="yp-search-spinner" id="team-search-spinner" aria-hidden="true"></span>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -199,10 +237,56 @@
                 </table>
             </div>
 
-            <div class="p-3 border-top">
-                <button type="button" id="add-member" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-plus mr-1"></i> Add Member
-                </button>
+            <div class="p-3 border-top yp-pager">
+                <div>
+                    <button type="button" id="add-member" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus mr-1"></i> Add Member
+                    </button>
+                    {% if total_count %}
+                        <span class="yp-pager-info ml-2">
+                            Page {{ page_obj.number }} of {{ paginator.num_pages }}
+                            · {{ total_count }} total
+                        </span>
+                    {% endif %}
+                </div>
+                {% if paginator.num_pages > 1 %}
+                    <ul class="pagination pagination-sm">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?{% if search_query %}q={{ search_query|urlencode }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">
+                                    &laquo;
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                        {% endif %}
+
+                        {% for n in paginator.page_range %}
+                            {% if n == page_obj.number %}
+                                <li class="page-item active"><span class="page-link">{{ n }}</span></li>
+                            {% elif n == 1 or n == paginator.num_pages or n >= page_obj.number|add:'-2' and n <= page_obj.number|add:'2' %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?{% if search_query %}q={{ search_query|urlencode }}&amp;{% endif %}page={{ n }}">{{ n }}</a>
+                                </li>
+                            {% elif n == page_obj.number|add:'-3' or n == page_obj.number|add:'3' %}
+                                <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="?{% if search_query %}q={{ search_query|urlencode }}&amp;{% endif %}page={{ page_obj.next_page_number }}">
+                                    &raquo;
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -329,6 +413,54 @@
     });
 
     bindAllPhotoDrops(document);
+})();
+
+(function () {
+    const input = document.getElementById('team-search');
+    const spinner = document.getElementById('team-search-spinner');
+    if (!input) return;
+
+    const DEBOUNCE_MS = 1000;
+    let timer = null;
+    let lastSent = input.value.trim();
+
+    function navigate(value) {
+        const params = new URLSearchParams(window.location.search);
+        if (value) {
+            params.set('q', value);
+        } else {
+            params.delete('q');
+        }
+        params.delete('page');
+        const qs = params.toString();
+        window.location.href = window.location.pathname + (qs ? '?' + qs : '');
+    }
+
+    input.addEventListener('input', function () {
+        const value = input.value.trim();
+        if (spinner) spinner.classList.add('is-active');
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            if (value === lastSent) {
+                if (spinner) spinner.classList.remove('is-active');
+                return;
+            }
+            lastSent = value;
+            navigate(value);
+        }, DEBOUNCE_MS);
+    });
+
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(timer);
+            const value = input.value.trim();
+            if (value !== lastSent) {
+                lastSent = value;
+                navigate(value);
+            }
+        }
+    });
 })();
 </script>
 {% endblock %}

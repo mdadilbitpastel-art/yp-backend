@@ -7,6 +7,9 @@ and it goes straight to its edit page.
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import QueryDict
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, UpdateView
@@ -1393,30 +1396,66 @@ class EmployersEditView(LoginRequiredMixin, TemplateView):
 
 
 class TeamMembersEditView(LoginRequiredMixin, TemplateView):
-    """Bulk editor for all `TeamMember` rows — add / edit / delete via a
-    single modelformset. Each row becomes selectable in the About Us
-    Team Section picker."""
+    """Bulk editor for `TeamMember` rows — add / edit / delete via a
+    paginated modelformset with name/designation search. Each row becomes
+    selectable in the About Us Team Section picker."""
 
     template_name = "dashboard/data/team_members_form.html"
-    success_url = reverse_lazy("dashboard:team_members_edit")
+    page_size = 10
+
+    def _filtered_queryset(self, query):
+        qs = TeamMember.objects.all().order_by("order", "id")
+        if query:
+            qs = qs.filter(
+                Q(name__icontains=query)
+                | Q(designation__icontains=query)
+                | Q(email_url__icontains=query)
+            )
+        return qs
+
+    def _page_queryset(self, source, query):
+        qs = self._filtered_queryset(query)
+        paginator = Paginator(qs, self.page_size)
+        page = paginator.get_page(source.get("page"))
+        page_qs = qs.filter(pk__in=[obj.pk for obj in page.object_list])
+        return page, page_qs
+
+    def _success_redirect(self, query, page_number):
+        params = QueryDict(mutable=True)
+        if query:
+            params["q"] = query
+        if page_number:
+            params["page"] = str(page_number)
+        url = reverse_lazy("dashboard:team_members_edit")
+        return redirect(f"{url}?{params.urlencode()}" if params else url)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx.setdefault(
-            "formset",
-            TeamMemberFormSet(queryset=TeamMember.objects.all()),
-        )
+        query = self.request.GET.get("q", "").strip()
+        page, page_qs = self._page_queryset(self.request.GET, query)
+        ctx.setdefault("formset", TeamMemberFormSet(queryset=page_qs))
+        ctx["page_obj"] = page
+        ctx["paginator"] = page.paginator
+        ctx["search_query"] = query
+        ctx["total_count"] = page.paginator.count
         return ctx
 
     def post(self, request, *args, **kwargs):
+        query = request.GET.get("q", "").strip()
+        page, page_qs = self._page_queryset(request.GET, query)
         formset = TeamMemberFormSet(
-            request.POST, request.FILES, queryset=TeamMember.objects.all()
+            request.POST, request.FILES, queryset=page_qs
         )
         if formset.is_valid():
             formset.save()
             messages.success(request, "Team members saved successfully.")
-            return redirect(self.success_url)
-        return self.render_to_response(self.get_context_data(formset=formset))
+            return self._success_redirect(query, page.number)
+        ctx = self.get_context_data(formset=formset)
+        ctx["page_obj"] = page
+        ctx["paginator"] = page.paginator
+        ctx["search_query"] = query
+        ctx["total_count"] = page.paginator.count
+        return self.render_to_response(ctx)
 
 
 class SocialMediaIconsEditView(LoginRequiredMixin, TemplateView):

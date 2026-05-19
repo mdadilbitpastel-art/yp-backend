@@ -112,6 +112,11 @@ class TeamMember(models.Model):
         ordering = ("order", "id")
         verbose_name = "Team Member"
         verbose_name_plural = "Team Members"
+        indexes = [
+            models.Index(fields=["order", "id"], name="tm_order_id_idx"),
+            models.Index(fields=["name"], name="tm_name_idx"),
+            models.Index(fields=["designation"], name="tm_designation_idx"),
+        ]
 
     def __str__(self) -> str:
         return self.name or f"Team Member {self.pk}"
