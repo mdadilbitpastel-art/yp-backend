@@ -13,19 +13,18 @@
     .yp-cc-row {
         display: flex;
         gap: 1rem;
-        padding: 1rem;
+        padding: .85rem 1rem;
         border-bottom: 1px solid #e2e8f0;
-        align-items: flex-start;
+        align-items: center;
     }
     .yp-cc-row:first-child { border-top: 1px solid #e2e8f0; }
     .yp-cc-imgs { flex-shrink: 0; }
     .yp-cc-fields {
         flex: 1 1 auto;
         display: grid;
-        grid-template-columns: minmax(160px, 1fr) minmax(160px, 2fr);
-        gap: .55rem .75rem;
+        grid-template-columns: minmax(140px, 1fr) minmax(140px, 1fr);
+        gap: .4rem .6rem;
     }
-    .yp-cc-fields .yp-cc-full { grid-column: 1 / -1; }
     .yp-cc-fields .form-group { margin-bottom: 0; }
     .yp-cc-fields label { display: none; }
     .yp-cc-fields input[type="text"],
@@ -33,27 +32,33 @@
     .yp-cc-fields input:not([type]),
     .yp-cc-fields textarea {
         width: 100%;
-        padding: .4rem .6rem;
+        padding: .35rem .55rem;
         border: 1px solid #cbd5e1;
         border-radius: 6px;
         background: #fff;
-        font-size: .9rem;
-        line-height: 1.5;
-        height: 38px;
+        font-size: .85rem;
+        line-height: 1.4;
+        height: 34px;
         box-sizing: border-box;
     }
-    .yp-cc-fields textarea { min-height: 38px; resize: vertical; overflow-y: auto; }
+    .yp-cc-fields textarea {
+        height: 34px;
+        min-height: 34px;
+        max-height: 110px;
+        resize: vertical;
+        overflow-y: auto;
+    }
     .yp-cc-fields input:focus, .yp-cc-fields textarea:focus {
         border-color: var(--yp-primary);
         box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
         outline: none;
     }
-    .yp-cc-actions { flex-shrink: 0; }
+    .yp-cc-actions { flex-shrink: 0; align-self: center; }
 
     .yp-img-wrap { position: relative; display: inline-block; }
     .yp-img-drop {
         position: relative;
-        width: 80px; height: 80px;
+        width: 96px; height: 96px;
         border: 1.5px dashed #94a3b8;
         border-radius: 10px;
         background: #f8fafc;
@@ -107,8 +112,14 @@
             <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.label %}
-            {% include "dashboard/home/_field.html" with field=form.title %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.label %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.title %}
+                </div>
+            </div>
             {% include "dashboard/home/_field.html" with field=form.subtitle %}
         </div>
     </div>
@@ -152,8 +163,8 @@
                     <div class="yp-cc-fields">
                         <div class="form-group">{{ card_form.name }}</div>
                         <div class="form-group">{{ card_form.button_text }}</div>
-                        <div class="form-group yp-cc-full">{{ card_form.description }}</div>
-                        <div class="form-group yp-cc-full">{{ card_form.button_url }}</div>
+                        <div class="form-group">{{ card_form.description }}</div>
+                        <div class="form-group">{{ card_form.button_url }}</div>
                     </div>
 
                     <div class="yp-cc-actions">
@@ -202,8 +213,8 @@
         <div class="yp-cc-fields">
             <div class="form-group">{{ empty.name }}</div>
             <div class="form-group">{{ empty.button_text }}</div>
-            <div class="form-group yp-cc-full">{{ empty.description }}</div>
-            <div class="form-group yp-cc-full">{{ empty.button_url }}</div>
+            <div class="form-group">{{ empty.description }}</div>
+            <div class="form-group">{{ empty.button_url }}</div>
         </div>
         <div class="yp-cc-actions">
             <button type="button" class="btn btn-sm btn-dark remove-row" title="Remove">

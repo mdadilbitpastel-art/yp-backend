@@ -22,6 +22,12 @@
                     <span class="text-muted small ml-2">
                         <span data-statistic-selected-count>{{ selected_statistic_ids|length }}</span> selected
                     </span>
+                    <button type="button"
+                            class="btn btn-link btn-sm p-0 ml-2 yp-statistic-clear-all"
+                            data-statistic-clear-all
+                            {% if not selected_statistic_ids %}style="display:none;"{% endif %}>
+                        <i class="fas fa-times-circle mr-1"></i>Uncheck all
+                    </button>
                 </span>
             </div>
             <div class="card-body p-0">
@@ -29,10 +35,7 @@
                     <table class="table table-hover mb-0 yp-statistic-picker-table">
                         <thead style="background: #f8fafc;">
                             <tr>
-                                <th style="width: 44px;" class="text-center">
-                                    <input type="checkbox" data-statistic-select-all
-                                           title="Select / unselect all statistics">
-                                </th>
+                                <th style="width: 44px;" class="text-center">&nbsp;</th>
                                 <th style="width: 30%;">Value</th>
                                 <th>Label</th>
                             </tr>
@@ -137,6 +140,14 @@
         border-radius: 2px;
     }
     .yp-statistic-picker-table tr.is-selected { background: #ecfdf5; }
+    .yp-statistic-clear-all {
+        color: #b91c1c;
+        font-size: .78rem;
+        font-weight: 500;
+        text-decoration: none;
+        vertical-align: baseline;
+    }
+    .yp-statistic-clear-all:hover { color: #7f1d1d; text-decoration: underline; }
 
     .yp-tip {
         position: relative;
@@ -195,7 +206,7 @@
     const fieldName = root.dataset.fieldName;
     const hiddenBox = root.querySelector('[data-statistic-hidden]');
     const selectedCountEl = root.querySelector('[data-statistic-selected-count]');
-    const selectAllCb = root.querySelector('[data-statistic-select-all]');
+    const clearAllBtn = root.querySelector('[data-statistic-clear-all]');
     const rowCbs = root.querySelectorAll('[data-statistic-row-cb]');
 
     if (!hiddenBox) return;
@@ -215,19 +226,7 @@
             hiddenBox.appendChild(inp);
         });
         if (selectedCountEl) selectedCountEl.textContent = selectedSet.size;
-    }
-
-    function setSelectAllState() {
-        if (!selectAllCb) return;
-        if (!rowCbs.length) {
-            selectAllCb.checked = false;
-            selectAllCb.indeterminate = false;
-            return;
-        }
-        let on = 0;
-        rowCbs.forEach(function (cb) { if (cb.checked) on++; });
-        selectAllCb.checked = on === rowCbs.length;
-        selectAllCb.indeterminate = on > 0 && on < rowCbs.length;
+        if (clearAllBtn) clearAllBtn.style.display = selectedSet.size ? '' : 'none';
     }
 
     rowCbs.forEach(function (cb) {
@@ -237,7 +236,6 @@
             else selectedSet.delete(id);
             cb.closest('tr').classList.toggle('is-selected', cb.checked);
             syncHidden();
-            setSelectAllState();
         });
     });
 
@@ -251,20 +249,20 @@
         });
     });
 
-    if (selectAllCb) {
-        selectAllCb.addEventListener('change', function () {
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!selectedSet.size) return;
+            selectedSet.clear();
             rowCbs.forEach(function (cb) {
-                cb.checked = selectAllCb.checked;
-                const id = String(cb.value);
-                if (cb.checked) selectedSet.add(id);
-                else selectedSet.delete(id);
-                cb.closest('tr').classList.toggle('is-selected', cb.checked);
+                cb.checked = false;
+                const tr = cb.closest('tr');
+                if (tr) tr.classList.remove('is-selected');
             });
             syncHidden();
         });
     }
 
-    setSelectAllState();
     syncHidden();
 })();
 </script>

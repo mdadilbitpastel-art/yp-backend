@@ -79,7 +79,9 @@
       "Bash(./.venv/Scripts/python.exe -c \"import django; django.setup\\(\\) if hasattr\\(django, 'setup'\\) else None\")",
       "Bash(./.venv/Scripts/python.exe -m py_compile dashboard/views.py dashboard/urls.py)",
       "Bash(python -c \"import ast; ast.parse\\(open\\('dashboard/views.py'\\).read\\(\\)\\); print\\('views.py: OK'\\)\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(python -c \"import django; print\\(django.get_version\\(\\)\\)\")",
+      "Bash(grep -n -B1 -A 9 'class=\"row\"' '/mnt/c/Users/Adil Alam/Desktop/yp/__TRACKED_VAR__')"
     ]
   }
 }

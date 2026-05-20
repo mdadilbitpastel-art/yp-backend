@@ -150,7 +150,6 @@ from .forms import (
     TalentPoolSectionForm,
     TeamMemberFormSet,
     TestimonialsSectionForm,
-    TestimonialUserFormSet,
 )
 from .sections import DASHBOARD_MODULES, get_module, module_stats
 
@@ -983,10 +982,21 @@ class TestimonialsEditView(SectionImagesMixin, LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return TestimonialsSection.load()
 
-    def get_extra_formsets(self, data=None, files=None):
-        return [
-            ("user_formset", TestimonialUserFormSet(data, files, instance=self.object)),
-        ]
+    def get_context_data(self, **kwargs):
+        from home.models import TestimonialUser
+
+        ctx = super().get_context_data(**kwargs)
+        rows = (
+            TestimonialUser.objects.filter(section=self.object)
+            .exclude(team_member__isnull=True)
+            .values("team_member_id", "message")
+        )
+        ctx["selected_team_member_ids"] = [r["team_member_id"] for r in rows]
+        ctx["existing_team_member_messages"] = {
+            r["team_member_id"]: r["message"] for r in rows
+        }
+        ctx["team_total_count"] = TeamMember.objects.count()
+        return ctx
 
 
 class SocialMediaEditView(LoginRequiredMixin, UpdateView):
@@ -1066,6 +1076,10 @@ class PartnersPartnerSectionEditView(LoginRequiredMixin, UpdateView):
             "category_formset",
             PartnersCategoryFormSet(instance=self.object),
         )
+        ctx["selected_employer_ids"] = list(
+            self.object.selected_employers.values_list("pk", flat=True)
+        )
+        ctx["employer_total_count"] = Employer.objects.count()
         return ctx
 
     def post(self, request, *args, **kwargs):
@@ -1092,6 +1106,14 @@ class PartnersFamilySectionEditView(LoginRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return PartnersFamilySection.load()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["selected_employer_ids"] = list(
+            self.object.selected_employers.values_list("pk", flat=True)
+        )
+        ctx["employer_total_count"] = Employer.objects.count()
+        return ctx
 
     def form_valid(self, form):
         messages.success(self.request, "Partners family section saved successfully.")
@@ -1542,6 +1564,7 @@ class TeamMemberPickerAPIView(LoginRequiredMixin, View):
     """
 
     page_size = 10
+    max_page_size = 50
 
     def get(self, request, *args, **kwargs):
         from django.db.models import Case, IntegerField, Value, When
@@ -1549,6 +1572,13 @@ class TeamMemberPickerAPIView(LoginRequiredMixin, View):
         query = request.GET.get("q", "").strip()
         selected_raw = request.GET.get("selected_ids", "")
         selected_ids = [int(x) for x in selected_raw.split(",") if x.isdigit()]
+        page_size = self.page_size
+        try:
+            requested = int(request.GET.get("page_size", ""))
+            if 1 <= requested <= self.max_page_size:
+                page_size = requested
+        except (TypeError, ValueError):
+            pass
 
         qs = TeamMember.objects.all()
         if query:
@@ -1569,7 +1599,7 @@ class TeamMemberPickerAPIView(LoginRequiredMixin, View):
         else:
             qs = qs.order_by("order", "id")
 
-        paginator = Paginator(qs, self.page_size)
+        paginator = Paginator(qs, page_size)
         page = paginator.get_page(request.GET.get("page"))
         members = []
         for m in page.object_list:
@@ -1584,7 +1614,7 @@ class TeamMemberPickerAPIView(LoginRequiredMixin, View):
             "page": page.number,
             "num_pages": paginator.num_pages,
             "total": paginator.count,
-            "page_size": self.page_size,
+            "page_size": page_size,
         })
 
 

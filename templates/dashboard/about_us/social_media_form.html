@@ -21,8 +21,14 @@
             <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.label %}
-            {% include "dashboard/home/_field.html" with field=form.heading %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.label %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.heading %}
+                </div>
+            </div>
             {% include "dashboard/home/_field.html" with field=form.subtitle %}
         </div>
     </div>

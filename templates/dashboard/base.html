@@ -488,6 +488,115 @@
         }
 
         /* =====================================================
+           Collapsing sticky page header + section tabs
+           (auto-enabled on every page that renders `.yp-section-tabs`)
+           The dark navbar is fixed at top:0 with height 60px; we anchor
+           the sticky elements just below it. Only the breadcrumb collapses
+           and padding tightens — the page heading (icon + title) stays the
+           same size so the layout delta is small and the transition stays
+           visually quiet.
+           ===================================================== */
+        body.yp-page-sticky-header .content-header {
+            position: sticky;
+            top: 60px;
+            z-index: 100;
+            background: var(--yp-bg);
+            padding-top: 1.6rem;
+            padding-bottom: .55rem;
+            will-change: padding-top, padding-bottom, background-color, backdrop-filter;
+            -webkit-backdrop-filter: blur(0);
+            backdrop-filter: blur(0);
+            transition: padding-top .28s cubic-bezier(.4, 0, .2, 1),
+                        padding-bottom .28s cubic-bezier(.4, 0, .2, 1),
+                        background-color .28s ease,
+                        -webkit-backdrop-filter .28s ease,
+                        backdrop-filter .28s ease,
+                        box-shadow .28s ease;
+        }
+        body.yp-page-sticky-header .breadcrumb {
+            max-height: 30px;
+            opacity: 1;
+            overflow: hidden;
+            transition: opacity .22s ease,
+                        max-height .28s cubic-bezier(.4, 0, .2, 1),
+                        margin-top .28s cubic-bezier(.4, 0, .2, 1);
+        }
+        body.yp-page-sticky-header.yp-header-condensed .content-header {
+            padding-top: .7rem;
+            padding-bottom: .55rem;
+            background-color: rgba(245, 247, 251, .65);
+            -webkit-backdrop-filter: saturate(160%) blur(18px);
+            backdrop-filter: saturate(160%) blur(18px);
+            box-shadow: 0 6px 14px -14px rgba(15, 23, 42, .55),
+                        inset 0 -1px 0 rgba(15, 23, 42, .06);
+        }
+        body.yp-page-sticky-header.yp-header-condensed .breadcrumb {
+            max-height: 0;
+            margin-top: 0;
+            opacity: 0;
+        }
+
+        body.yp-page-sticky-header .yp-section-tabs {
+            position: sticky;
+            top: 152px;
+            z-index: 99;
+            will-change: top, padding, background-color, backdrop-filter;
+            -webkit-backdrop-filter: blur(0);
+            backdrop-filter: blur(0);
+            transition: top .28s cubic-bezier(.4, 0, .2, 1),
+                        padding .28s cubic-bezier(.4, 0, .2, 1),
+                        background-color .28s ease,
+                        -webkit-backdrop-filter .28s ease,
+                        backdrop-filter .28s ease,
+                        box-shadow .28s ease;
+        }
+        body.yp-page-sticky-header .yp-section-tab {
+            transition: padding .28s cubic-bezier(.4, 0, .2, 1),
+                        font-size .28s cubic-bezier(.4, 0, .2, 1);
+        }
+        body.yp-page-sticky-header.yp-header-condensed .yp-section-tabs {
+            top: 117px;
+            padding: .45rem .65rem;
+            background-color: rgba(255, 255, 255, .55);
+            -webkit-backdrop-filter: saturate(160%) blur(18px);
+            backdrop-filter: saturate(160%) blur(18px);
+            box-shadow: 0 10px 20px -18px rgba(15, 23, 42, .45),
+                        inset 0 0 0 1px rgba(15, 23, 42, .04);
+        }
+        body.yp-page-sticky-header.yp-header-condensed .yp-section-tab {
+            padding: .35rem .75rem;
+            font-size: .82rem;
+        }
+
+        /* Full-width frosted strip behind the entire condensed sticky bar.
+           Sits behind the heading and the tabs (z-index 95 < 99 < 100) and
+           fills the side gaps (container-fluid padding) and any seam between
+           the two sticky elements, so scrolling content never shows through. */
+        body.yp-page-sticky-header::before {
+            content: '';
+            position: fixed;
+            top: 60px;
+            left: var(--yp-sidebar-w);
+            right: 0;
+            height: 116px;
+            z-index: 95;
+            pointer-events: none;
+            background-color: rgba(245, 247, 251, .82);
+            -webkit-backdrop-filter: saturate(170%) blur(22px);
+            backdrop-filter: saturate(170%) blur(22px);
+            opacity: 0;
+            transition: opacity .28s ease;
+        }
+        body.yp-page-sticky-header.yp-header-condensed::before { opacity: 1; }
+        body.yp-page-sticky-header.sidebar-collapse::before { left: 4.6rem; }
+        @media (max-width: 991.98px) {
+            body.yp-page-sticky-header::before { left: 0; }
+        }
+        /* Pages without section tabs (e.g. Header / Footer settings) only
+           need the strip to cover the heading bar, not the tab strip. */
+        body.yp-page-sticky-header.yp-sticky-heading-only::before { height: 60px; }
+
+        /* =====================================================
            Top navbar
            ===================================================== */
         .main-header.navbar {
@@ -1538,7 +1647,7 @@
 
     {% block extra_head %}{% endblock %}
 </head>
-<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed {% block body_class %}{% endblock %}">
 <div class="wrapper">
 
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
@@ -2040,6 +2149,53 @@
             }
         });
     });
+</script>
+<script>
+// Collapsing sticky page header — auto-runs on every page whose template
+// renders the `.yp-section-tabs` bar, OR which opts in via the
+// `yp-sticky-heading-only` body class (e.g. Header / Footer settings,
+// which have a heading but no section tabs). Off elsewhere (e.g.
+// Dashboard home).
+(function () {
+    const hasTabs = !!document.querySelector('.yp-section-tabs');
+    const headingOnly = document.body.classList.contains('yp-sticky-heading-only');
+    if (!hasTabs && !headingOnly) return;
+    document.body.classList.add('yp-page-sticky-header');
+    const scroller = document.querySelector('.content-wrapper');
+    // Hysteresis: condense well past the heading, only expand near the
+    // very top. The wide gap absorbs the post-toggle flow shift so the
+    // bar doesn't oscillate. Plus a cooldown locks the state for 350ms
+    // after a toggle, matching the CSS transition duration.
+    const ENTER = 100;
+    const EXIT  = 4;
+    const COOLDOWN = 350;
+    let condensed = false;
+    let ticking = false;
+    let lockedUntil = 0;
+    function getScrollTop() {
+        const w = window.scrollY || document.documentElement.scrollTop || 0;
+        const c = scroller ? scroller.scrollTop : 0;
+        return Math.max(w, c);
+    }
+    function apply() {
+        ticking = false;
+        if (Date.now() < lockedUntil) return;
+        const y = getScrollTop();
+        const should = condensed ? (y > EXIT) : (y > ENTER);
+        if (should === condensed) return;
+        condensed = should;
+        lockedUntil = Date.now() + COOLDOWN;
+        document.body.classList.toggle('yp-header-condensed', condensed);
+    }
+    function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(apply);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    if (scroller) scroller.addEventListener('scroll', onScroll, { passive: true });
+    apply();
+})();
 </script>
 {% block extra_scripts %}{% endblock %}
 

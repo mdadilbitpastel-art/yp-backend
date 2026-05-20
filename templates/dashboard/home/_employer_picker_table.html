@@ -25,6 +25,12 @@
                     <span class="text-muted small ml-2" data-employer-selected-info>
                         <span data-employer-selected-count>{{ selected_employer_ids|length }}</span> selected
                     </span>
+                    <button type="button"
+                            class="btn btn-link btn-sm p-0 ml-2 yp-employer-clear-all"
+                            data-employer-clear-all
+                            {% if not selected_employer_ids %}style="display:none;"{% endif %}>
+                        <i class="fas fa-times-circle mr-1"></i>Uncheck all
+                    </button>
                 </span>
                 <div class="position-relative" style="flex: 1 1 auto; max-width: 340px;">
                     <input type="search"
@@ -40,11 +46,7 @@
                     <table class="table table-hover mb-0 yp-employer-picker-table">
                         <thead style="background: #f8fafc;">
                             <tr>
-                                <th style="width: 44px;" class="text-center">
-                                    <input type="checkbox"
-                                           data-employer-select-page
-                                           title="Select / unselect everyone on this page">
-                                </th>
+                                <th style="width: 44px;" class="text-center">&nbsp;</th>
                                 <th style="width: 80px;">Logo</th>
                                 <th>Name</th>
                             </tr>
@@ -145,6 +147,14 @@
         border-radius: 2px;
     }
     .yp-employer-picker-table tr.is-selected { background: #ecfdf5; }
+    .yp-employer-clear-all {
+        color: #b91c1c;
+        font-size: .78rem;
+        font-weight: 500;
+        text-decoration: none;
+        vertical-align: baseline;
+    }
+    .yp-employer-clear-all:hover { color: #7f1d1d; text-decoration: underline; }
     .employer-picker-wrapper .yp-search-input { padding-right: 32px; }
     .employer-picker-wrapper .yp-search-spinner {
         position: absolute;
@@ -223,7 +233,7 @@
     const pageInfoEl = root.querySelector('[data-employer-page-info]');
     const searchInput = root.querySelector('[data-employer-search]');
     const spinner = root.querySelector('[data-employer-search-spinner]');
-    const selectAllCb = root.querySelector('[data-employer-select-page]');
+    const clearAllBtn = root.querySelector('[data-employer-clear-all]');
     const hiddenBox = root.querySelector('[data-employer-hidden]');
     const selectedCountEl = root.querySelector('[data-employer-selected-count]');
 
@@ -250,6 +260,7 @@
             hiddenBox.appendChild(inp);
         });
         if (selectedCountEl) selectedCountEl.textContent = selectedSet.size;
+        if (clearAllBtn) clearAllBtn.style.display = selectedSet.size ? '' : 'none';
     }
 
     function escapeHtml(s) {
@@ -311,20 +322,6 @@
         pagerEl.innerHTML = items.join('');
     }
 
-    function setSelectAllState() {
-        if (!selectAllCb) return;
-        const cbs = rowsBody.querySelectorAll('[data-employer-row-cb]');
-        if (!cbs.length) {
-            selectAllCb.checked = false;
-            selectAllCb.indeterminate = false;
-            return;
-        }
-        let on = 0;
-        cbs.forEach(function (cb) { if (cb.checked) on++; });
-        selectAllCb.checked = on === cbs.length;
-        selectAllCb.indeterminate = on > 0 && on < cbs.length;
-    }
-
     function fetchPage() {
         if (inflight) inflight.abort();
         const params = new URLSearchParams();
@@ -355,7 +352,6 @@
                         pageInfoEl.textContent = '';
                     }
                 }
-                setSelectAllState();
             })
             .catch(function (err) {
                 if (err && err.name === 'AbortError') return;
@@ -373,7 +369,6 @@
         else selectedSet.delete(id);
         cb.closest('tr').classList.toggle('is-selected', cb.checked);
         syncHidden();
-        setSelectAllState();
     });
 
     rowsBody.addEventListener('click', function (e) {
@@ -386,15 +381,15 @@
         cb.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    if (selectAllCb) {
-        selectAllCb.addEventListener('change', function () {
-            const cbs = rowsBody.querySelectorAll('[data-employer-row-cb]');
-            cbs.forEach(function (cb) {
-                cb.checked = selectAllCb.checked;
-                const id = String(cb.value);
-                if (cb.checked) selectedSet.add(id);
-                else selectedSet.delete(id);
-                cb.closest('tr').classList.toggle('is-selected', cb.checked);
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!selectedSet.size) return;
+            selectedSet.clear();
+            rowsBody.querySelectorAll('[data-employer-row-cb]').forEach(function (cb) {
+                cb.checked = false;
+                const tr = cb.closest('tr');
+                if (tr) tr.classList.remove('is-selected');
             });
             syncHidden();
         });

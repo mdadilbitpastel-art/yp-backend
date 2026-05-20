@@ -649,8 +649,23 @@ SocialMediaIconFormSet = forms.modelformset_factory(
 
 
 class TestimonialsSectionForm(BootstrapFormMixin, forms.ModelForm):
-    """Testimonials section editor — title only. Background images live on
-    `SectionImage`; users live on the inline `TestimonialUserFormSet`."""
+    """Testimonials section editor — title plus a picker over
+    `data_management.TeamMember`. For each checked member the form
+    expects a non-empty `message_<id>` value in `self.data`; on save we
+    re-create the `TestimonialUser` rows so the section's testimonials
+    exactly match the current picker state."""
+
+    selected_team_members = forms.ModelMultipleChoiceField(
+        queryset=TeamMember.objects.all(),
+        widget=forms.MultipleHiddenInput(),
+        required=False,
+        label="Team Members",
+        help_text=(
+            "Tick the members to show in this section. Each ticked member "
+            "needs a message. Add or edit available members from Data "
+            "Management → Team Members."
+        ),
+    )
 
     class Meta:
         model = TestimonialsSection
@@ -660,33 +675,55 @@ class TestimonialsSectionForm(BootstrapFormMixin, forms.ModelForm):
         }
         labels = {"title": "Title"}
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._member_messages: dict[int, str] = {}
+        if self.instance and self.instance.pk:
+            self.fields["selected_team_members"].initial = list(
+                TestimonialUser.objects.filter(section=self.instance)
+                .values_list("team_member_id", flat=True)
+            )
 
-class TestimonialUserForm(BootstrapFormMixin, forms.ModelForm):
-    class Meta:
-        model = TestimonialUser
-        fields = ["name", "profile_image", "message"]
-        widgets = {
-            "profile_image": CleanFileInput(),
-            "name": forms.TextInput(attrs={"placeholder": "Full name"}),
-            "message": forms.Textarea(attrs={
-                "rows": 3,
-                "placeholder": "Their testimonial quote",
-            }),
-        }
-        labels = {
-            "name": "Name",
-            "profile_image": "Profile Image",
-            "message": "Message",
-        }
+    def clean(self):
+        cleaned = super().clean()
+        members = cleaned.get("selected_team_members") or []
+        messages_map: dict[int, str] = {}
+        missing: list[str] = []
+        data = self.data
+        for member in members:
+            raw = (data.get(f"message_{member.pk}") or "").strip()
+            if not raw:
+                missing.append(member.name or f"Member #{member.pk}")
+                continue
+            messages_map[member.pk] = raw
+        if missing:
+            raise forms.ValidationError(
+                "Please provide a message for: " + ", ".join(missing)
+            )
+        self._member_messages = messages_map
+        return cleaned
 
+    def save(self, commit=True):
+        instance = super().save(commit=commit)
+        if commit:
+            self._sync_users(instance)
+        return instance
 
-TestimonialUserFormSet = forms.inlineformset_factory(
-    TestimonialsSection,
-    TestimonialUser,
-    form=TestimonialUserForm,
-    extra=0,
-    can_delete=True,
-)
+    def _sync_users(self, instance):
+        selected = self.cleaned_data.get("selected_team_members") or []
+        keep_ids = {m.pk for m in selected}
+        TestimonialUser.objects.filter(section=instance).exclude(
+            team_member_id__in=keep_ids
+        ).delete()
+        for order, member in enumerate(selected, start=1):
+            TestimonialUser.objects.update_or_create(
+                section=instance,
+                team_member=member,
+                defaults={
+                    "message": self._member_messages.get(member.pk, ""),
+                    "order": order,
+                },
+            )
 
 
 def _app_button_field_names() -> list[str]:
@@ -1628,6 +1665,11 @@ class PartnersPartnerSectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_employers_field()
+        # Override the default checkbox widget with hidden inputs — the
+        # table-based picker partial owns the visible UI for this form.
+        field = self.fields.get("selected_employers")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class PartnersCategoryForm(BootstrapFormMixin, forms.ModelForm):
@@ -1684,6 +1726,11 @@ class PartnersFamilySectionForm(EmployerPickerMixin, BootstrapFormMixin, forms.M
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._configure_employers_field()
+        # Override the default checkbox widget with hidden inputs — the
+        # table-based picker partial owns the visible UI for this form.
+        field = self.fields.get("selected_employers")
+        if field:
+            field.widget = forms.MultipleHiddenInput()
 
 
 class PartnersReviewSectionForm(BootstrapFormMixin, forms.ModelForm):

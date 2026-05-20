@@ -123,8 +123,9 @@ class SocialMediaSection(SingletonModel):
 
 class TestimonialsSection(SingletonModel):
     """Testimonials homepage section — title + a dynamic list of users
-    managed via the related `TestimonialUser` model. Background images
-    live on `data_management.SectionImage`."""
+    drawn from `data_management.TeamMember`. Each picked member gets a
+    mandatory per-section message via the through-row `TestimonialUser`.
+    Background images live on `data_management.SectionImage`."""
 
     title = models.CharField(max_length=255, blank=True)
 
@@ -136,40 +137,48 @@ class TestimonialsSection(SingletonModel):
         return self.title or "Testimonials Section"
 
     def testimonials(self) -> list[dict]:
+        rows = self.users.select_related("team_member").all()
         return [
             {
                 "position": index,
-                "name": user.name,
-                "profile_image": user.profile_image if user.profile_image else None,
+                "name": user.team_member.name if user.team_member else "",
+                "profile_image": (
+                    user.team_member.profile_image
+                    if user.team_member and user.team_member.profile_image
+                    else None
+                ),
                 "message": user.message,
             }
-            for index, user in enumerate(self.users.all(), start=1)
+            for index, user in enumerate(rows, start=1)
         ]
 
 
 class TestimonialUser(models.Model):
-    """A single testimonial — name, profile image, and message."""
+    """A single testimonial — picks a `TeamMember` from data management
+    and attaches a mandatory message for this section."""
 
     section = models.ForeignKey(
         TestimonialsSection,
         on_delete=models.CASCADE,
         related_name="users",
     )
-    order = models.PositiveIntegerField(default=0)
-    name = models.CharField(max_length=120, blank=True)
-    profile_image = models.ImageField(
-        upload_to="home/testimonials/profiles/",
-        validators=[validate_image_size, validate_image_extension],
-        blank=True,
+    team_member = models.ForeignKey(
+        "data_management.TeamMember",
+        on_delete=models.CASCADE,
+        related_name="testimonial_entries",
         null=True,
     )
-    message = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+    message = models.TextField()
 
     class Meta:
         ordering = ("order", "id")
+        unique_together = (("section", "team_member"),)
 
     def __str__(self) -> str:
-        return self.name or f"Testimonial {self.pk}"
+        if self.team_member:
+            return self.team_member.name
+        return f"Testimonial {self.pk}"
 
 
 class AppSection(SingletonModel):

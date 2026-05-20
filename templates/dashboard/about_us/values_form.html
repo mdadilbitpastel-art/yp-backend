@@ -105,8 +105,14 @@
             <h3 class="card-title"><i class="fas fa-align-left mr-1"></i> Content</h3>
         </div>
         <div class="card-body">
-            {% include "dashboard/home/_field.html" with field=form.label %}
-            {% include "dashboard/home/_field.html" with field=form.title %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.label %}
+                </div>
+                <div class="col-md-6">
+                    {% include "dashboard/home/_field.html" with field=form.title %}
+                </div>
+            </div>
             {% include "dashboard/home/_field.html" with field=form.subtitle %}
         </div>
     </div>
@@ -142,7 +148,7 @@
                                         <img src="{% if card_form.icon.value %}{{ card_form.icon.value.url }}{% endif %}"
                                              class="yp-icon-thumb" data-icon-thumb alt="icon"
                                              {% if not card_form.icon.value %}style="display:none;"{% endif %}>
-                                        <i class="fas fa-image yp-icon-placeholder" data-icon-placeholder
+                                        <i class="fas fa-icons yp-icon-placeholder" data-icon-placeholder
                                            {% if card_form.icon.value %}style="display:none;"{% endif %}></i>
                                         {{ card_form.icon }}
                                         <input type="checkbox"
@@ -204,7 +210,7 @@
             <span class="yp-icon-wrap" data-icon-wrap>
                 <label class="yp-icon-drop mb-0" data-icon-drop>
                     <img src="" class="yp-icon-thumb" data-icon-thumb alt="icon" style="display:none;">
-                    <i class="fas fa-image yp-icon-placeholder" data-icon-placeholder></i>
+                    <i class="fas fa-icons yp-icon-placeholder" data-icon-placeholder></i>
                     {{ empty.icon }}
                 </label>
                 <button type="button" class="yp-icon-clear" data-icon-clear style="display:none;">

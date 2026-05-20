@@ -99,7 +99,7 @@ DASHBOARD_MODULES = [
                 "title": "Testimonials Section",
                 "icon": "fas fa-quote-right",
                 "url_name": "dashboard:testimonials_edit",
-                "description": "Testimonials block — background image and 3 fixed user cards.",
+                "description": "Testimonials block — title, background images, and per-section messages from picked team members.",
                 "loader": "home.models.TestimonialsSection",
                 "primary_field": "title",
             },

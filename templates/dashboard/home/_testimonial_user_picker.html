@@ -1,8 +1,10 @@
-<div class="form-group team-member-picker-wrapper mb-0"
-     data-team-picker
+{{ existing_team_member_messages|json_script:"testimonial-existing-messages" }}
+<div class="form-group testimonial-user-picker-wrapper mb-0"
+     data-tm-picker
      data-api-url="{% url 'dashboard:team_members_picker_api' %}"
      data-field-name="{{ field.name }}"
      data-total="{{ team_total_count|default:0 }}"
+     data-page-size="5"
      data-selected-ids="[{{ selected_team_member_ids|join:',' }}]">
 
     {% if team_total_count == 0 %}
@@ -17,17 +19,17 @@
             <div class="card-header d-flex align-items-center" style="gap: .75rem; background: #f8fafc;">
                 <span class="font-weight-bold mr-auto">
                     Members
-                    <span class="badge badge-light ml-1" data-team-total-badge>{{ team_total_count }}</span>
+                    <span class="badge badge-light ml-1" data-tm-total-badge>{{ team_total_count }}</span>
                     <span class="yp-tip ml-1"
-                          data-tip="Tick the members you want to display in this section. Only the checked members appear on the public About Us → Team page. Use the search box to find a member quickly and the pager to browse through all available members from Data Management → Team Members.">
+                          data-tip="Tick the members you want to show in this section. Each checked member needs a message. Use the search box to find a member quickly and the pager to browse all team members from Data Management → Team Members.">
                         <i class="fas fa-info-circle"></i>
                     </span>
-                    <span class="text-muted small ml-2" data-team-selected-info>
-                        <span data-team-selected-count>{{ selected_team_member_ids|length }}</span> selected
+                    <span class="text-muted small ml-2" data-tm-selected-info>
+                        <span data-tm-selected-count>{{ selected_team_member_ids|length }}</span> selected
                     </span>
                     <button type="button"
-                            class="btn btn-link btn-sm p-0 ml-2 yp-team-clear-all"
-                            data-team-clear-all
+                            class="btn btn-link btn-sm p-0 ml-2 yp-tm-clear-all"
+                            data-tm-clear-all
                             {% if not selected_team_member_ids %}style="display:none;"{% endif %}>
                         <i class="fas fa-times-circle mr-1"></i>Uncheck all
                     </button>
@@ -37,29 +39,30 @@
                            class="form-control form-control-sm yp-search-input"
                            placeholder="Search name, designation, or email…"
                            autocomplete="off"
-                           data-team-search>
-                    <span class="yp-search-spinner" data-team-search-spinner aria-hidden="true"></span>
+                           data-tm-search>
+                    <span class="yp-search-spinner" data-tm-search-spinner aria-hidden="true"></span>
                 </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0 yp-team-picker-table">
+                    <table class="table table-hover mb-0 yp-tm-picker-table">
                         <thead style="background: #f8fafc;">
                             <tr>
                                 <th style="width: 44px;" class="text-center">&nbsp;</th>
                                 <th style="width: 64px;"></th>
-                                <th>Name</th>
-                                <th>Designation</th>
+                                <th style="width: 22%;">Name</th>
+                                <th style="width: 22%;">Designation</th>
+                                <th>Message <span class="text-danger">*</span></th>
                             </tr>
                         </thead>
-                        <tbody data-team-rows>
-                            <tr><td colspan="4" class="text-center text-muted py-4">Loading…</td></tr>
+                        <tbody data-tm-rows>
+                            <tr><td colspan="5" class="text-center text-muted py-4">Loading…</td></tr>
                         </tbody>
                     </table>
                 </div>
                 <div class="p-2 border-top d-flex align-items-center justify-content-between flex-wrap" style="gap: .5rem;">
-                    <span class="text-muted small" data-team-page-info></span>
-                    <ul class="pagination pagination-sm mb-0" data-team-pager></ul>
+                    <span class="text-muted small" data-tm-page-info></span>
+                    <ul class="pagination pagination-sm mb-0" data-tm-pager></ul>
                 </div>
             </div>
         </div>
@@ -68,7 +71,7 @@
             {{ field.help_text }}
         </small>
 
-        <div data-team-hidden style="display:none;"></div>
+        <div data-tm-hidden style="display:none;"></div>
     {% endif %}
 
     {% for error in field.errors %}
@@ -77,10 +80,13 @@
 </div>
 
 <style>
-    .yp-team-picker-table { table-layout: auto; }
-    .yp-team-picker-table tbody tr { cursor: pointer; }
-    .yp-team-picker-table tbody td { padding: .55rem .75rem; vertical-align: middle; }
-    .yp-team-picker-table .yp-avatar {
+    .yp-tm-picker-table { table-layout: auto; }
+    .yp-tm-picker-table tbody td { padding: .55rem .75rem; vertical-align: middle; }
+    .yp-tm-picker-table tbody tr.is-checkable td.tm-cell-toggle,
+    .yp-tm-picker-table tbody tr.is-checkable td.tm-cell-avatar,
+    .yp-tm-picker-table tbody tr.is-checkable td.tm-cell-name,
+    .yp-tm-picker-table tbody tr.is-checkable td.tm-cell-designation { cursor: pointer; }
+    .yp-tm-picker-table .yp-avatar {
         width: 36px; height: 36px;
         border-radius: 50%;
         object-fit: cover;
@@ -88,7 +94,7 @@
         border: 1px solid #e2e8f0;
         display: inline-block;
     }
-    .yp-team-picker-table .yp-avatar-fallback {
+    .yp-tm-picker-table .yp-avatar-fallback {
         width: 36px; height: 36px;
         border-radius: 50%;
         background: #f1f5f9;
@@ -98,7 +104,7 @@
         align-items: center; justify-content: center;
         font-size: .85rem;
     }
-    .yp-team-picker-table input[type="checkbox"] {
+    .yp-tm-picker-table input[type="checkbox"] {
         -webkit-appearance: none;
         appearance: none;
         width: 18px;
@@ -112,16 +118,16 @@
         transition: background .12s ease, border-color .12s ease;
         vertical-align: middle;
     }
-    .yp-team-picker-table input[type="checkbox"]:hover { border-color: #94a3b8; }
-    .yp-team-picker-table input[type="checkbox"]:focus-visible {
+    .yp-tm-picker-table input[type="checkbox"]:hover { border-color: #94a3b8; }
+    .yp-tm-picker-table input[type="checkbox"]:focus-visible {
         outline: none;
         box-shadow: 0 0 0 3px rgba(5, 150, 105, .25);
     }
-    .yp-team-picker-table input[type="checkbox"]:checked {
+    .yp-tm-picker-table input[type="checkbox"]:checked {
         background: #059669;
         border-color: #047857;
     }
-    .yp-team-picker-table input[type="checkbox"]:checked::after {
+    .yp-tm-picker-table input[type="checkbox"]:checked::after {
         content: '';
         position: absolute;
         left: 4px;
@@ -132,11 +138,11 @@
         border-width: 0 2.5px 2.5px 0;
         transform: rotate(45deg);
     }
-    .yp-team-picker-table input[type="checkbox"]:indeterminate {
+    .yp-tm-picker-table input[type="checkbox"]:indeterminate {
         background: #059669;
         border-color: #047857;
     }
-    .yp-team-picker-table input[type="checkbox"]:indeterminate::after {
+    .yp-tm-picker-table input[type="checkbox"]:indeterminate::after {
         content: '';
         position: absolute;
         left: 3px;
@@ -146,17 +152,49 @@
         background: #fff;
         border-radius: 2px;
     }
-    .yp-team-picker-table tr.is-selected { background: #ecfdf5; }
-    .yp-team-clear-all {
+    .yp-tm-picker-table tr.is-selected { background: #ecfdf5; }
+    .yp-tm-picker-table textarea.yp-tm-msg {
+        width: 100%;
+        min-height: 38px;
+        max-height: 140px;
+        padding: .4rem .6rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font-size: .9rem;
+        line-height: 1.45;
+        resize: vertical;
+        box-sizing: border-box;
+    }
+    .yp-tm-picker-table textarea.yp-tm-msg:focus {
+        border-color: var(--yp-primary, #4f46e5);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, .12);
+        outline: none;
+    }
+    .yp-tm-picker-table textarea.yp-tm-msg.is-invalid {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+    }
+    .yp-tm-picker-table textarea.yp-tm-msg[disabled] {
+        background: #f1f5f9;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    .yp-tm-picker-table .yp-msg-hint {
+        color: #94a3b8;
+        font-size: .8rem;
+        font-style: italic;
+    }
+    .yp-tm-clear-all {
         color: #b91c1c;
         font-size: .78rem;
         font-weight: 500;
         text-decoration: none;
         vertical-align: baseline;
     }
-    .yp-team-clear-all:hover { color: #7f1d1d; text-decoration: underline; }
-    .team-member-picker-wrapper .yp-search-input { padding-right: 32px; }
-    .team-member-picker-wrapper .yp-search-spinner {
+    .yp-tm-clear-all:hover { color: #7f1d1d; text-decoration: underline; }
+    .testimonial-user-picker-wrapper .yp-search-input { padding-right: 32px; }
+    .testimonial-user-picker-wrapper .yp-search-spinner {
         position: absolute;
         right: 10px;
         top: 50%;
@@ -169,7 +207,7 @@
         pointer-events: none;
         animation: yp-spin .8s linear infinite;
     }
-    .team-member-picker-wrapper .yp-search-spinner.is-active { opacity: 1; }
+    .testimonial-user-picker-wrapper .yp-search-spinner.is-active { opacity: 1; }
     @keyframes yp-spin { to { transform: rotate(360deg); } }
 
     .yp-tip {
@@ -223,19 +261,20 @@
 
 <script>
 (function () {
-    const root = document.querySelector('[data-team-picker]');
+    const root = document.querySelector('[data-tm-picker]');
     if (!root) return;
 
     const apiUrl = root.dataset.apiUrl;
     const fieldName = root.dataset.fieldName;
-    const rowsBody = root.querySelector('[data-team-rows]');
-    const pagerEl = root.querySelector('[data-team-pager]');
-    const pageInfoEl = root.querySelector('[data-team-page-info]');
-    const searchInput = root.querySelector('[data-team-search]');
-    const spinner = root.querySelector('[data-team-search-spinner]');
-    const clearAllBtn = root.querySelector('[data-team-clear-all]');
-    const hiddenBox = root.querySelector('[data-team-hidden]');
-    const selectedCountEl = root.querySelector('[data-team-selected-count]');
+    const pageSize = parseInt(root.dataset.pageSize, 10) || 0;
+    const rowsBody = root.querySelector('[data-tm-rows]');
+    const pagerEl = root.querySelector('[data-tm-pager]');
+    const pageInfoEl = root.querySelector('[data-tm-page-info]');
+    const searchInput = root.querySelector('[data-tm-search]');
+    const spinner = root.querySelector('[data-tm-search-spinner]');
+    const clearAllBtn = root.querySelector('[data-tm-clear-all]');
+    const hiddenBox = root.querySelector('[data-tm-hidden]');
+    const selectedCountEl = root.querySelector('[data-tm-selected-count]');
 
     if (!rowsBody) return;
 
@@ -246,6 +285,16 @@
     const selectedSet = new Set(initialSelected.map(String));
     const initialSelectedParam = initialSelected.length ? initialSelected.join(',') : '';
 
+    let initialMessages = {};
+    try {
+        const msgEl = document.getElementById('testimonial-existing-messages');
+        initialMessages = msgEl ? JSON.parse(msgEl.textContent || '{}') : {};
+    } catch (_) { initialMessages = {}; }
+    const messageMap = new Map();
+    Object.keys(initialMessages || {}).forEach(function (k) {
+        messageMap.set(String(k), String(initialMessages[k] || ''));
+    });
+
     let currentPage = 1;
     let currentQuery = '';
     let inflight = null;
@@ -253,11 +302,17 @@
     function syncHidden() {
         hiddenBox.innerHTML = '';
         selectedSet.forEach(function (id) {
-            const inp = document.createElement('input');
-            inp.type = 'hidden';
-            inp.name = fieldName;
-            inp.value = id;
-            hiddenBox.appendChild(inp);
+            const memberInput = document.createElement('input');
+            memberInput.type = 'hidden';
+            memberInput.name = fieldName;
+            memberInput.value = id;
+            hiddenBox.appendChild(memberInput);
+
+            const msgInput = document.createElement('input');
+            msgInput.type = 'hidden';
+            msgInput.name = 'message_' + id;
+            msgInput.value = messageMap.get(String(id)) || '';
+            hiddenBox.appendChild(msgInput);
         });
         if (selectedCountEl) selectedCountEl.textContent = selectedSet.size;
         if (clearAllBtn) clearAllBtn.style.display = selectedSet.size ? '' : 'none';
@@ -272,23 +327,35 @@
     function renderRows(members) {
         if (!members.length) {
             rowsBody.innerHTML =
-                '<tr><td colspan="4" class="text-center text-muted py-4">No members match.</td></tr>';
+                '<tr><td colspan="5" class="text-center text-muted py-4">No members match.</td></tr>';
             return;
         }
         const html = members.map(function (m) {
-            const checked = selectedSet.has(String(m.id)) ? 'checked' : '';
-            const rowClass = checked ? 'is-selected' : '';
+            const id = String(m.id);
+            const checked = selectedSet.has(id);
+            const checkedAttr = checked ? 'checked' : '';
+            const rowClass = checked ? 'is-checkable is-selected' : 'is-checkable';
             const avatar = m.profile_image
                 ? '<img class="yp-avatar" src="' + escapeHtml(m.profile_image) + '" alt="">'
                 : '<span class="yp-avatar-fallback"><i class="fas fa-user"></i></span>';
+            const msgValue = messageMap.get(id) || '';
+            const disabledAttr = checked ? '' : 'disabled';
+            const placeholder = checked
+                ? 'Their testimonial message (required)'
+                : 'Tick the row first to enable…';
             return ''
-                + '<tr class="' + rowClass + '" data-member-id="' + m.id + '">'
-                + '<td class="text-center">'
-                + '<input type="checkbox" data-team-row-cb value="' + m.id + '" ' + checked + '>'
+                + '<tr class="' + rowClass + '" data-member-id="' + id + '">'
+                + '<td class="text-center tm-cell-toggle">'
+                + '<input type="checkbox" data-tm-row-cb value="' + id + '" ' + checkedAttr + '>'
                 + '</td>'
-                + '<td>' + avatar + '</td>'
-                + '<td>' + escapeHtml(m.name) + '</td>'
-                + '<td class="text-muted">' + escapeHtml(m.designation) + '</td>'
+                + '<td class="tm-cell-avatar">' + avatar + '</td>'
+                + '<td class="tm-cell-name">' + escapeHtml(m.name) + '</td>'
+                + '<td class="tm-cell-designation text-muted">' + escapeHtml(m.designation) + '</td>'
+                + '<td class="tm-cell-msg">'
+                + '<textarea class="yp-tm-msg" data-tm-msg rows="1" '
+                + 'placeholder="' + placeholder + '" '
+                + disabledAttr + '>' + escapeHtml(msgValue) + '</textarea>'
+                + '</td>'
                 + '</tr>';
         }).join('');
         rowsBody.innerHTML = html;
@@ -308,7 +375,7 @@
             } else if (opts.active) {
                 items.push('<li class="page-item active"><span class="page-link">' + label + '</span></li>');
             } else {
-                items.push('<li class="page-item"><a class="page-link" href="#" data-team-goto="' + target + '">' + label + '</a></li>');
+                items.push('<li class="page-item"><a class="page-link" href="#" data-tm-goto="' + target + '">' + label + '</a></li>');
             }
         }
         btn('&laquo;', page - 1, { disabled: page <= 1 });
@@ -328,6 +395,7 @@
         const params = new URLSearchParams();
         if (currentQuery) params.set('q', currentQuery);
         params.set('page', currentPage);
+        if (pageSize > 0) params.set('page_size', pageSize);
         if (initialSelectedParam) params.set('selected_ids', initialSelectedParam);
         const controller = new AbortController();
         inflight = controller;
@@ -358,28 +426,64 @@
                 if (err && err.name === 'AbortError') return;
                 if (spinner) spinner.classList.remove('is-active');
                 rowsBody.innerHTML =
-                    '<tr><td colspan="4" class="text-center text-danger py-4">Failed to load members.</td></tr>';
+                    '<tr><td colspan="5" class="text-center text-danger py-4">Failed to load members.</td></tr>';
             });
     }
 
-    rowsBody.addEventListener('change', function (e) {
-        const cb = e.target.closest('[data-team-row-cb]');
-        if (!cb) return;
+    function toggleRow(tr, cb) {
         const id = String(cb.value);
-        if (cb.checked) selectedSet.add(id);
-        else selectedSet.delete(id);
-        cb.closest('tr').classList.toggle('is-selected', cb.checked);
+        if (cb.checked) {
+            selectedSet.add(id);
+        } else {
+            selectedSet.delete(id);
+            messageMap.delete(id);
+        }
+        tr.classList.toggle('is-selected', cb.checked);
+        const ta = tr.querySelector('[data-tm-msg]');
+        if (ta) {
+            if (cb.checked) {
+                ta.disabled = false;
+                ta.placeholder = 'Their testimonial message (required)';
+                ta.value = messageMap.get(id) || '';
+            } else {
+                ta.value = '';
+                ta.disabled = true;
+                ta.placeholder = 'Tick the row first to enable…';
+                ta.classList.remove('is-invalid');
+            }
+        }
+        syncHidden();
+    }
+
+    rowsBody.addEventListener('change', function (e) {
+        const cb = e.target.closest('[data-tm-row-cb]');
+        if (!cb) return;
+        const tr = cb.closest('tr[data-member-id]');
+        if (!tr) return;
+        toggleRow(tr, cb);
+    });
+
+    rowsBody.addEventListener('input', function (e) {
+        const ta = e.target.closest('[data-tm-msg]');
+        if (!ta) return;
+        const tr = ta.closest('tr[data-member-id]');
+        if (!tr) return;
+        const id = String(tr.dataset.memberId);
+        if (!selectedSet.has(id)) return;
+        messageMap.set(id, ta.value);
+        if (ta.value.trim()) ta.classList.remove('is-invalid');
         syncHidden();
     });
 
     rowsBody.addEventListener('click', function (e) {
-        if (e.target.closest('[data-team-row-cb]')) return;
+        if (e.target.closest('[data-tm-row-cb]')) return;
+        if (e.target.closest('[data-tm-msg]')) return;
         const tr = e.target.closest('tr[data-member-id]');
         if (!tr) return;
-        const cb = tr.querySelector('[data-team-row-cb]');
+        const cb = tr.querySelector('[data-tm-row-cb]');
         if (!cb) return;
         cb.checked = !cb.checked;
-        cb.dispatchEvent(new Event('change', { bubbles: true }));
+        toggleRow(tr, cb);
     });
 
     if (clearAllBtn) {
@@ -387,10 +491,18 @@
             e.preventDefault();
             if (!selectedSet.size) return;
             selectedSet.clear();
-            rowsBody.querySelectorAll('[data-team-row-cb]').forEach(function (cb) {
-                cb.checked = false;
-                const tr = cb.closest('tr');
-                if (tr) tr.classList.remove('is-selected');
+            messageMap.clear();
+            rowsBody.querySelectorAll('tr[data-member-id]').forEach(function (tr) {
+                const cb = tr.querySelector('[data-tm-row-cb]');
+                if (cb) cb.checked = false;
+                tr.classList.remove('is-selected');
+                const ta = tr.querySelector('[data-tm-msg]');
+                if (ta) {
+                    ta.value = '';
+                    ta.disabled = true;
+                    ta.placeholder = 'Tick the row first to enable…';
+                    ta.classList.remove('is-invalid');
+                }
             });
             syncHidden();
         });
@@ -398,10 +510,10 @@
 
     if (pagerEl) {
         pagerEl.addEventListener('click', function (e) {
-            const a = e.target.closest('[data-team-goto]');
+            const a = e.target.closest('[data-tm-goto]');
             if (!a) return;
             e.preventDefault();
-            const target = parseInt(a.dataset.teamGoto, 10);
+            const target = parseInt(a.dataset.tmGoto, 10);
             if (!target || target === currentPage) return;
             currentPage = target;
             fetchPage();
@@ -433,6 +545,32 @@
                 currentQuery = v;
                 currentPage = 1;
                 fetchPage();
+            }
+        });
+    }
+
+    const form = root.closest('form');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            let firstInvalid = null;
+            selectedSet.forEach(function (id) {
+                const text = (messageMap.get(String(id)) || '').trim();
+                if (!text) {
+                    if (!firstInvalid) firstInvalid = String(id);
+                }
+            });
+            if (firstInvalid) {
+                e.preventDefault();
+                const tr = rowsBody.querySelector('tr[data-member-id="' + firstInvalid + '"]');
+                if (tr) {
+                    const ta = tr.querySelector('[data-tm-msg]');
+                    if (ta) {
+                        ta.classList.add('is-invalid');
+                        ta.focus();
+                    }
+                } else {
+                    alert('One or more checked members are missing a message. Use the pager / search to find them.');
+                }
             }
         });
     }
