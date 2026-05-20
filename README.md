@@ -3,7 +3,9 @@
 A Django + PostgreSQL backend that powers the **Young Professionals** website
 as a **Headless CMS**. Content editors manage the site through a fully custom
 AdminLTE-style dashboard at `/dashboard/`; the Next.js frontend reads every
-section over a read-only REST API at `/api/home/`.
+section over a read-only REST API mounted under `/api/<page>/` (one
+namespace per public page — `home`, `about-us`, `schools`, `employers`,
+`partners`, `events`, `insight`, plus shared `data`).
 
 > Django Admin is intentionally **not mounted** — all editing happens in the
 > custom dashboard. No HTML page templates are served from Django other than
@@ -44,7 +46,7 @@ young-professionals/
 │
 ├── young_professionals/           ← project package (settings + URLs)
 │   ├── settings.py                ← reads .env via python-decouple
-│   ├── urls.py                    ← /, /dashboard/, /api/home/
+│   ├── urls.py                    ← /, /dashboard/, /api/<page>/
 │   ├── wsgi.py
 │   └── asgi.py
 │
@@ -57,6 +59,16 @@ young-professionals/
 │   ├── storage.py                 ← video storage (always filesystem)
 │   ├── signals.py
 │   └── migrations/
+│
+├── about_us/                      ← About Us page CMS app
+├── schools/                       ← Schools page CMS app
+├── employers/                     ← Employers page CMS app
+├── partners/                      ← Partners page CMS app
+├── events/                        ← Events page CMS app
+├── insight/                       ← Insight page CMS app
+├── data_management/               ← Shared dynamic data (Statistics, Employers,
+│                                    Team Members, Social Media Icons,
+│                                    SectionImage generic image attachments)
 │
 └── dashboard/                     ← custom CMS dashboard app (no Django Admin)
     ├── views.py                   ← LoginRequired UpdateViews per section
@@ -71,21 +83,31 @@ young-professionals/
 
 ### What lives where (in plain English)
 
-- **`home/models.py`** — every homepage section is a `SingletonModel` (one
-  row, pk=1, `delete()` is a no-op, `load()` get-or-creates). Sections with
-  repeating sub-items (feature cards, network stats, apply companies, social
-  cards, header tabs, footer links) use a child model with a `ForeignKey`
-  back to the singleton.
-- **`home/serializers.py`** — shape of the JSON the frontend receives. The
-  `HomePageSerializer` reloads every singleton in one response.
-- **`home/views.py`** — read-only `RetrieveAPIView`s. `_SingletonMixin`
-  resolves `get_object()` via `Model.load()`.
+- **Per-page apps (`home/`, `about_us/`, `schools/`, `employers/`,
+  `partners/`, `events/`, `insight/`)** — each public page has its own
+  Django app following the same shape: `models.py` holds one
+  `SingletonModel` per section, `serializers.py` shapes the JSON,
+  `views.py` exposes read-only `RetrieveAPIView`s, `urls.py` mounts them
+  under `/api/<page>/`. Sections with repeating sub-items (cards, points,
+  categories, lanes, …) use a child model with a `ForeignKey` back to the
+  singleton.
+- **`home/models.py`** — also defines the shared `SingletonModel` abstract
+  base (pk=1, `delete()` is a no-op, `load()` get-or-creates) plus the
+  site-wide `HeaderSettings` / `FooterSettings` singletons and the home
+  page's own section models.
+- **`data_management/`** — shared rows (`Statistic`, `Employer`,
+  `TeamMember`, `SocialMediaIcon`) that consumer sections pick from via
+  `ManyToManyField`. `SectionImage` is a generic-FK image row any
+  singleton section can own, used by every section's dashboard "Images"
+  card so admins upload `image-1`, `image-2`, … rather than fighting
+  hard-coded `background_image` / `side_image` slots.
 - **`dashboard/sections.py`** — the registry of dashboard modules and their
   sections. Adding an entry here makes it appear in the sidebar, the module
   landing page, and the dashboard overview's "x of y configured" stat.
-- **`dashboard/views.py`** — one `UpdateView` per section. Sections with
-  child rows (Feature, Network, Apply, Social Media, Header, Footer) post
-  both the parent form and an `InlineFormSet`.
+- **`dashboard/views.py`** — one `UpdateView` per section across every
+  module. Sections with child rows post both the parent form and an
+  `InlineFormSet`; sections that pick from `data_management` use a JSON
+  picker endpoint (`/dashboard/data/<resource>/picker.json`).
 
 ---
 
@@ -202,7 +224,10 @@ python manage.py runserver
 Open:
 
 - Dashboard: <http://127.0.0.1:8000/dashboard/>
-- API root:  <http://127.0.0.1:8000/api/home/>
+- Home API:  <http://127.0.0.1:8000/api/home/>
+- Other public-page APIs: `/api/about-us/`, `/api/schools/`,
+  `/api/employers/`, `/api/partners/`, `/api/events/`, `/api/insight/`
+- Shared data API: <http://127.0.0.1:8000/api/data/>
 
 Visiting `/` redirects to `/dashboard/`.
 
@@ -212,7 +237,9 @@ Visiting `/` redirects to `/dashboard/`.
 
 Every section is a **singleton** (`SingletonModel`, pk=1, `delete()` is a
 no-op, `load()` get-or-creates). Sections with repeating sub-items use a
-child model linked by `ForeignKey`.
+child model linked by `ForeignKey`. Sections that need imagery use
+`data_management.SectionImage` (a generic-FK row) instead of hard-coded
+image fields — every section's dashboard exposes the same "Images" card.
 
 ### Site-wide
 
@@ -221,26 +248,105 @@ child model linked by `ForeignKey`.
 | Header           | `HeaderSettings`   | logo + single CTA button, plus dynamic `HeaderTab` rows |
 | Footer           | `FooterSettings`   | logo, title, address, email, copyright, dynamic `FooterLink` rows |
 
-### Homepage sections
+### Home (`home/models.py`)
 
 | Section          | Model                 | Highlights                                                                 |
 |------------------|-----------------------|----------------------------------------------------------------------------|
-| Hero             | `HeroSection`         | title, description, highlight text, 2 CTAs, background + foreground image  |
+| Hero             | `HeroSection`         | title, description, highlight text, 2 CTAs, rating, bottom note            |
 | Features         | `FeatureSection`      | heading + shared button label + dynamic `FeatureCard` rows (icon, title, URL) |
-| About / Mission  | `AboutSection`        | label, title, description, 2 CTAs, image                                   |
-| Network          | `NetworkSection`      | title, optional video, dynamic `NetworkStat` rows (value + label)          |
-| Talent Pool      | `TalentPoolSection`   | title, subtitle, description, 2 CTAs, image                                |
-| Apply            | `ApplySection`        | title, subtitle, dynamic `ApplyCompany` cards, bottom CTA                  |
-| Social Media     | `SocialMediaSection`  | heading + dynamic `SocialMediaCard` rows (name + icon)                     |
-| Testimonials     | `TestimonialsSection` | title, background image, 3 fixed user testimonials                         |
-| App promotion    | `AppSection`          | title, description, 3 CTAs, side image, barcode image                      |
+| About / Mission  | `AboutSection`        | label, title, description, 2 CTAs                                          |
+| Network          | `NetworkSection`      | title, optional video, plus selectable statistics from `data_management.Statistic` |
+| Talent Pool      | `TalentPoolSection`   | label, title, subtitle, description, 2 CTAs                                |
+| Apply            | `ApplySection`        | title, subtitle, selectable employers, dynamic `ApplyCompany` cards, bottom CTA |
+| Social Media     | `SocialMediaSection`  | label, heading, subtitle, plus selectable icons from `data_management.SocialMediaIcon` |
+| Testimonials     | `TestimonialsSection` | title; testimonials are `TestimonialUser` rows that FK to `data_management.TeamMember` and carry a per-section `message` |
+| App promotion    | `AppSection`          | title, description, 3 CTAs, bottom note                                    |
+
+### About Us (`about_us/models.py`)
+
+| Section       | Model                          | Highlights                                                        |
+|---------------|--------------------------------|-------------------------------------------------------------------|
+| Hero          | `AboutUsHeroSection`           | label, title, description                                         |
+| Mission       | `AboutUsMissionSection`        | label, title, description, plus selectable statistics from `data_management.Statistic` (independent of Home Network) |
+| Founder       | `AboutUsFounderSection`        | label, founder name, designation, description, founder message, single CTA |
+| Values        | `AboutUsValuesSection`         | label, title, subtitle, plus dynamic `AboutUsValueCard` rows (icon, label, note) |
+| Journey       | `AboutUsJourneySection`        | label, title, subtitle, plus dynamic `AboutUsJourneyCard` rows (image, title, description) |
+| Pledge        | `AboutUsPledgeSection`         | label, title, description                                         |
+| Team          | `AboutUsTeamSection`           | label, title, subtitle, plus selectable members from `data_management.TeamMember` |
+| Community     | `AboutUsCommunitySection`      | label, title, subtitle, plus dynamic `AboutUsCommunityCard` rows (image, name, description, CTA) |
+| Social Media  | `AboutUsSocialMediaSection`    | label, heading, subtitle, plus selectable icons from `data_management.SocialMediaIcon` (independent of Home Social Media) |
+
+### Schools (`schools/models.py`)
+
+| Section    | Model                       | Highlights                                                                 |
+|------------|-----------------------------|----------------------------------------------------------------------------|
+| Hero       | `SchoolsHeroSection`        | label, title, description, 2 CTAs                                          |
+| Help       | `SchoolsHelpSection`        | label, title, plus dynamic `SchoolsHelpCard` rows (title + description)    |
+| Employer   | `SchoolsEmployerSection`    | label, title, description, single CTA, plus selectable employers from `data_management.Employer` |
+| Benchmark  | `SchoolsBenchmarkSection`   | label, title, description, plus dynamic `SchoolsBenchmarkCard` rows        |
+| Subscribe  | `SchoolsSubscribeSection`   | label, title, description, single CTA, plus dynamic `SchoolsSubscribeField` form fields |
+| FAQ        | `SchoolsFaqSection`         | label, title, description, plus dynamic `SchoolsFaqItem` Q&A rows          |
+
+### Employers (`employers/models.py`)
+
+| Section  | Model                          | Highlights                                                                |
+|----------|--------------------------------|---------------------------------------------------------------------------|
+| Hero     | `EmployersHeroSection`         | label, title, description, 2 CTAs                                         |
+| Network  | (shared `home.NetworkSection`) | re-uses the Home Network singleton and its selected statistics            |
+| Mission  | `EmployersMissionSection`      | label, title, description, single CTA, plus dynamic `EmployersMissionPoint` bullet points |
+| Offers   | `EmployersOfferSection`        | label, title, description, plus dynamic `EmployersOfferCard` rows (icon, title, description) |
+| Events   | `EmployersEventsSection`       | label, title, description, single CTA, plus dynamic `EmployersEventImage` rows |
+
+### Partners (`partners/models.py`)
+
+| Section          | Model                       | Highlights                                                                       |
+|------------------|-----------------------------|----------------------------------------------------------------------------------|
+| Hero             | `PartnersHeroSection`       | label, title, description, plus selectable statistics from `data_management.Statistic` |
+| Partner Section  | `PartnersPartnerSection`    | search placeholder, explore button text, dynamic `PartnersCategory` rows, plus selectable employers |
+| Family           | `PartnersFamilySection`     | label, title, description, selectable employers, Load More CTA                   |
+| Review           | `PartnersReviewSection`     | label, title, plus dynamic `PartnersReviewCard` rows (name, designation, message) |
+| Founder          | `PartnersFounderSection`    | label, title, description, 2 CTAs                                                |
+
+### Events (`events/models.py`)
+
+| Section    | Model                       | Highlights                                                                          |
+|------------|-----------------------------|-------------------------------------------------------------------------------------|
+| Hero       | `EventsHeroSection`         | label, title, description, 2 CTAs                                                   |
+| Featured   | `EventsFeaturedSection`     | label, free-form datetime label, title, description, category label, single CTA     |
+| Upcoming   | `EventsUpcomingSection`     | label, title, shared card button label, plus dynamic `EventsUpcomingCategory` and `EventsUpcomingCard` rows (image, title, description, years, price, URL) |
+| Missed     | `EventsMissedSection`       | label, title, description, shared card button label, plus dynamic `EventsMissedCard` rows (video, title, date label, URL) |
+| Submit     | `EventsSubmitSection`       | label, title, description, single CTA                                               |
+
+### Insight (`insight/models.py`)
+
+| Section           | Model                          | Highlights                                                                       |
+|-------------------|--------------------------------|----------------------------------------------------------------------------------|
+| Hero              | `InsightHeroSection`           | label, title, description, search placeholder                                    |
+| Founder Section   | `InsightFounderSection`        | dynamic `InsightFounderCategory` labels, label-1, label-2, date label, title, description, meta data line, single CTA |
+| Article Section   | `InsightArticleSection`        | title, shared card button text, plus dynamic `InsightArticleCard` rows (label, image, date, title, description, tag, URL) |
+| Lane Section      | `InsightLaneSection`           | label, title, plus dynamic `InsightLane` rows (name, article count, URL)         |
+| Subscribe Section | `InsightSubscribeSection`      | label, title, description, email placeholder, subscribe CTA, bottom note         |
+
+### Data Management (`data_management/models.py`)
+
+Shared dynamic data — each section above that says "selectable X from
+`data_management`" reads from these tables. Edited at
+`/dashboard/data/...`.
+
+| Resource           | Model              | Highlights                                                       |
+|--------------------|--------------------|------------------------------------------------------------------|
+| Statistics         | `Statistic`        | value, label, global order (used by Home Network, About Us Mission, Partners Hero) |
+| Employers          | `Employer`         | name, logo, description, URL (used by Home Apply, Schools Employer, Partners Partner / Family) |
+| Team Members       | `TeamMember`       | name, profile image, designation, email URL, view-profile link (used by About Us Team and Home Testimonials) |
+| Social Media Icons | `SocialMediaIcon`  | name, icon (used by Home Social Media and About Us Social Media) |
+| Section Images     | `SectionImage`     | generic-FK image attached to any singleton section; powers the dashboard "Images" card for every section that needs imagery |
 
 ### Upload rules
 
 - **Images**: max 5 MB. Allowed extensions: `jpg`, `jpeg`, `png`, `webp`, `svg`, `gif`.
-- **Videos** (Network section only): size + extension validated by
-  `home/validators.py`. Always stored on the local filesystem
-  (`home/storage.py`) — Cloudinary is bypassed for videos.
+- **Videos** (Home Network section + Events Missed cards): size + extension
+  validated by `home/validators.py`. Always stored on the local filesystem
+  via `home/storage.py` — Cloudinary is bypassed for videos.
 - In **development**: media lives under `media/<section>/`.
 - In **production**: when `CLOUDINARY_CLOUD_NAME` is set, image uploads
   switch to `cloudinary_storage.storage.MediaCloudinaryStorage`
@@ -250,36 +356,114 @@ child model linked by `ForeignKey`.
 
 ## 6. API Endpoints
 
-Mounted under `/api/home/`. All endpoints are **read-only** (`GET` only) and
+Every public page has its own URL namespace under `/api/`. Each namespace
+exposes one aggregate endpoint (the page's full payload in one call) plus
+one read-only endpoint per section. All endpoints are **GET-only** and
 return the singleton row for each section.
 
-| Endpoint                       | Returns                                       |
-|--------------------------------|-----------------------------------------------|
-| `GET /api/home/`               | Aggregate payload — every homepage section    |
-| `GET /api/home/hero/`          | Hero section                                  |
-| `GET /api/home/features/`      | Feature section + active feature cards        |
-| `GET /api/home/about/`         | About / Mission section                       |
-| `GET /api/home/network/`       | Network section + stats                       |
-| `GET /api/home/talent-pool/`   | Talent Pool section                           |
-| `GET /api/home/apply/`         | Apply section + company cards + bottom button |
+### Home (`/api/home/`)
 
-Aggregate response shape:
+| Endpoint                          | Returns                                       |
+|-----------------------------------|-----------------------------------------------|
+| `GET /api/home/`                  | Aggregate payload — every homepage section    |
+| `GET /api/home/header/`           | Site-wide header settings + tabs              |
+| `GET /api/home/footer/`           | Site-wide footer settings + links             |
+| `GET /api/home/hero/`             | Hero section                                  |
+| `GET /api/home/features/`         | Feature section + feature cards               |
+| `GET /api/home/about/`            | About / Mission section                       |
+| `GET /api/home/network/`          | Network section + selected statistics         |
+| `GET /api/home/talent-pool/`      | Talent Pool section                           |
+| `GET /api/home/apply/`            | Apply section + company cards + bottom button |
+| `GET /api/home/social-media/`     | Social Media section + selected icons         |
+| `GET /api/home/testimonials/`     | Testimonials section + picked members' messages |
+| `GET /api/home/app/`              | App promotion section                         |
 
-```json
-{
-  "hero":        { "title": "...", "description": "...", "primary_button_text": "...", "background_image": "...", "hero_image": "..." },
-  "features":    { "title": "...", "description": "...", "button_text": "...", "cards": [ { "position": 1, "title": "...", "icon": "...", "button_url": "..." } ] },
-  "about":       { "label": "...", "title": "...", "description": "...", "image": "...", "primary_button": { "text": "...", "url": "..." }, "secondary_button": { "text": "...", "url": "..." } },
-  "network":     { "title": "...", "video_url": "...", "stats": [ { "position": 1, "value": "...", "label": "..." } ] },
-  "talent_pool": { "title": "...", "subtitle": "...", "description": "...", "image": "...", "primary_button": { "...": "..." }, "secondary_button": { "...": "..." } },
-  "apply":       { "title": "...", "subtitle": "...", "companies": [ { "position": 1, "label": "...", "title": "...", "description": "...", "button_text": "...", "button_url": "...", "large_image": "...", "small_image": "..." } ], "bottom_button": { "text": "...", "url": "..." } }
-}
-```
+### About Us (`/api/about-us/`)
+
+| Endpoint                              | Returns                                |
+|---------------------------------------|----------------------------------------|
+| `GET /api/about-us/`                  | Aggregate payload                      |
+| `GET /api/about-us/hero/`             | Hero section                           |
+| `GET /api/about-us/mission/`          | Mission section + selected statistics  |
+| `GET /api/about-us/founder/`          | Founder section                        |
+| `GET /api/about-us/values/`           | Values section + value cards           |
+| `GET /api/about-us/journey/`          | Journey section + journey cards        |
+| `GET /api/about-us/pledge/`           | Pledge section                         |
+| `GET /api/about-us/team/`             | Team section + selected team members   |
+| `GET /api/about-us/community/`        | Community section + community cards    |
+| `GET /api/about-us/social-media/`     | Social Media section + selected icons  |
+
+### Schools (`/api/schools/`)
+
+| Endpoint                          | Returns                                |
+|-----------------------------------|----------------------------------------|
+| `GET /api/schools/`               | Aggregate payload                      |
+| `GET /api/schools/hero/`          | Hero section                           |
+| `GET /api/schools/help/`          | Help section + help cards              |
+| `GET /api/schools/employer/`      | Employer section + selected employers  |
+| `GET /api/schools/benchmark/`     | Benchmark section + benchmark cards    |
+| `GET /api/schools/subscribe/`     | Subscribe section + form fields        |
+| `GET /api/schools/faq/`           | FAQ section + Q&A items                |
+
+### Employers (`/api/employers/`)
+
+| Endpoint                          | Returns                                          |
+|-----------------------------------|--------------------------------------------------|
+| `GET /api/employers/`             | Aggregate payload                                |
+| `GET /api/employers/hero/`        | Hero section                                     |
+| `GET /api/employers/network/`     | Network section (shared with Home) + statistics  |
+| `GET /api/employers/mission/`     | Mission section + bullet points                  |
+| `GET /api/employers/offer/`       | Offers section + offer cards                     |
+| `GET /api/employers/events/`      | Events section + event images                    |
+
+### Partners (`/api/partners/`)
+
+| Endpoint                          | Returns                                                      |
+|-----------------------------------|--------------------------------------------------------------|
+| `GET /api/partners/`              | Aggregate payload                                            |
+| `GET /api/partners/hero/`         | Hero section + selected statistics                           |
+| `GET /api/partners/partner/`      | Partner Section — categories + selected employers            |
+| `GET /api/partners/family/`       | Family section + selected employers + load-more CTA          |
+| `GET /api/partners/review/`       | Review section + review cards                                |
+| `GET /api/partners/founder/`      | Founder section                                              |
+
+### Events (`/api/events/`)
+
+| Endpoint                          | Returns                                |
+|-----------------------------------|----------------------------------------|
+| `GET /api/events/`                | Aggregate payload                      |
+| `GET /api/events/hero/`           | Hero section                           |
+| `GET /api/events/featured/`       | Featured section                       |
+| `GET /api/events/upcoming/`       | Upcoming section + categories + cards  |
+| `GET /api/events/missed/`         | Missed section + cards (with videos)   |
+| `GET /api/events/submit/`         | Submit section                         |
+
+### Insight (`/api/insight/`)
+
+| Endpoint                          | Returns                                       |
+|-----------------------------------|-----------------------------------------------|
+| `GET /api/insight/`               | Aggregate payload                             |
+| `GET /api/insight/hero/`          | Hero section                                  |
+| `GET /api/insight/founder/`       | Founder section + categories                  |
+| `GET /api/insight/article/`       | Article section + article cards               |
+| `GET /api/insight/lane/`          | Lane section + lanes                          |
+| `GET /api/insight/subscribe/`     | Subscribe section                             |
+
+### Shared data (`/api/data/`)
+
+Plain lists of the shared dynamic rows that consumer sections pick from.
+
+| Endpoint                              | Returns                                |
+|---------------------------------------|----------------------------------------|
+| `GET /api/data/statistics/`           | All `Statistic` rows                   |
+| `GET /api/data/employers/`            | All `Employer` rows                    |
+| `GET /api/data/team-members/`         | All `TeamMember` rows                  |
+| `GET /api/data/social-media/`         | All `SocialMediaIcon` rows             |
 
 > DRF defaults: `PageNumberPagination` (page size 20), JSON + Browsable API
-> renderers, `AllowAny` permission on the public API. The aggregate endpoint
-> returns the full payload in a single call — convenient for one-shot
-> Next.js home-page rendering.
+> renderers, `AllowAny` permission on the public API. Per-page aggregate
+> endpoints return the full payload in a single call — convenient for
+> one-shot Next.js page rendering.
 
 ---
 
@@ -312,22 +496,120 @@ The dashboard at `/dashboard/` is the only editor — Django Admin is not
 mounted. Layout: AdminLTE-style sidebar grouped by **module**, with each
 module's sections beneath it.
 
+### Auth + overview
+
 | URL                                  | What it edits                            |
 |--------------------------------------|------------------------------------------|
 | `/dashboard/login/`                  | Login (any user with `is_staff=True`)    |
+| `/dashboard/logout/`                 | Logout                                   |
 | `/dashboard/`                        | Overview — module summary + config stats |
+
+### Site-wide
+
+| URL                                  | What it edits                            |
+|--------------------------------------|------------------------------------------|
 | `/dashboard/header/`                 | Header settings + tabs                   |
 | `/dashboard/footer/`                 | Footer settings + links                  |
+
+### Home Management
+
+| URL                                  | What it edits                            |
+|--------------------------------------|------------------------------------------|
 | `/dashboard/home/`                   | Home module landing page                 |
 | `/dashboard/home/hero/`              | Hero section                             |
 | `/dashboard/home/features/`          | Feature section + cards                  |
 | `/dashboard/home/about/`             | About / Mission section                  |
-| `/dashboard/home/network/`           | Network section + stats                  |
+| `/dashboard/home/network/`           | Network section + selected statistics    |
 | `/dashboard/home/talent-pool/`       | Talent Pool section                      |
 | `/dashboard/home/apply/`             | Apply section + companies                |
-| `/dashboard/home/social-media/`      | Social Media section + cards             |
-| `/dashboard/home/testimonials/`      | Testimonials section                     |
+| `/dashboard/home/social-media/`      | Social Media section + selected icons    |
+| `/dashboard/home/testimonials/`      | Testimonials section + picked members    |
 | `/dashboard/home/app/`               | App promotion section                    |
+
+### About Us Management
+
+| URL                                  | What it edits                            |
+|--------------------------------------|------------------------------------------|
+| `/dashboard/about-us/`               | About Us module landing page             |
+| `/dashboard/about-us/hero/`          | Hero section                             |
+| `/dashboard/about-us/mission/`       | Mission section + selected statistics    |
+| `/dashboard/about-us/founder/`       | Founder section                          |
+| `/dashboard/about-us/values/`        | Values section + value cards             |
+| `/dashboard/about-us/journey/`       | Journey section + journey cards          |
+| `/dashboard/about-us/pledge/`        | Pledge section                           |
+| `/dashboard/about-us/team/`          | Team section + selected team members     |
+| `/dashboard/about-us/community/`     | Community section + community cards      |
+| `/dashboard/about-us/social-media/`  | Social Media section + selected icons    |
+
+### Schools Management
+
+| URL                                  | What it edits                            |
+|--------------------------------------|------------------------------------------|
+| `/dashboard/schools/`                | Schools module landing page              |
+| `/dashboard/schools/hero/`           | Hero section                             |
+| `/dashboard/schools/help/`           | Help section + help cards                |
+| `/dashboard/schools/employer/`       | Employer section + selected employers    |
+| `/dashboard/schools/benchmark/`      | Benchmark section + benchmark cards      |
+| `/dashboard/schools/subscribe/`      | Subscribe section + form fields          |
+| `/dashboard/schools/faq/`            | FAQ section + Q&A items                  |
+
+### Employers Management
+
+| URL                                  | What it edits                            |
+|--------------------------------------|------------------------------------------|
+| `/dashboard/employers/`              | Employers module landing page            |
+| `/dashboard/employers/hero/`         | Hero section                             |
+| `/dashboard/employers/network/`      | Network section (shared with Home)       |
+| `/dashboard/employers/mission/`      | Mission section + bullet points          |
+| `/dashboard/employers/offer/`        | Offers section + offer cards             |
+| `/dashboard/employers/events/`       | Events section + event images            |
+
+### Partner Management
+
+| URL                                       | What it edits                            |
+|-------------------------------------------|------------------------------------------|
+| `/dashboard/partners/`                    | Partners module landing page             |
+| `/dashboard/partners/hero/`               | Hero section + selected statistics       |
+| `/dashboard/partners/partner-section/`    | Partner Section — categories + employers |
+| `/dashboard/partners/family-section/`     | Family section + selected employers      |
+| `/dashboard/partners/review-section/`     | Review section + review cards            |
+| `/dashboard/partners/founder-section/`    | Founder section                          |
+
+### Events Management
+
+| URL                                  | What it edits                            |
+|--------------------------------------|------------------------------------------|
+| `/dashboard/events/`                 | Events module landing page               |
+| `/dashboard/events/hero/`            | Hero section                             |
+| `/dashboard/events/featured/`        | Featured section                         |
+| `/dashboard/events/upcoming/`        | Upcoming section + categories + cards    |
+| `/dashboard/events/missed/`          | Missed section + cards (videos)          |
+| `/dashboard/events/submit/`          | Submit section                           |
+
+### Insight Management
+
+| URL                                          | What it edits                            |
+|----------------------------------------------|------------------------------------------|
+| `/dashboard/insight/`                        | Insight module landing page              |
+| `/dashboard/insight/hero/`                   | Hero section                             |
+| `/dashboard/insight/founder-section/`        | Founder section + categories             |
+| `/dashboard/insight/article-section/`        | Article section + article cards          |
+| `/dashboard/insight/lane-section/`           | Lane section + lanes                     |
+| `/dashboard/insight/subscribe-section/`      | Subscribe section                        |
+
+### Data Management
+
+Shared dynamic rows that consumer sections pick from.
+
+| URL                                            | What it edits                            |
+|------------------------------------------------|------------------------------------------|
+| `/dashboard/data/`                             | Data module landing page                 |
+| `/dashboard/data/statistics/`                  | Statistics (value + label)               |
+| `/dashboard/data/employers/`                   | Employers (name, logo, description, URL) |
+| `/dashboard/data/team-members/`                | Team Members                             |
+| `/dashboard/data/social-media/`                | Social Media Icons                       |
+| `/dashboard/data/team-members/picker.json`     | JSON picker used by Team / Testimonial selectors |
+| `/dashboard/data/employers/picker.json`        | JSON picker used by Employer selectors   |
 
 The login page lives at `dashboard:login`; `LOGIN_URL`, `LOGIN_REDIRECT_URL`,
 and `LOGOUT_REDIRECT_URL` in `settings.py` already point Django's auth
@@ -337,15 +619,19 @@ machinery at it.
 
 ## 9. Adding a New Section Later
 
-The section model + dashboard registry pattern is designed for extension:
+The section model + dashboard registry pattern is designed for extension.
+New sections in any module (Home, About Us, Schools, Employers, Partners,
+Events, Insight, …) follow the same shape — substitute the relevant
+per-app `models.py` / `serializers.py` / `views.py` / `urls.py`:
 
-1. **Model** — add a `SingletonModel` subclass in `home/models.py`. If it
-   has repeating sub-items, add a child model with a `ForeignKey` back to it.
-2. **Serializer + view + URL** — add a serializer in `home/serializers.py`,
-   a `RetrieveAPIView` (subclass `_SingletonMixin`) in `home/views.py`, and
-   wire it into `home/urls.py`. Don't forget to include it in
-   `HomePageSerializer.to_representation` so it's part of the aggregate
-   payload.
+1. **Model** — add a `SingletonModel` subclass in the target app's
+   `models.py` (subclass `home.models.SingletonModel`). If it has
+   repeating sub-items, add a child model with a `ForeignKey` back to it.
+2. **Serializer + view + URL** — add a serializer in the app's
+   `serializers.py`, a `RetrieveAPIView` (subclass the app's singleton
+   mixin) in `views.py`, and wire it into the app's `urls.py`. Don't
+   forget to include it in the page's aggregate serializer so it's part
+   of the aggregate payload.
 3. **Form** — add a `ModelForm` (and an `InlineFormSet` if there are child
    rows) in `dashboard/forms.py`.
 4. **Dashboard view + URL** — add an `UpdateView` in `dashboard/views.py`
