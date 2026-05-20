@@ -1439,7 +1439,6 @@
             height: 168px;
             border: 1px solid var(--yp-line);
             border-radius: 14px;
-            overflow: hidden;
             background: #f3f4f6;
             box-shadow: 0 4px 10px -4px rgba(17, 24, 39, .15),
                         0 1px 2px rgba(17, 24, 39, .05);
@@ -1457,12 +1456,14 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            border-radius: 13px;
         }
         /* Dim overlay on hover so the cross is easier to see. */
         .yp-image-tile::after {
             content: "";
             position: absolute;
             inset: 0;
+            border-radius: 13px;
             background: linear-gradient(180deg, rgba(0,0,0,.3) 0%, transparent 35%);
             opacity: 0;
             transition: opacity .15s ease;
@@ -1471,36 +1472,27 @@
         .yp-image-tile:hover::after { opacity: 1; }
         .yp-image-tile-remove {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 28px;
-            height: 28px;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
             padding: 0;
-            border: 0;
+            border: 2px solid #fff;
             border-radius: 50%;
-            background: rgba(255, 255, 255, .92);
-            color: #b91c1c;
-            font-size: 13px;
+            background: rgba(15, 23, 42, .92);
+            color: #fff;
+            font-size: 10px;
             line-height: 1;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 10px -2px rgba(0, 0, 0, .3);
-            backdrop-filter: blur(4px);
-            opacity: 0;
-            transform: scale(.85);
-            transition: opacity .15s ease, transform .15s ease,
-                        background .15s ease, color .15s ease;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, .35);
+            transition: background .15s ease, transform .12s ease;
             z-index: 2;
         }
-        .yp-image-tile:hover .yp-image-tile-remove {
-            opacity: 1;
-            transform: scale(1);
-        }
         .yp-image-tile-remove:hover {
-            background: var(--yp-danger);
-            color: #fff;
+            background: #b91c1c;
             transform: scale(1.08);
         }
         .yp-image-tile-remove:focus { outline: none; }
@@ -2210,23 +2202,31 @@
     const KEY_PREFIX = 'yp-scroll:';
     const key = KEY_PREFIX + window.location.pathname + window.location.search;
     const MAX_KEYS = 60;
+    const TTL_MS = 15 * 1000; // saved scroll position expires after 15 seconds
 
     function prune() {
         try {
+            const now = Date.now();
             const keys = [];
             for (let i = 0; i < sessionStorage.length; i++) {
                 const k = sessionStorage.key(i);
                 if (k && k.startsWith(KEY_PREFIX)) keys.push(k);
             }
-            if (keys.length <= MAX_KEYS) return;
-            keys
-                .map(function (k) {
-                    let ts = 0;
-                    try { ts = JSON.parse(sessionStorage.getItem(k) || '{}').t || 0; } catch (_) {}
-                    return { k: k, t: ts };
-                })
+            // Drop any entries already past their TTL.
+            const fresh = [];
+            keys.forEach(function (k) {
+                let ts = 0;
+                try { ts = JSON.parse(sessionStorage.getItem(k) || '{}').t || 0; } catch (_) {}
+                if (!ts || now - ts > TTL_MS) {
+                    sessionStorage.removeItem(k);
+                } else {
+                    fresh.push({ k: k, t: ts });
+                }
+            });
+            if (fresh.length <= MAX_KEYS) return;
+            fresh
                 .sort(function (a, b) { return a.t - b.t; })
-                .slice(0, keys.length - MAX_KEYS)
+                .slice(0, fresh.length - MAX_KEYS)
                 .forEach(function (item) { sessionStorage.removeItem(item.k); });
         } catch (_) {}
     }
@@ -2249,6 +2249,12 @@
             const raw = sessionStorage.getItem(key);
             if (!raw) return;
             const data = JSON.parse(raw);
+            const ts = (data && data.t) || 0;
+            // Drop and ignore anything older than the TTL.
+            if (!ts || Date.now() - ts > TTL_MS) {
+                sessionStorage.removeItem(key);
+                return;
+            }
             const y = parseInt(data && data.y, 10);
             if (!y) return;
             requestAnimationFrame(function () {

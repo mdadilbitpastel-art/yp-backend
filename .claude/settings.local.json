@@ -81,7 +81,9 @@
       "Bash(python -c \"import ast; ast.parse\\(open\\('dashboard/views.py'\\).read\\(\\)\\); print\\('views.py: OK'\\)\")",
       "Bash(git checkout *)",
       "Bash(python -c \"import django; print\\(django.get_version\\(\\)\\)\")",
-      "Bash(grep -n -B1 -A 9 'class=\"row\"' '/mnt/c/Users/Adil Alam/Desktop/yp/__TRACKED_VAR__')"
+      "Bash(grep -n -B1 -A 9 'class=\"row\"' '/mnt/c/Users/Adil Alam/Desktop/yp/__TRACKED_VAR__')",
+      "Bash(grep -n 'thead\\\\|f8fafc\\\\|f9fafb' templates/dashboard/__TRACKED_VAR__)",
+      "Bash(grep -n -B1 'e0e7ff\\\\|c7d2fe\\\\|3730a3' '/mnt/c/Users/Adil Alam/Desktop/yp/__TRACKED_VAR__')"
     ]
   }
 }
